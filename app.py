@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import json
 import fitz  # PyMuPDF
+import glob
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.enum.text import PP_ALIGN
@@ -193,31 +194,23 @@ if generate_btn and uploaded_file is not None:
                 
                 # ────────── ① 表紙 ──────────
                 if page_data['type'] == 'cover':
-                    template_path = f"{selected_style_key}_p1.png"
-                    
-                    if os.path.exists(template_path):
-                        base_img = Image.open(template_path).resize((width, height)).convert("RGB")
-                        
-                        # テーマに合わせて用意した画像を動的加工！
-                        enhancer_color = ImageEnhance.Color(base_img)
-                        enhancer_brightness = ImageEnhance.Brightness(base_img)
-                        enhancer_contrast = ImageEnhance.Contrast(base_img)
-                        
-                        if selected_style_key == "style_1":
-                            bg_image = enhancer_color.enhance(0.7)
-                            bg_image = ImageEnhance.Brightness(bg_image).enhance(0.85)
-                        elif selected_style_key == "style_2":
-                            bg_image = enhancer_color.enhance(1.2)
-                            bg_image = ImageEnhance.Brightness(bg_image).enhance(1.1)
-                        elif selected_style_key == "style_3":
-                            bg_image = enhancer_color.enhance(0.4)
-                            bg_image = enhancer_contrast.enhance(1.2)
-                        elif selected_style_key == "style_4":
-                            bg_image = enhancer_color.enhance(0.8)
-                            bg_image = enhancer_contrast.enhance(0.9)
-                        else:
-                            bg_image = base_img
-                    else:
+                    st.write(f"🎨 表紙の背景画像をAIで生成中...（テーマ: {theme_info['name']}）")
+                    try:
+                        # Imagenモデルを使ってテーマに合った背景画像を生成
+                        image_result = gemini_client.models.generate_images(
+                            model='imagen-3.0-fast-generate-001',
+                            prompt=f"不動産パンフレットの表紙用背景画像。テーマは「{theme_info['name']}」。文字や枠線は一切含めず、高品質で空間の広がりを感じる建築的な背景のみ。",
+                            config=types.GenerateImagesConfig(
+                                number_of_images=1,
+                                aspect_ratio="4:3"
+                            )
+                        )
+                        # 生成された画像をPillowで読み込み
+                        generated_bytes = image_result.generated_images[0].image.image_bytes
+                        bg_image = Image.open(BytesIO(generated_bytes)).convert("RGB").resize((width, height))
+                    except Exception as e:
+                        st.error(f"画像生成APIのエラー詳細: {e}")
+                        st.warning("背景画像の生成をスキップしました。基本カラーを使用します。")
                         bg_image = Image.new('RGB', (width, height), color=theme_bg)
 
                     draw = ImageDraw.Draw(bg_image)
@@ -228,6 +221,7 @@ if generate_btn and uploaded_file is not None:
                     main_copy = page_data.get('main_copy', '').replace('\n', ' ')
                     price_text = page_data.get('price', '--- 万円').replace('\n', ' ')
 
+                    # テキストの描画（元のコードと同じ）
                     font_prop = get_fitting_font(draw, prop_name, int(height * 0.12), max_w)
                     draw.text((width/2, height * 0.1), prop_name, font=font_prop, fill=theme_tc, anchor="mt")
                     
@@ -245,34 +239,29 @@ if generate_btn and uploaded_file is not None:
 
                 # ────────── ② 空撮地図 ──────────
                 elif page_data['type'] == 'aerial_map':
-                    template_path_p2 = f"{selected_style_key}_p2.png"
-                    
-                    if os.path.exists(template_path_p2):
-                        base_img = Image.open(template_path_p2).resize((width, height)).convert("RGB")
-                        
-                        # 2ページ目の画像もテーマに合わせて動的加工
-                        enhancer_color = ImageEnhance.Color(base_img)
-                        enhancer_brightness = ImageEnhance.Brightness(base_img)
-                        enhancer_contrast = ImageEnhance.Contrast(base_img)
-                        
-                        if selected_style_key == "style_1":
-                            bg_image = enhancer_color.enhance(0.7)
-                            bg_image = ImageEnhance.Brightness(bg_image).enhance(0.85)
-                        elif selected_style_key == "style_2":
-                            bg_image = enhancer_color.enhance(1.2)
-                            bg_image = ImageEnhance.Brightness(bg_image).enhance(1.1)
-                        elif selected_style_key == "style_3":
-                            bg_image = enhancer_color.enhance(0.4)
-                            bg_image = enhancer_contrast.enhance(1.2)
-                        else:
-                            bg_image = base_img
-                    else:
+                    st.write(f"🎨 空撮マップの背景画像をAIで生成中...（テーマ: {theme_info['name']}）")
+                    try:
+                        # 空撮風の画像を生成
+                        image_result = gemini_client.models.generate_images(
+                            model='imagen-3.0-fast-generate-001',
+                            prompt=f"上空から見下ろした美しい街並みの風景。不動産パンフレット用。テーマは「{theme_info['name']}」。文字や枠線、ピンは含めないクリーンな風景。",
+                            config=types.GenerateImagesConfig(
+                                number_of_images=1,
+                                aspect_ratio="4:3"
+                            )
+                        )
+                        generated_bytes = image_result.generated_images[0].image.image_bytes
+                        bg_image = Image.open(BytesIO(generated_bytes)).convert("RGB").resize((width, height))
+                    except Exception as e:
+                        st.warning("背景画像の生成をスキップしました。基本カラーを使用します。")
                         bg_image = Image.new('RGB', (width, height), color=theme_bg)
 
                     draw = ImageDraw.Draw(bg_image)
                     
+                    # (ここから下のフォント設定やピン描画の処理は、元のコードと同じものを残します)
                     try:
                         font_head = ImageFont.truetype(FONT_PATH, int(height * 0.07))
+                        # ... （以下、元のコードの ②空撮地図 の描画処理をそのまま続けてください）
                         font_subhead = ImageFont.truetype(FONT_PATH, int(height * 0.04))
                         font_main = ImageFont.truetype(FONT_PATH, int(height * 0.03))
                         font_label = ImageFont.truetype(FONT_PATH, int(height * 0.025))
