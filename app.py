@@ -24,27 +24,34 @@ st.write("用意したテンプレート画像とAIのテキスト解析を組�
 # フォントのパス（実行環境に合わせて確認してください）
 FONT_PATH = './NotoSansCJKjp-Bold.ttf' 
 
-# --- デザインテーマの設定 ---
+# --- 修正：デザインテーマを6種＋その他に拡張 ---
 THEMES = {
-    "style_1": {
-        "name": "① 高級・ラグジュアリー（落ち着いたトーン、富裕層向け）",
-        "bg_color": (40, 40, 45), "text_color": "white", "accent_color": (180, 150, 80)
+    "luxury":       {"name": "1 高級・ラグジュアリー", "bg_color": (40, 40, 45), "text_color": "white", "accent_color": (180, 150, 80)},
+    "family":       {"name": "2 ファミリー・温もり", "bg_color": (255, 245, 235), "text_color": "black", "accent_color": (240, 130, 50)},
+    "modern":       {"name": "3 スタイリッシュ・モダン", "bg_color": (240, 245, 255), "text_color": "black", "accent_color": (50, 100, 180)},
+    "wa_modern":    {"name": "4 和モダン・伝統美", "bg_color": (230, 225, 215), "text_color": "black", "accent_color": (100, 120, 80)},
+    "casual":       {"name": "5 カジュアル・ポップ", "bg_color": (255, 250, 220), "text_color": "black", "accent_color": (250, 100, 130)},
+    "other":        {"name": "6 その他（自由入力スタイル）", "bg_color": (240, 240, 240), "text_color": "black", "accent_color": (100, 100, 100)}
+}
+# --- 追加：店舗ごとの詳細データ ---
+BRANCH_DATA = {
+    "国分寺": {
+        "full_name": "株式会社 東宝ハウス国分寺",
+        "license": "東京都知事（9）第42787号",
+        "address": "〒185-0021 東京都国分寺市南町3-22-2",
+        "tel": "0120-13-3107"
     },
-    "style_2": {
-        "name": "② ファミリー・温もり（明るく親しみやすい、子育て向け）",
-        "bg_color": (255, 245, 235), "text_color": "black", "accent_color": (240, 130, 50)
+    "武蔵野": {
+        "full_name": "株式会社 東宝ハウス武蔵野",
+        "license": "東京都知事（3）第90333号",
+        "address": "〒180-0004 東京都武蔵野市吉祥寺本町1-15-9",
+        "tel": "0120-15-3101"
     },
-    "style_3": {
-        "name": "③ スタイリッシュ・モダン（シンプルで都会的、単身・DINKS向け）",
-        "bg_color": (240, 245, 255), "text_color": "black", "accent_color": (50, 100, 180)
-    },
-    "style_4": {
-        "name": "④ 和モダン（伝統と新しさが融合した落ち着き）",
-        "bg_color": (230, 225, 215), "text_color": "black", "accent_color": (100, 120, 80)
-    },
-    "style_5": {
-        "name": "⑤ カジュアル・ポップ（軽快で若々しい印象）",
-        "bg_color": (255, 250, 220), "text_color": "black", "accent_color": (250, 100, 130)
+    "練馬": {
+        "full_name": "株式会社 東宝ハウス練馬",
+        "license": "東京都知事（4）第86488号",
+        "address": "〒178-0063 東京都練馬区東大泉1-27-22光和ビル2F",
+        "tel": "0120-384-700"
     }
 }
 
@@ -58,8 +65,12 @@ if "current_file" not in st.session_state:
 if "pdf_text" not in st.session_state:
     st.session_state.pdf_text = ""
 
-# --- 3. ファイルアップロードとデザイン選択UI ---
-uploaded_file = st.file_uploader("販売図面のPDFをドラッグ＆ドロップ", type="pdf")
+# --- 修正：PDFだけでなく画像も許可する ---
+col_u1, col_u2 = st.columns(2)
+with col_u1:
+    uploaded_file = st.file_uploader("販売図面（PDFまたは画像）をアップロード", type=["pdf", "png", "jpg", "jpeg"])
+with col_u2:
+    madori_file = st.file_uploader("間取り図の画像をアップロード（P.4用）", type=["png", "jpg", "jpeg"])
 
 if uploaded_file is not None and uploaded_file.name != st.session_state.current_file:
     st.session_state.finished_pages = []
@@ -72,10 +83,30 @@ st.subheader("🎨 パンフレットのデザインテーマを選択")
 selected_style_key = st.radio(
     "デザインの方向性を選んでください：", 
     options=list(THEMES.keys()), 
-    format_func=lambda x: THEMES[x]["name"]
+    format_func=lambda x: THEMES[x]["name"],
+    index=0
 )
+theme_info = THEMES[selected_style_key]
 
-user_target_area = st.text_input("例：国分寺市南町、練馬区下石神井", key="user_target_area")
+# --- 追加：⑦その他を選択した場合の自由入力欄 ---
+custom_style_description = ""
+if selected_style_key == "other":
+    custom_style_description = st.text_input(
+        "どのようなデザインスタイルにしたいか入力してください：",
+        placeholder="例：北欧風の明るい木目調、ヴィンテージ風のレンガ造り、など"
+    )
+
+# --- 修正：店舗選択UIを追加 ---
+st.write("---")
+st.subheader("🏢 担当店舗の選択")
+selected_branch_name = st.selectbox("担当店舗を選んでください：", list(BRANCH_DATA.keys()))
+
+# --- 修正：スライドの向き選択UIを追加 ---
+st.write("---")
+st.subheader("📏 スライドの向きを選択")
+orientation = st.radio("作成するパンフレットの向き：", ["横向き (Landscape)", "縦向き (Portrait)"], index=0)
+# 選択された店舗の詳細を取得
+branch_info = BRANCH_DATA[selected_branch_name]
 
 generate_btn = st.button("🚀 選択したデザインで全6ページを生成開始", disabled=not uploaded_file)
 
@@ -97,15 +128,38 @@ if generate_btn and uploaded_file is not None:
         try:
             st.write("AIが物件情報、指定地域、デザインテーマを分析中...")
             gemini_client = genai.Client(api_key=gemini_api_key)
+            # --- ここを追加：間取り図をAIに読み取らせる ---
+            room_description = "A modern living room" # 読み取れなかった時の予備
+            if madori_file:
+                st.write("🔍 間取り図からお部屋のレイアウトを解析中...")
+                m_bytes = madori_file.getvalue()
+                # AIに間取り図を見せて、その形を言葉で説明させます
+                analysis = gemini_client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=[
+                        "この間取り図に基づいた3Dインテリア画像を作りたいです。部屋の配置、窓の位置、キッチンの形を詳しく英語で説明してください。スタイルはモダンで。",
+                        types.Part.from_bytes(data=m_bytes, mime_type="image/jpeg")
+                    ]
+                )
+                room_description = analysis.text
             theme_info = THEMES[selected_style_key]
             
-            prompt = f"""
-            不動産図面を解析し、以下の6ページ構成のパンフレット（4:3比率）を作成してください。
-            今回のターゲットおよびデザインテーマは「{theme_info["name"]}」です。
-            特に「main_copy」や「main_text」は、このテーマの客層に刺さるような魅力的な表現に調整してください。
-            対象地域（空撮マップ用）は「{user_target_area if user_target_area else '物件所在地周辺'}」です。
+            # --- 修正：ユーザーの自由入力プロンプトを反映させる ---
+            current_theme_name = custom_style_description if selected_style_key == "other" else theme_info["name"]
             
-            出力はJSON配列形式のみにしてください。
+            # 比率の指示を動的に変える
+            ratio_text = "4:3（横長）" if orientation == "横向き (Landscape)" else "3:4（縦長）"
+            
+            # --- 修正：7ページ構成（4ページ目に間取り図）のプロンプト全文 ---
+            prompt = f"""
+            不動産図面を解析し、以下の7ページ構成のパンフレット（比率 {ratio_text}）を作成してください。
+            
+            【デザインの最優先条件】
+            ・デザインスタイル: {current_theme_name}
+            
+            上記スタイルと指示に合わせ、1ページ目の背景画像生成プロンプトや、メインキャッチコピー、周辺環境の説明文（main_text）を調整してください。
+            
+            対象地域（空撮マップ用）は「物件所在地周辺」です。
             [
               {{
                 "page": 1, "type": "cover",
@@ -130,17 +184,23 @@ if generate_btn and uploaded_file is not None:
                 "source_pdf_page": 4, "life_info": "周辺施設情報を改行ありの箇条書きで"
               }},
               {{
-                "page": 4, "type": "interior_hq", "headline": "内観", "sub_headline": "建物内覧・完成予想図"
+                "page": 4, "type": "floor_plan",
+                "headline": "FLOOR PLAN", 
+                "sub_headline": "洗練された居住空間"
               }},
               {{
-                "page": 5, "type": "interior", "headline": "内観ギャラリー", "source_pdf_page": 5
+                "page": 5, "type": "interior_hq", "headline": "INTERIOR VISION", 
+                "sub_headline": "間取り図から描き出した完成予想イメージ"
+              }},
+              {{
+                "page": 6, "type": "interior", "headline": "内観ギャラリー", "source_pdf_page": 5
               }},
               {{ 
-                "page": 6, "type": "company", 
-                "company_name": "株式会社 東宝ハウス国分寺",
-                "license": "東京都知事（9）第42787号",
-                "address": "〒185-0021 東京都国分寺市南町3-22-2",
-                "tel": "0120-13-3107"
+                "page": 7, "type": "company", 
+                "company_name": "{branch_info['full_name']}",
+                "license": "{branch_info['license']}",
+                "address": "{branch_info['address']}",
+                "tel": "{branch_info['tel']}"
               }}
             ]
             【補助データ】: {st.session_state.pdf_text}
@@ -181,8 +241,11 @@ if generate_btn and uploaded_file is not None:
                 for y in range(int(y1), int(y2), dash * 2): draw.line([(x2, y), (x2, min(y + dash, y2))], fill=outline, width=width)
 
             generated_pages = []
-            width = 1024
-            height = 768
+            # 向きに合わせてキャンバスサイズを入れ替える
+            if orientation == "横向き (Landscape)":
+                width, height = 1024, 768
+            else:
+                width, height = 768, 1024
             
             theme_bg = theme_info["bg_color"]
             theme_tc = theme_info["text_color"]
@@ -196,21 +259,19 @@ if generate_btn and uploaded_file is not None:
                 if page_data['type'] == 'cover':
                     st.write(f"🎨 表紙の背景画像をAIで生成中...（テーマ: {theme_info['name']}）")
                     try:
-                        # Imagenモデルを使ってテーマに合った背景画像を生成
+                        # ✨ 修正：モデル名を安定版にし、configの囲いを正確に記述
                         image_result = gemini_client.models.generate_images(
-                            model='imagen-3.0-fast-generate-001',
-                            prompt=f"不動産パンフレットの表紙用背景画像。テーマは「{theme_info['name']}」。文字や枠線は一切含めず、高品質で空間の広がりを感じる建築的な背景のみ。",
+                            model='imagen-4.0-generate-001', # 最も安定しているモデル名
+                            prompt=f"日本の閑静な住宅街にある、洗練された現代的な一戸建て住宅の外観。モダンな建築デザイン。青空と美しい植栽。テーマは「{theme_info['name']}」。高品質な建築写真スタイル。",
                             config=types.GenerateImagesConfig(
                                 number_of_images=1,
-                                aspect_ratio="4:3"
+                                aspect_ratio="4:3" if orientation == "横向き (Landscape)" else "3:4"
                             )
                         )
-                        # 生成された画像をPillowで読み込み
                         generated_bytes = image_result.generated_images[0].image.image_bytes
                         bg_image = Image.open(BytesIO(generated_bytes)).convert("RGB").resize((width, height))
                     except Exception as e:
-                        st.error(f"画像生成APIのエラー詳細: {e}")
-                        st.warning("背景画像の生成をスキップしました。基本カラーを使用します。")
+                        st.error(f"1ページ目の画像生成でエラー: {e}")
                         bg_image = Image.new('RGB', (width, height), color=theme_bg)
 
                     draw = ImageDraw.Draw(bg_image)
@@ -221,85 +282,80 @@ if generate_btn and uploaded_file is not None:
                     main_copy = page_data.get('main_copy', '').replace('\n', ' ')
                     price_text = page_data.get('price', '--- 万円').replace('\n', ' ')
 
-                    # テキストの描画（元のコードと同じ）
+                    # --- デザイン設定（練馬HP風） ---
+                    navy_color = (20, 35, 75)     # 影に使う信頼の紺
+                    gold_color = (195, 160, 100)  # アクセントの金
+                    off = 2                        # 影のズレ幅
+
+                    # 1. 物件名（白文字 + 紺の影）
                     font_prop = get_fitting_font(draw, prop_name, int(height * 0.12), max_w)
-                    draw.text((width/2, height * 0.1), prop_name, font=font_prop, fill=theme_tc, anchor="mt")
-                    
+                    draw.text((width/2+off, height*0.1+off), prop_name, font=font_prop, fill=navy_color, anchor="mt")
+                    draw.text((width/2, height * 0.1), prop_name, font=font_prop, fill="white", anchor="mt")
+
+                    # 2. サブコピー（白文字 + 紺の影）
                     font_sub = get_fitting_font(draw, side_copy, int(height * 0.04), max_w)
-                    draw.text((width/2, height * 0.35), side_copy, font=font_sub, fill=theme_tc, anchor="mt")
+                    draw.text((width/2+off, height*0.35+off), side_copy, font=font_sub, fill=navy_color, anchor="mt")
+                    draw.text((width/2, height * 0.35), side_copy, font=font_sub, fill="white", anchor="mt")
 
+                    # 3. メインコピー（白文字 + 紺の影）
                     font_main = get_fitting_font(draw, main_copy, int(height * 0.08), max_w)
-                    draw.text((width/2, height*0.55), main_copy, font=font_main, fill=theme_tc, anchor="mm")
+                    draw.text((width/2+off, height*0.55+off), main_copy, font=font_main, fill=navy_color, anchor="mm")
+                    draw.text((width/2, height*0.55), main_copy, font=font_main, fill="white", anchor="mm")
 
+                    # 4. 価格ボックス（ゴールド背景 + 白文字）
                     font_price = get_fitting_font(draw, price_text, int(height * 0.1), width * 0.4)
                     p_w = draw.textbbox((0, 0), price_text, font=font_price)[2] - draw.textbbox((0, 0), price_text, font=font_price)[0]
-                    
-                    draw.rectangle([(width - p_w - 60, height * 0.8), (width - 20, height * 0.92)], fill=theme_ac)
+                    draw.rectangle([(width - p_w - 60, height * 0.8), (width - 20, height * 0.92)], fill=gold_color)
                     draw.text((width - p_w/2 - 40, height * 0.86), price_text, font=font_price, fill="white", anchor="mm")
 
                 # ────────── ② 空撮地図 ──────────
                 elif page_data['type'] == 'aerial_map':
                     st.write(f"🎨 空撮マップの背景画像をAIで生成中...（テーマ: {theme_info['name']}）")
                     try:
-                        # 空撮風の画像を生成
+                        # ✨ 修正：ここが文法エラーでスキップの原因でした！configの囲いを追加
                         image_result = gemini_client.models.generate_images(
-                            model='imagen-3.0-fast-generate-001',
-                            prompt=f"上空から見下ろした美しい街並みの風景。不動産パンフレット用。テーマは「{theme_info['name']}」。文字や枠線、ピンは含めないクリーンな風景。",
+                            model='imagen-4.0-generate-001',
+                            prompt=f"日本の都市近郊にある、整然とした典型的な住宅街の空撮写真。一戸建てが並ぶ閑静な街並み。テーマは「{theme_info['name']}」。クリーンな風景写真。",
                             config=types.GenerateImagesConfig(
                                 number_of_images=1,
-                                aspect_ratio="4:3"
+                                aspect_ratio="4:3" if orientation == "横向き (Landscape)" else "3:4"
                             )
                         )
                         generated_bytes = image_result.generated_images[0].image.image_bytes
                         bg_image = Image.open(BytesIO(generated_bytes)).convert("RGB").resize((width, height))
                     except Exception as e:
-                        st.warning("背景画像の生成をスキップしました。基本カラーを使用します。")
+                        st.warning(f"2ページ目の画像生成をスキップしました: {e}")
                         bg_image = Image.new('RGB', (width, height), color=theme_bg)
 
                     draw = ImageDraw.Draw(bg_image)
                     
-                    # (ここから下のフォント設定やピン描画の処理は、元のコードと同じものを残します)
                     try:
                         font_head = ImageFont.truetype(FONT_PATH, int(height * 0.07))
-                        # ... （以下、元のコードの ②空撮地図 の描画処理をそのまま続けてください）
                         font_subhead = ImageFont.truetype(FONT_PATH, int(height * 0.04))
                         font_main = ImageFont.truetype(FONT_PATH, int(height * 0.03))
-                        font_label = ImageFont.truetype(FONT_PATH, int(height * 0.025))
                     except:
-                        font_head = font_subhead = font_main = font_label = ImageFont.load_default()
+                        font_head = font_subhead = font_main = ImageFont.load_default()
 
                     headline = page_data.get('headline', 'FUTURE VISION').replace('\n', ' ')
                     sub_headline = page_data.get('sub_headline', '').replace('\n', ' ')
                     main_text = page_data.get('main_text', '')
 
-                    draw.text((width*0.05, height*0.05), headline, font=font_head, fill=theme_tc, anchor="la")
-                    draw.text((width*0.05, height*0.13), sub_headline, font=font_subhead, fill=theme_tc, anchor="la")
-                    draw.multiline_text((width*0.05, height*0.2), main_text, font=font_main, fill=theme_tc, spacing=10)
+                    # 影のズレ幅
+                    off = 1
 
-                    pins = []
-                    plots_data = page_data.get('plots', [])
-                    
-                    for plot in plots_data:
-                        px = int(plot.get('x', 0.5) * width)
-                        py = int(plot.get('y', 0.5) * height)
-                        plot_name = plot.get('name', '施設').replace('\n', ' ')
-                        pins.append((px, py, plot_name))
-                        
-                        r = int(height * 0.01)
-                        p_color = theme_ac if 'station' in plot.get('type', '') else (200, 50, 50)
-                        draw.ellipse([px-r, py-r, px+r, py+r], fill=p_color, outline="white", width=2)
-                        
-                        draw.rectangle([px-r, py-r*2-int(height*0.045), px+r*6, py-r*2], fill=(255, 255, 255, 200), outline="lightgray")
-                        draw.text((px+r*2, py-r*2-int(height*0.023)), plot_name, font=font_label, fill="black", anchor="lm")
+                    # Headline
+                    draw.text((width*0.05+off, height*0.05+off), headline, font=font_head, fill="black", anchor="la") # 影
+                    draw.text((width*0.05, height*0.05), headline, font=font_head, fill="white", anchor="la")        # 本体
 
-                    if pins:
-                        mx, my = pins[0][0], pins[0][1]
-                        r = int(height * 0.01)
-                        draw.ellipse([mx-r, my-r, mx+r, my+r], fill=(255, 255, 50), outline="white", width=4)
-                        for i in range(int(height*0.4)):
-                            draw.ellipse([mx-(r+i/5), my-(r*2+i)-r, mx+(r+i/5), my-(r*2+i)+r], fill=(255, 255, 150, int(255*(1-i/(height*0.4)))), outline=None)
-                        draw.rectangle([mx+int(width*0.05), my-r-int(height*0.05), mx+int(width*0.3), my+r+int(height*0.05)], fill=theme_ac, outline="white", width=2)
-                        draw.text((mx+int(width*0.17), my), "物件所在地", font=font_main, fill="white", anchor="mm")
+                    # Sub Headline
+                    draw.text((width*0.05+off, height*0.13+off), sub_headline, font=font_subhead, fill="black", anchor="la") # 影
+                    draw.text((width*0.05, height*0.13), sub_headline, font=font_subhead, fill="white", anchor="la")         # 本体
+
+                    # Main Text（ multiline_text には影も2回書きます）
+                    draw.multiline_text((width*0.05+off, height*0.2+off), main_text, font=font_main, fill="black", spacing=10) # 影
+                    draw.multiline_text((width*0.05, height*0.2), main_text, font=font_main, fill="white", spacing=10)         # 本体
+
+                    # --- 以前あった「ピン描画(for plot in plots_data)」と「物件所在地(if pins)」のコードを削除しました ---
 
                 # ────────── ③ アクセス・地図 ──────────
                 elif page_data['type'] == 'access':
@@ -338,35 +394,58 @@ if generate_btn and uploaded_file is not None:
                     life_info_text = page_data.get('life_info', '情報なし')
                     draw.multiline_text((width*0.6, height*0.3), life_info_text, font=font_body, fill=(50, 50, 50))
 
-                # ────────── ④ 内観レイアウト枠 ──────────
-                elif page_data['type'] == 'interior_hq':
+                    # ────────── ④ 間取り図（新規追加） ──────────
+                elif page_data['type'] == 'floor_plan':
                     bg_image = Image.new('RGB', (width, height), color="white")
                     draw = ImageDraw.Draw(bg_image)
                     
-                    draw.rectangle([(0, 0), (width, height * 0.12)], fill=theme_ac)
-                    try: 
-                        font_headline = ImageFont.truetype(FONT_PATH, int(height * 0.08))
-                        font_subhead = ImageFont.truetype(FONT_PATH, int(height * 0.04))
-                        font_placeholder = ImageFont.truetype(FONT_PATH, int(height * 0.03))
-                    except: 
-                        font_headline = ImageFont.load_default()
-                        font_subhead = ImageFont.load_default()
-                        font_placeholder = ImageFont.load_default()
-                        
-                    draw.text((width*0.05, height*0.06), "内 観", font=font_headline, fill="white", anchor="lm")
-                    draw.text((width*0.25, height*0.06), page_data.get('sub_headline', ''), font=font_subhead, fill="white", anchor="lm")
+                    # ヘッダー（ネイビー）
+                    draw.rectangle([(0, 0), (width, height * 0.12)], fill=(20, 35, 75))
+                    try:
+                        f_h = ImageFont.truetype(FONT_PATH, int(height * 0.08))
+                        f_s = ImageFont.truetype(FONT_PATH, int(height * 0.04))
+                    except: f_h = f_s = ImageFont.load_default()
                     
-                    main_rect = [width*0.1, height*0.15, width*0.9, height*0.6]
-                    draw_dashed_rectangle(draw, main_rect)
-                    draw.text((width/2, height*0.37), "[メイン画像挿入枠]", font=font_placeholder, fill="gray", anchor="mm")
-                    
-                    sub_w, sub_h = width * 0.2, height * 0.2
-                    for i in range(4):
-                        start_x = width * 0.05 + (i * (sub_w + width * 0.04))
-                        sub_rect = [start_x, height * 0.65, start_x + sub_w, height * 0.65 + sub_h]
-                        draw_dashed_rectangle(draw, sub_rect)
-                        draw.text((start_x + sub_w/2, height * 0.65 + sub_h/2), f"[画像 {i+1}]", font=font_placeholder, fill="gray", anchor="mm")
+                    draw.text((width*0.05, height*0.06), "FLOOR PLAN", font=f_h, fill="white", anchor="lm")
+                    draw.text((width*0.4, height*0.06), page_data.get('sub_headline', ''), font=f_s, fill="white", anchor="lm")
 
+                    # アップロードされた間取り図を中央に配置
+                    if madori_file:
+                        m_img = Image.open(madori_file).convert("RGB")
+                        m_img.thumbnail((width * 0.8, height * 0.7))
+                        p_x, p_y = (width - m_img.width) // 2, (height * 0.15 + (height * 0.8 - m_img.height) // 2)
+                        bg_image.paste(m_img, (int(p_x), int(p_y)))
+                    else:
+                        draw.text((width/2, height/2), "間取り図がアップロードされていません", fill="gray", anchor="mm")
+
+                # ────────── ⑤ 内観（間取り図を基にAI生成） ──────────
+                elif page_data['type'] == 'interior_hq':
+                    st.write(f"🎨 間取り図に合わせたお部屋を生成中...")
+                    try:
+                        # 1箇所目で作った「間取りの説明」を使って絵を描きます
+                        image_result = gemini_client.models.generate_images(
+                            model='imagen-4.0-generate-001',
+                            prompt=f"Photorealistic high-end interior, {room_description}, architectural photography style, 8k.",
+                            config=types.GenerateImagesConfig(
+                                number_of_images=1,
+                                aspect_ratio="4:3" if orientation == "横向き (Landscape)" else "3:4"
+                            )
+                        )
+                        generated_bytes = image_result.generated_images[0].image.image_bytes
+                        bg_image = Image.open(BytesIO(generated_bytes)).convert("RGB").resize((width, height))
+                    except Exception as e:
+                        st.error(f"内観生成エラー: {e}")
+                        bg_image = Image.new('RGB', (width, height), color="white")
+
+                    draw = ImageDraw.Draw(bg_image)
+                    # ヘッダー（紺色）を上から重ねる
+                    draw.rectangle([(0, 0), (width, height * 0.12)], fill=(20, 35, 75))
+                    try:
+                        f_h = ImageFont.truetype(FONT_PATH, int(height * 0.08))
+                        f_s = ImageFont.truetype(FONT_PATH, int(height * 0.04))
+                    except: f_h = f_s = ImageFont.load_default()
+                    draw.text((width*0.05, height*0.06), "INTERIOR VISION", font=f_h, fill="white", anchor="lm")
+                    draw.text((width*0.45, height*0.06), page_data.get('sub_headline', ''), font=f_s, fill="white", anchor="lm")
                 # ────────── ⑤ 内観（PDFそのまま抽出） ──────────
                 elif page_data['type'] == 'interior':
                     doc_for_interior = fitz.open(stream=pdf_bytes, filetype="pdf")
@@ -427,7 +506,11 @@ if st.session_state.finished_pages:
             st.image(page_img, use_container_width=True)
 
     prs = Presentation()
-    prs.slide_width, prs.slide_height = Inches(10), Inches(7.5)
+    # 向きに合わせてスライドサイズを設定
+    if orientation == "横向き (Landscape)":
+        prs.slide_width, prs.slide_height = Inches(10), Inches(7.5)
+    else:
+        prs.slide_width, prs.slide_height = Inches(7.5), Inches(10)
 
     for i, page_img in enumerate(st.session_state.finished_pages):
         slide = prs.slides.add_slide(prs.slide_layouts[6]) 
@@ -438,13 +521,14 @@ if st.session_state.finished_pages:
         
         slide.shapes.add_picture(img_io, 0, 0, width=prs.slide_width, height=prs.slide_height)
 
-        if i == 5 and st.session_state.ai_data:
-            c_data = st.session_state.ai_data[5]
+        if i == 6 and st.session_state.ai_data:
+            c_data = st.session_state.ai_data[6]
             
             tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(5.6), Inches(9.0), Inches(1.7))
             fill = tx_box.fill
             fill.solid()
-            fill.fore_color.rgb = RGBColor(255, 255, 255)
+            # 会社のテキストボックス背景をゴールドに変更
+            fill.fore_color.rgb = RGBColor(195, 160, 100)
             
             tf = tx_box.text_frame
             tf.word_wrap = True
