@@ -211,7 +211,7 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
             # 比率の指示を動的に変える
             ratio_text = "4:3（横長）" if orientation == "横向き (Landscape)" else "3:4（縦長）"
             
-            # --- 図面から正確な情報を抽出するための強化プロンプト ---
+            # --- 修正：4ページ目（間取り図）のヘッダーに情報を盛り込むためのプロンプト ---
             prompt = f"""
             あなたはプロの不動産ライターです。提供された【補助データ】を隅々まで解析し、以下の7ページ構成のパンフレット（比率 {ratio_text}）を作成してください。
             
@@ -220,7 +220,12 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
             2. **city_town**: 物件の「所在地」から市区町村と町名を抽出してください。（例：東京都府中市美好町... → 府中市 美好町）
             3. **station_info**: 「交通」の項目から、最も主要な駅名と徒歩分数を抽出してください。改行を入れて見やすくしてください。（例：中央線 国分寺駅 徒歩5分 → 国分寺駅\n徒歩5分）
             4. **price**: 販売価格を抽出してください。
-            5. **デザインスタイル**: {current_theme_name} の雰囲気に合わせた魅力的な言葉選びをしてください。
+            # ✨ 4ページ目（FLOOR PLAN）用のデータ抽出
+            5. **property_name_jp**: 【補助データ】から物件名を日本語表記で抽出してください。（例：ラ・フレーズ国分寺）
+            6. **land_area**: 【補助データ】から土地面積を抽出してください。「土地」という文字と「㎡」単位を含めてください。（例：土地 100.77㎡）
+            7. **building_area**: 【補助データ】から建物面積を抽出してください。「建物」という文字と「㎡」単位を含めてください。（例：建物 100.77㎡）
+            8. **price_jp**: 【補助データ】から価格を日本語表記（万円単位）で抽出してください。（例：3,650万円）
+            9. **デザインスタイル**: {current_theme_name} の雰囲気に合わせた魅力的な言葉選びをしてください。
 
             出力は必ず以下のJSON配列形式のみにしてください。
             [
@@ -241,14 +246,15 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
               {{
                 "page": 3, "type": "access", "headline": "MAP & ACCESS", 
                 "source_pdf_page": 1, 
-                "area_feature": "【補助データ】から読み取れる物件の最大の特徴（例：「ペット可」「公園近い」「買い物便利」など。短いキーワード）",
-                "access_info": "【補助データ】から最寄り駅と徒歩分数を抽出し、改行区切りで記述",
-                "life_info": "【補助データ】からスーパー、学校などの周辺施設名と距離を抽出し、改行区切りで箇条書き"
+                "life_info": "【補助データ】からスーパー、学校、公園などの施設名と距離を箇条書きで抽出してください。"
               }},
               {{
                 "page": 4, "type": "floor_plan",
-                "headline": "FLOOR PLAN", 
-                "sub_headline": "洗練された居住空間"
+                # headline, sub_headlineは削除し、必要な情報を追加
+                "property_name_jp": "抽出した物件名（日本語）",
+                "land_area": "抽出した土地面積（例：土地 --- ㎡）",
+                "building_area": "抽出した建物面積（例：建物 --- ㎡）",
+                "price_jp": "抽出した価格（日本語表記、例：--- 万円）"
               }},
               {{
                 "page": 5, "type": "interior_hq", "headline": "INTERIOR VISION", 
@@ -443,68 +449,43 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
 
                 # ────────── ③ アクセス・地図 ──────────
                 elif page_data['type'] == 'access':
-                    st.write(f"🎨 MAP & ACCESSの背景画像（自然豊かな風景）をAIで生成中...")
+                    st.write(f"🎨 MAP & ACCESSの背景画像をAIで生成中...")
                     try:
-                        # ✨ 修正：自然豊かな背景画像をAIで生成する
                         image_result = gemini_client.models.generate_images(
                             model='imagen-4.0-generate-001',
                             prompt="Photorealistic beautiful nature background, lush green trees, soft sunlight, bright and clean landscape, suitable for a real estate flyer background. NO text, NO logos.",
-                            config=types.GenerateImagesConfig(
-                                number_of_images=1,
-                                aspect_ratio="4:3" if orientation == "横向き (Landscape)" else "3:4"
-                            )
+                            config=types.GenerateImagesConfig(number_of_images=1, aspect_ratio="4:3" if orientation == "横向き (Landscape)" else "3:4")
                         )
                         generated_bytes = image_result.generated_images[0].image.image_bytes
                         base_bg = Image.open(BytesIO(generated_bytes)).convert("RGB").resize((width, height))
-                        # ✨ 修正：文字や枠を見やすくするため、背景画像の上に半透明(50%)の白を被せる
                         bg_image = Image.blend(base_bg, Image.new('RGB', (width, height), color=(255, 255, 255)), alpha=0.5)
                     except Exception as e:
-                        st.warning(f"3ページ目の画像生成をスキップしました: {e}")
-                        bg_image = Image.new('RGB', (width, height), color=(250, 253, 250))
+                        st.warning(f"3ページ目の画像生成エラー: {e}")
+                        bg_image = Image.new('RGB', (width, height), color=(240, 245, 240))
 
                     draw = ImageDraw.Draw(bg_image)
-                    
-                    # 上部ヘッダー
                     draw.rectangle([(0, 0), (width, height * 0.12)], fill=theme_ac)
-                    try: 
-                        font_headline = ImageFont.truetype(FONT_PATH, int(height * 0.08))
-                        font_guide = ImageFont.truetype(FONT_PATH, int(height * 0.03))
-                    except: 
-                        font_headline = ImageFont.load_default()
-                        font_guide = ImageFont.load_default()
+                    try: font_headline = ImageFont.truetype(FONT_PATH, int(height * 0.08))
+                    except: font_headline = ImageFont.load_default()
                     draw.text((width*0.05, height*0.06), "MAP & ACCESS", font=font_headline, fill="white", anchor="lm")
-
-                    # ✨ 修正：左上のマップは自動貼り付けせず、「挿入枠」だけを配置する
-                    map_w, map_h = int(width * 0.45), int(height * 0.4)
-                    map_x, map_y = int(width * 0.05), int(height * 0.15)
-                    
-                    # 枠の背景を白で塗りつぶして目立たせる
-                    draw.rectangle([map_x, map_y, map_x + map_w, map_y + map_h], fill=(255, 255, 255, 220))
-                    draw_dashed_rectangle(draw, [map_x, map_y, map_x + map_w, map_y + map_h], outline="gray", width=2)
-                    draw.text((map_x + map_w//2, map_y + map_h//2), "【 MAP画像 挿入枠 】\n※PowerPoint上で画像を配置してください", font=font_guide, fill=(100, 100, 100), anchor="mm", align="center")
+                    # ✨ 枠の焼き付けを削除しました
 
                 # ────────── ④ 間取り図 ──────────
                 elif page_data['type'] == 'floor_plan':
                     bg_image = Image.new('RGB', (width, height), color="white")
                     draw = ImageDraw.Draw(bg_image)
-                    
-                    draw.rectangle([(0, 0), (width, height * 0.12)], fill=(20, 35, 75))
-                    try:
-                        f_h = ImageFont.truetype(FONT_PATH, int(height * 0.08))
-                        f_s = ImageFont.truetype(FONT_PATH, int(height * 0.04))
-                    except: f_h = f_s = ImageFont.load_default()
-                    
-                    draw.text((width*0.05, height*0.06), "FLOOR PLAN", font=f_h, fill="white", anchor="lm")
-                    draw.text((width*0.4, height*0.06), page_data.get('sub_headline', ''), font=f_s, fill="white", anchor="lm")
+                    header_h = int(height * 0.16)
+                    draw.rectangle([(0, 0), (width, header_h)], fill=theme_ac)
 
                     if madori_file:
                         m_img = Image.open(madori_file).convert("RGB")
-                        m_img.thumbnail((width * 0.8, height * 0.7))
-                        p_x, p_y = (width - m_img.width) // 2, (height * 0.15 + (height * 0.8 - m_img.height) // 2)
+                        m_img.thumbnail((width * 0.9, height * 0.8))
+                        p_x = (width - m_img.width) // 2
+                        p_y = (header_h + (height - header_h - m_img.height) // 2)
                         bg_image.paste(m_img, (int(p_x), int(p_y)))
                     else:
                         draw.text((width/2, height/2), "間取り図がアップロードされていません", fill="gray", anchor="mm")
-
+                
                 # ────────── ⑤ 内観（間取り図を基にAI生成） ──────────
                 elif page_data['type'] == 'interior_hq':
                     st.write(f"🎨 間取り図に合わせたお部屋を生成中...")
@@ -512,64 +493,38 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                         image_result = gemini_client.models.generate_images(
                             model='imagen-4.0-generate-001',
                             prompt=room_description,
-                            config=types.GenerateImagesConfig(
-                                number_of_images=1,
-                                aspect_ratio="4:3" if orientation == "横向き (Landscape)" else "3:4"
-                            )
+                            config=types.GenerateImagesConfig(number_of_images=1, aspect_ratio="4:3" if orientation == "横向き (Landscape)" else "3:4")
                         )
                         generated_bytes = image_result.generated_images[0].image.image_bytes
                         bg_image = Image.open(BytesIO(generated_bytes)).convert("RGB").resize((width, height))
                     except Exception as e:
                         st.error(f"内観生成エラー: {e}")
-                        bg_image = Image.new('RGB', (width, height), color="white")
+                        bg_image = Image.new('RGB', (width, height), color=(240, 240, 240))
 
                     draw = ImageDraw.Draw(bg_image)
                     draw.rectangle([(0, 0), (width, height * 0.12)], fill=(20, 35, 75))
-                    try:
-                        f_h = ImageFont.truetype(FONT_PATH, int(height * 0.08))
-                        f_s = ImageFont.truetype(FONT_PATH, int(height * 0.04))
-                    except: f_h = f_s = ImageFont.load_default()
+                    f_h = get_fitting_font(draw, "INTERIOR VISION", int(height * 0.08), width * 0.5)
+                    sub_text = page_data.get('sub_headline', '')
+                    f_s = get_fitting_font(draw, sub_text, int(height * 0.04), width * 0.4)
                     draw.text((width*0.05, height*0.06), "INTERIOR VISION", font=f_h, fill="white", anchor="lm")
-                    draw.text((width*0.45, height*0.06), page_data.get('sub_headline', ''), font=f_s, fill="white", anchor="lm")
+                    draw.text((width*0.95, height*0.06), sub_text, font=f_s, fill="white", anchor="rm")
                 
-                # ────────── ⑥ 内観ギャラリー（PDF/画像そのまま抽出） ──────────
+                # ────────── ⑥ 内観ギャラリー ──────────
                 elif page_data['type'] == 'interior':
-                    # ✨ 修正：画像ファイルからも安全に切り抜く
-                    target_page = page_data.get('source_pdf_page', 5) - 1
-                    try:
-                        extracted_img = get_source_image(uploaded_file.getvalue(), uploaded_file.name, target_page)
-                        bg_image = Image.new('RGB', (width, height), color="white")
-                        extracted_img.thumbnail((width * 0.9, height * 0.9))
-                        paste_x, paste_y = (width - extracted_img.width) // 2, (height - extracted_img.height) // 2
-                        bg_image.paste(extracted_img, (paste_x, paste_y))
-                    except Exception as e:
-                        st.warning(f"ギャラリー画像の読み込みに失敗しました: {e}")
-                        bg_image = Image.new('RGB', (width, height), color="white")
+                    bg_image = Image.new('RGB', (width, height), color="white")
+                    draw = ImageDraw.Draw(bg_image)
+                    draw.rectangle([(0, 0), (width, height * 0.12)], fill=theme_ac)
+                    
+                    f_h = get_fitting_font(draw, "INTERIOR GALLERY", int(height * 0.08), width * 0.5)
+                    f_s = get_fitting_font(draw, "内観ギャラリー", int(height * 0.04), width * 0.4)
+                    draw.text((width*0.05, height*0.06), "INTERIOR GALLERY", font=f_h, fill="white", anchor="lm")
+                    draw.text((width*0.95, height*0.06), "内観ギャラリー", font=f_s, fill="white", anchor="rm")
+                    # ✨ 枠の焼き付けを削除しました
 
                 # ────────── ⑦ 会社案内 ──────────
                 elif page_data['type'] == 'company':
                     bg_image = Image.new('RGB', (width, height), color='white')
-                    draw = ImageDraw.Draw(bg_image)
-                    
-                    draw_dashed_rectangle(draw, [width*0.05, height*0.02, width*0.95, height*0.45], outline="lightgray")
-                    draw.text((width/2, height*0.23), "【 店舗案内図 挿入エリア 】", fill="gray", anchor="mm")
-
-                    draw_dashed_rectangle(draw, [width*0.05, height*0.47, width*0.48, height*0.72], outline="lightgray")
-                    draw_dashed_rectangle(draw, [width*0.52, height*0.47, width*0.95, height*0.72], outline="lightgray")
-                    draw.text((width*0.26, height*0.6), "【店舗外観】", fill="gray", anchor="mm")
-                    draw.text((width*0.73, height*0.6), "【店舗内観】", fill="gray", anchor="mm")
-
-                    try: 
-                        font_msg = ImageFont.truetype(FONT_PATH, int(height * 0.035))
-                        font_company = ImageFont.truetype(FONT_PATH, int(height * 0.05))
-                    except: 
-                        font_msg = ImageFont.load_default()
-                        font_company = ImageFont.load_default()
-                        
-                    draw.text((width/2, height*0.76), "ご質問・現地確認のご希望に関してはご連絡下さい。", font=font_msg, fill="gray", anchor="mm")
-                    company_info_text = f"{page_data.get('company_name', '')}    TEL: {page_data.get('tel', '')}"
-                    draw.text((width/2, height*0.85), company_info_text, font=font_company, fill="lightgray", anchor="mm")
-                    draw.text((width/2, height*0.92), "※PowerPoint上で編集可能なテキストボックスになります", font=font_msg, fill="lightgray", anchor="mm")
+                    # ✨ 枠の焼き付けを削除しました
 
                 if bg_image:
                     generated_pages.append(bg_image)
@@ -598,35 +553,44 @@ if st.session_state.finished_pages:
     else:
         prs.slide_width, prs.slide_height = Inches(7.5), Inches(10)
 
+    # ✨ PowerPoint上に「自由に動かせる枠」を作るための便利機能
+    def add_placeholder_box(slide_obj, left, top, width, height, text):
+        tx_box = slide_obj.shapes.add_textbox(left, top, width, height)
+        tx_box.fill.solid()
+        tx_box.fill.fore_color.rgb = RGBColor(245, 245, 245) # 薄いグレー背景
+        tx_box.line.color.rgb = RGBColor(180, 180, 180)      # 枠線
+        tf = tx_box.text_frame
+        tf.word_wrap = True
+        p = tf.paragraphs[0]
+        p.text = text
+        p.font.size = Pt(14)
+        p.font.color.rgb = RGBColor(100, 100, 100)
+
     for i, page_img in enumerate(st.session_state.finished_pages):
         slide = prs.slides.add_slide(prs.slide_layouts[6]) 
         
         img_io = BytesIO()
         page_img.save(img_io, format='PNG')
         img_io.seek(0)
-        
         slide.shapes.add_picture(img_io, 0, 0, width=prs.slide_width, height=prs.slide_height)
 
-        # ✨ 3ページ目（MAP & ACCESS）に編集可能なテキストボックスを配置
+        # 3ページ目（MAP & ACCESS）
         if i == 2 and st.session_state.ai_data:
             p3_data = st.session_state.ai_data[2]
-            
-            # リストで返ってきた場合の安全対策
             acc_text = p3_data.get('access_info', '交通情報がありません')
             if isinstance(acc_text, list): acc_text = "\n".join(str(x) for x in acc_text)
-            
             life_text = p3_data.get('life_info', '周辺施設情報がありません')
             if isinstance(life_text, list): life_text = "\n".join(str(x) for x in life_text)
             
-            # 向きに応じたテキストボックスの配置設定
             if orientation == "横向き (Landscape)":
+                add_placeholder_box(slide, Inches(0.5), Inches(1.1), Inches(4.5), Inches(3.0), "【 MAP画像 挿入枠 】\n※自由にサイズ変更・削除できます")
                 tx_box_acc = slide.shapes.add_textbox(Inches(0.5), Inches(4.5), Inches(4.0), Inches(2.5))
                 tx_box_life = slide.shapes.add_textbox(Inches(5.0), Inches(4.5), Inches(4.5), Inches(2.5))
             else:
+                add_placeholder_box(slide, Inches(0.5), Inches(1.5), Inches(6.5), Inches(3.5), "【 MAP画像 挿入枠 】\n※自由にサイズ変更・削除できます")
                 tx_box_acc = slide.shapes.add_textbox(Inches(0.5), Inches(5.5), Inches(6.5), Inches(1.5))
                 tx_box_life = slide.shapes.add_textbox(Inches(0.5), Inches(7.2), Inches(6.5), Inches(2.5))
             
-            # 交通情報の書き込み
             tf_acc = tx_box_acc.text_frame
             tf_acc.word_wrap = True
             p_acc = tf_acc.add_paragraph()
@@ -634,7 +598,6 @@ if st.session_state.finished_pages:
             p_acc.font.size = Pt(14)
             p_acc.font.color.rgb = RGBColor(50, 50, 50)
             
-            # 周辺環境の書き込み
             tf_life = tx_box_life.text_frame
             tf_life.word_wrap = True
             p_life = tf_life.add_paragraph()
@@ -642,10 +605,84 @@ if st.session_state.finished_pages:
             p_life.font.size = Pt(14)
             p_life.font.color.rgb = RGBColor(50, 50, 50)
 
+        # 4ページ目（間取り図）
+        if i == 3 and st.session_state.ai_data:
+            p4_data = st.session_state.ai_data[3]
+            prop_name_jp = p4_data.get('property_name_jp', '物件名')
+            land_area = p4_data.get('land_area', '')
+            building_area = p4_data.get('building_area', '')
+            price_jp = p4_data.get('price_jp', '--- 万円')
+
+            if "情報なし" in land_area or "未定" in land_area: land_area = ""
+            if "情報なし" in building_area or "未定" in building_area: building_area = ""
+            
+            if orientation == "横向き (Landscape)":
+                tb_title = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(6.0), Inches(0.8))
+                tb_area = slide.shapes.add_textbox(Inches(6.5), Inches(0.1), Inches(3.0), Inches(0.4))
+                tb_price = slide.shapes.add_textbox(Inches(6.5), Inches(0.5), Inches(3.0), Inches(0.6))
+            else:
+                tb_title = slide.shapes.add_textbox(Inches(0.5), Inches(0.4), Inches(4.0), Inches(0.8))
+                tb_area = slide.shapes.add_textbox(Inches(4.5), Inches(0.1), Inches(2.5), Inches(0.5))
+                tb_price = slide.shapes.add_textbox(Inches(4.5), Inches(0.6), Inches(2.5), Inches(0.8))
+            
+            tf_title = tb_title.text_frame
+            p_title = tf_title.paragraphs[0]
+            p_title.text = prop_name_jp
+            p_title.font.size = Pt(28)
+            p_title.font.color.rgb = RGBColor(255, 255, 255)
+            p_title.font.bold = True
+            
+            tf_area = tb_area.text_frame
+            p_area1 = tf_area.paragraphs[0]
+            p_area1.text = land_area
+            p_area1.font.size = Pt(12)
+            p_area1.font.color.rgb = RGBColor(255, 255, 255)
+            p_area1.alignment = PP_ALIGN.RIGHT
+            if building_area:
+                p_area2 = tf_area.add_paragraph()
+                p_area2.text = building_area
+                p_area2.font.size = Pt(12)
+                p_area2.font.color.rgb = RGBColor(255, 255, 255)
+                p_area2.alignment = PP_ALIGN.RIGHT
+            
+            tf_price = tb_price.text_frame
+            p_price = tf_price.paragraphs[0]
+            p_price.text = price_jp
+            p_price.font.size = Pt(32)
+            p_price.font.color.rgb = RGBColor(255, 255, 255)
+            p_price.font.bold = True
+            p_price.alignment = PP_ALIGN.RIGHT
+
+        # 6ページ目（内観ギャラリー）
+        if i == 5:
+            if orientation == "横向き (Landscape)":
+                add_placeholder_box(slide, Inches(0.5), Inches(1.1), Inches(9.0), Inches(3.0), "【 メイン画像 挿入枠 】\n※自由にサイズ変更・削除できます")
+                add_placeholder_box(slide, Inches(0.5), Inches(4.3), Inches(4.3), Inches(1.4), "【 サブ画像 】")
+                add_placeholder_box(slide, Inches(5.2), Inches(4.3), Inches(4.3), Inches(1.4), "【 サブ画像 】")
+                add_placeholder_box(slide, Inches(0.5), Inches(5.9), Inches(4.3), Inches(1.4), "【 サブ画像 】")
+                add_placeholder_box(slide, Inches(5.2), Inches(5.9), Inches(4.3), Inches(1.4), "【 サブ画像 】")
+            else:
+                add_placeholder_box(slide, Inches(0.5), Inches(1.5), Inches(6.5), Inches(4.0), "【 メイン画像 挿入枠 】\n※自由にサイズ変更・削除できます")
+                add_placeholder_box(slide, Inches(0.5), Inches(5.7), Inches(3.1), Inches(1.8), "【 サブ画像 】")
+                add_placeholder_box(slide, Inches(3.9), Inches(5.7), Inches(3.1), Inches(1.8), "【 サブ画像 】")
+                add_placeholder_box(slide, Inches(0.5), Inches(7.7), Inches(3.1), Inches(1.8), "【 サブ画像 】")
+                add_placeholder_box(slide, Inches(3.9), Inches(7.7), Inches(3.1), Inches(1.8), "【 サブ画像 】")
+
+        # 7ページ目（会社案内）
         if i == 6 and st.session_state.ai_data:
             c_data = st.session_state.ai_data[6]
             
-            tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(5.6), Inches(9.0), Inches(1.7))
+            if orientation == "横向き (Landscape)":
+                add_placeholder_box(slide, Inches(0.5), Inches(0.2), Inches(9.0), Inches(3.2), "【 店舗案内図 挿入枠 】\n※自由にサイズ変更・削除できます")
+                add_placeholder_box(slide, Inches(0.5), Inches(3.6), Inches(4.3), Inches(1.8), "【 店舗外観 挿入枠 】")
+                add_placeholder_box(slide, Inches(5.2), Inches(3.6), Inches(4.3), Inches(1.8), "【 店舗内観 挿入枠 】")
+                tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(5.6), Inches(9.0), Inches(1.7))
+            else:
+                add_placeholder_box(slide, Inches(0.5), Inches(0.2), Inches(6.5), Inches(3.2), "【 店舗案内図 挿入枠 】\n※自由にサイズ変更・削除できます")
+                add_placeholder_box(slide, Inches(0.5), Inches(3.6), Inches(3.1), Inches(3.5), "【 店舗外観 挿入枠 】")
+                add_placeholder_box(slide, Inches(3.9), Inches(3.6), Inches(3.1), Inches(3.5), "【 店舗内観 挿入枠 】")
+                tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(7.5), Inches(6.5), Inches(2.0))
+                
             fill = tx_box.fill
             fill.solid()
             fill.fore_color.rgb = RGBColor(195, 160, 100)
@@ -655,7 +692,7 @@ if st.session_state.finished_pages:
             tf.clear() 
             
             p_name = tf.add_paragraph()
-            p_name.text = c_data.get('company_name', '株式会社 東宝ハウス国分寺')
+            p_name.text = c_data.get('company_name', '株式会社 東宝ハウス')
             p_name.font.bold = True
             p_name.font.size = Pt(28)
             p_name.alignment = PP_ALIGN.CENTER
