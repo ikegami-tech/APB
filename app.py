@@ -3,6 +3,7 @@ import os
 import json
 import fitz  # PyMuPDF
 import glob
+import time
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.enum.text import PP_ALIGN
@@ -84,16 +85,32 @@ if uploaded_file is not None and uploaded_file.name != st.session_state.current_
     st.session_state.current_file = uploaded_file.name
     st.session_state.pdf_text = ""
 st.write("---")
-# ここから下を追加
+# ここから下を追加・修正
 st.subheader("🏠 物件種別を選択")
 property_types = {"house": "戸建て", "apartment": "マンション"}
 selected_property_key = st.radio(
     "物件の種別を選んでください：", 
     options=list(property_types.keys()), 
     format_func=lambda x: property_types[x],
-    horizontal=True # 横並びにする
+    horizontal=True
 )
-selected_property_type_label = property_types[selected_property_key] # プロンプト用（例: 戸建て）
+
+# ✨ 修正：マンションが選ばれた場合のみ、規模を選択させる
+selected_apt_scale = None
+if selected_property_key == "apartment":
+    apt_scales = {
+        "low": "低層マンション（3〜4階建て・閑静な住宅街）",
+        "mid": "中層マンション（5〜10階建て・一般的なマンション）",
+        "high": "高層タワーマンション（20階建て以上・都心部）"
+    }
+    selected_apt_scale = st.radio(
+        "マンションの規模を選んでください：",
+        options=list(apt_scales.keys()),
+        format_func=lambda x: apt_scales[x],
+        horizontal=False
+    )
+
+selected_property_type_label = property_types[selected_property_key]
 # ここまでを追加
 st.write("---")
 st.subheader("🎨 パンフレットのデザインテーマを選択")
@@ -148,15 +165,28 @@ if generate_btn and uploaded_file is not None:
             mime_type = "image/jpeg"
             
         try:
-            # ✨ 修正：Geminiに直接ファイルを見せて高精度なOCR（文字起こし）を行わせる
-            ocr_analysis = gemini_client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=[
-                    "この販売図面（画像またはPDF）に書かれているすべての文字情報を、正確に読み取ってテキスト化してください。物件名（フリガナや英語名も）、価格、所在地、交通（最寄り駅と徒歩分数）などの主要項目は絶対に漏らさないでください。",
-                    types.Part.from_bytes(data=file_bytes, mime_type=mime_type)
-                ]
-            )
-            st.session_state.pdf_text = ocr_analysis.text
+            # ✨ 修正：サーバー混雑エラーが出た場合、自動で最大3回まで再チャレンジする機能を追加
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    ocr_analysis = gemini_client.models.generate_content(
+                        model='gemini-2.5-flash',
+                        contents=[
+                            "この販売図面（画像またはPDF）に書かれているすべての文字情報を、正確に読み取ってテキスト化してください。物件名（フリガナや英語名も）、価格、所在地、交通（最寄り駅と徒歩分数）などの主要項目は絶対に漏らさないでください。",
+                            types.Part.from_bytes(data=file_bytes, mime_type=mime_type)
+                        ]
+                    )
+                    st.session_state.pdf_text = ocr_analysis.text
+                    break  # 成功したらループを抜ける
+                
+                except Exception as inner_e:
+                    # 503エラー（混雑）だった場合は数秒待つ
+                    if "503" in str(inner_e) and attempt < max_retries - 1:
+                        st.warning(f"Googleのサーバーが混雑しています。5秒待機して再試行します... ({attempt + 1}/{max_retries})")
+                        time.sleep(5)
+                    else:
+                        raise inner_e  # 別のエラーか、上限に達したらエラーを外に出す
+
         except Exception as e:
             st.error(f"図面の読み取りエラー: {e}")
             st.session_state.pdf_text = "読み取り失敗"
@@ -338,13 +368,18 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                 
                 ## ────────── ① 表紙 ──────────
                 if page_data['type'] == 'cover':
-                    st.write(f"🎨 表紙の背景画像をAI（Imagen 4.0）で生成中...（テーマ: {theme_info['name']}、種別: {selected_property_type_label}、日本スタイル）")
+                    st.write(f"🎨 表紙の背景画像をAIで生成中...（テーマ: {theme_info['name']}、種別: {selected_property_type_label}）")
                     
+                    # ✨ 修正：選んだ規模に合わせて、プロンプトを細かく切り替える
                     if selected_property_key == "house":
                         property_img_prompt = "beautifully designed Japanese detached house (Japanese modern architecture) and front garden"
                     else:
-                        # ✨ 修正：戸建てに見えないように「大規模な高層タワーマンション（large-scale high-rise luxury condominium, tower mansion）」と強力に指定
-                        property_img_prompt = "large-scale high-rise luxury condominium building (tower mansion) exterior and grand entrance"
+                        if selected_apt_scale == "low":
+                            property_img_prompt = "elegant 3-story low-rise Japanese apartment building (mansion) in a quiet residential area, modern exterior"
+                        elif selected_apt_scale == "mid":
+                            property_img_prompt = "modern 6-to-8-story mid-rise Japanese apartment building (mansion) exterior and nice entrance"
+                        else: # high
+                            property_img_prompt = "large-scale high-rise luxury condominium building (tower mansion) exterior and grand entrance"
 
                     try:
                         prompt=f"Photorealistic architectural photography of a {property_img_prompt} in Tokyo, Japan. Full frame single image, NO split screen, NO collage, NO white borders. High-end, clean background with space for text placement. NO text, NO logos."
@@ -372,8 +407,6 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                     city_town_text = page_data.get('city_town', '地域名')
                     station_info_text = page_data.get('station_info', '駅徒歩X分')
                     
-                    # ✨ 修正：文字をずらす影をやめ、Pillowの「縁取り（ストローク）」機能を使って綺麗に目立たせる
-                    # 文字が黒のテーマなら白フチ、白のテーマなら黒フチにする
                     stroke_c = "white" if theme_tc == "black" else "black"
 
                     # 1. 物件名
@@ -403,14 +436,21 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                     
                     font_station = get_fitting_font(draw, station_info_text, int(height * 0.04), r_inner * 1.6)
                     draw.multiline_text((circle_x, circle_y), station_info_text, font=font_station, fill="white", anchor="mm", align="center", stroke_width=2, stroke_fill="black")
+                
                 # ────────── ② 空撮地図 ──────────
                 elif page_data['type'] == 'aerial_map':
-                    st.write(f"🎨 空撮マップの背景画像をAI（Imagen 4.0）で生成中...（種別: {selected_property_type_label}、リアル実写スタイル）")
+                    st.write(f"🎨 空撮マップの背景画像をAIで生成中...（種別: {selected_property_type_label}）")
                     
+                    # ✨ 修正：空撮画像も、選んだ規模に合わせて街並みを変える
                     if selected_property_key == "house":
                         aerial_desc = "dense suburban residential area in Japan, featuring realistic Japanese detached houses, narrow streets, and typical roofing"
                     else:
-                        aerial_desc = "dense urban Japanese cityscape, featuring realistic mid-to-high rise apartment buildings, roads, and everyday urban details"
+                        if selected_apt_scale == "low":
+                            aerial_desc = "peaceful Japanese residential neighborhood, featuring 3-story low-rise apartment buildings and houses, lots of green trees"
+                        elif selected_apt_scale == "mid":
+                            aerial_desc = "typical Japanese urban cityscape, featuring medium-density mid-rise 6-story apartment buildings and roads"
+                        else: # high
+                            aerial_desc = "dense urban Japanese cityscape, featuring realistic high-rise tower mansions, large roads, and skyscrapers"
 
                     try:
                         image_result = gemini_client.models.generate_images(
