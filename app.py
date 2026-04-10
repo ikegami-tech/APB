@@ -11,6 +11,7 @@ from pptx.dml.color import RGBColor
 from google import genai
 from dotenv import load_dotenv
 from io import BytesIO
+from pptx.enum.shapes import MSO_SHAPE
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 from google.genai import types
 
@@ -85,32 +86,45 @@ if uploaded_file is not None and uploaded_file.name != st.session_state.current_
     st.session_state.current_file = uploaded_file.name
     st.session_state.pdf_text = ""
 st.write("---")
-# ここから下を追加・修正
-st.subheader("🏠 物件種別を選択")
-property_types = {"house": "戸建て", "apartment": "マンション"}
-selected_property_key = st.radio(
-    "物件の種別を選んでください：", 
-    options=list(property_types.keys()), 
-    format_func=lambda x: property_types[x],
-    horizontal=True
-)
+st.subheader("🏠 物件・表紙の設定")
+col_p1, col_p2 = st.columns(2)
 
-# ✨ 修正：マンションが選ばれた場合のみ、規模を選択させる
-selected_apt_scale = None
-if selected_property_key == "apartment":
-    apt_scales = {
-        "low": "低層マンション（3〜4階建て・閑静な住宅街）",
-        "mid": "中層マンション（5〜10階建て・一般的なマンション）",
-        "high": "高層タワーマンション（20階建て以上・都心部）"
-    }
-    selected_apt_scale = st.radio(
-        "マンションの規模を選んでください：",
-        options=list(apt_scales.keys()),
-        format_func=lambda x: apt_scales[x],
-        horizontal=False
+with col_p1:
+    property_types = {"house": "戸建て", "apartment": "マンション"}
+    selected_property_key = st.radio(
+        "物件の種別：", 
+        options=list(property_types.keys()), 
+        format_func=lambda x: property_types[x],
+        horizontal=True
     )
+    selected_property_type_label = property_types[selected_property_key]
 
-selected_property_type_label = property_types[selected_property_key]
+with col_p2:
+    if selected_property_key == "apartment":
+        apt_scales = {"low": "低層", "mid": "中層", "high": "高層タワー"}
+        selected_apt_scale = st.selectbox(
+            "マンションの規模（データ用）：",
+            options=list(apt_scales.keys()),
+            format_func=lambda x: apt_scales[x]
+        )
+    else:
+        selected_apt_scale = "house"
+
+# ✨ 追加：表紙のイメージテーマを選択（5つの選択肢）
+st.write("🖼️ **表紙の背景イメージ（街並み）を選択してください**")
+NEIGHBORHOOD_THEMES = {
+    "green": "1. 自然豊かな街並み（街路樹・公園・緑が多い）",
+    "urban": "2. 都会的・モダンな街並み（洗練されたビル・舗装された道路）",
+    "quiet": "3. 閑静な住宅街（落ち着いた雰囲気・邸宅地）",
+    "station": "4. 利便性の高い駅前（賑わい・店舗・明るい夜景も可）",
+    "open": "5. 開放感のある街並み（空が広い・リバーサイド・並木道）"
+}
+selected_neighborhood_key = st.radio(
+    "表紙に使用するイメージ：",
+    options=list(NEIGHBORHOOD_THEMES.keys()),
+    format_func=lambda x: NEIGHBORHOOD_THEMES[x],
+    horizontal=False
+)
 # ここまでを追加
 st.write("---")
 st.subheader("🎨 パンフレットのデザインテーマを選択")
@@ -251,7 +265,7 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
             3. **station_info**: 「交通」の項目から、最も主要な駅名と徒歩分数を抽出してください。改行を入れて見やすくしてください。（例：中央線 国分寺駅 徒歩5分 → 国分寺駅\n徒歩5分）
             4. **price**: 販売価格を抽出してください。
             # ✨ 4ページ目（FLOOR PLAN）用のデータ抽出
-            5. **property_name_jp**: 【補助データ】から物件名を日本語表記で抽出してください。（例：ラ・フレーズ国分寺）
+            5. **property_name_jp**: 【補助データ】のOCRテキストの中から、最も目立つ場所に書かれている名称（通常はタイトル）、または物件概要欄から特定される物件名を日本語表記で特定し、抽出してください。
             6. **land_area**: 【補助データ】から土地面積を抽出してください。「土地」という文字と「㎡」単位を含めてください。（例：土地 100.77㎡）
             7. **building_area**: 【補助データ】から建物面積を抽出してください。「建物」という文字と「㎡」単位を含めてください。（例：建物 100.77㎡）
             8. **price_jp**: 【補助データ】から価格を日本語表記（万円単位）で抽出してください。（例：3,650万円）
@@ -263,6 +277,7 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                 "page": 1, "type": "cover",
                 "price": "抽出した価格", 
                 "property_name_en": "抽出・変換した物件名（英字）", 
+                "property_name_jp": "抽出した物件名（日本語）",
                 "sub_copy": "テーマに合わせた洗練されたサブコピー（日本語）",
                 "city_town": "抽出した地域名（例：府中市 美好町）",
                 "station_info": "抽出した駅名と徒歩分数（例：国分寺駅\\n徒歩5分）"
@@ -368,21 +383,22 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                 
                 ## ────────── ① 表紙 ──────────
                 if page_data['type'] == 'cover':
-                    st.write(f"🎨 表紙の背景画像をAIで生成中...（テーマ: {theme_info['name']}、種別: {selected_property_type_label}）")
+                    st.write(f"🎨 表紙の背景（街並み）をAIで生成中...（テーマ: {NEIGHBORHOOD_THEMES[selected_neighborhood_key]}）")
                     
-                    # ✨ 修正：選んだ規模に合わせて、プロンプトを細かく切り替える
-                    if selected_property_key == "house":
-                        property_img_prompt = "beautifully designed Japanese detached house (Japanese modern architecture) and front garden"
-                    else:
-                        if selected_apt_scale == "low":
-                            property_img_prompt = "elegant 3-story low-rise Japanese apartment building (mansion) in a quiet residential area, modern exterior"
-                        elif selected_apt_scale == "mid":
-                            property_img_prompt = "modern 6-to-8-story mid-rise Japanese apartment building (mansion) exterior and nice entrance"
-                        else: # high
-                            property_img_prompt = "large-scale high-rise luxury condominium building (tower mansion) exterior and grand entrance"
+                    # ✨ 修正：選択されたテーマに基づいて街並みのプロンプトを切り替える
+                    neighborhood_prompts = {
+                        "green": "beautiful lush green Japanese neighborhood with many trees, a park nearby, and sunlight filtering through leaves",
+                        "urban": "sophisticated modern Japanese cityscape with clean architecture, paved streets, and a stylish urban atmosphere",
+                        "quiet": "quiet and upscale Japanese residential area with elegant streetscapes and a peaceful atmosphere",
+                        "station": "vibrant and convenient Japanese station-front area with high-end shops, clean streets, and a lively atmosphere",
+                        "open": "open and airy Japanese streetscape with a wide blue sky, perhaps near a river or a wide tree-lined boulevard"
+                    }
+                    
+                    target_cityscape = neighborhood_prompts[selected_neighborhood_key]
 
                     try:
-                        prompt=f"Photorealistic architectural photography of a {property_img_prompt} in Tokyo, Japan. Full frame single image, NO split screen, NO collage, NO white borders. High-end, clean background with space for text placement. NO text, NO logos."
+                        # 街並みを主役にしつつ、テキスト用の余白を考慮したプロンプト
+                        prompt=f"Photorealistic high-end architectural photography of a {target_cityscape} in Japan. Eye-level view, wide angle, clean and bright. Full frame single image, NO buildings in the center to allow for text placement. NO text, NO logos, NO people."
                         image_result = gemini_client.models.generate_images(
                             model='imagen-4.0-generate-001',
                             prompt=prompt,
@@ -394,48 +410,31 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                         generated_bytes = image_result.generated_images[0].image.image_bytes
                         bg_image = Image.open(BytesIO(generated_bytes)).convert("RGB").resize((width, height))
                     except Exception as e:
-                        st.error(f"画像生成APIのエラー詳細: {e}") 
-                        st.warning("背景画像の生成をスキップしました。基本カラーを使用します。")
+                        st.error(f"表紙画像生成エラー: {e}") 
                         bg_image = Image.new('RGB', (width, height), color=theme_bg)
 
                     draw = ImageDraw.Draw(bg_image)
                     max_w = width * 0.9
 
-                    prop_name_en = page_data.get('property_name_en', 'Supreme DREAM').replace('\n', ' ')
-                    sub_copy = page_data.get('sub_copy', 'Produced by toho house').replace('\n', ' ')
-                    price_text = page_data.get('price', '--- 万円').replace('\n', ' ')
-                    city_town_text = page_data.get('city_town', '地域名')
-                    station_info_text = page_data.get('station_info', '駅徒歩X分')
+                    # ✨ 変更：物件名を日本語から取得するように
+                    prop_name_jp = page_data.get('property_name_jp', '').replace('\n', ' ')
                     
+                    # ✨ 修正：JPが空の場合はデフォルト値「物件名」を使う
+                    if not prop_name_jp:
+                        prop_name_jp = '物件名'
+
+                    sub_copy = page_data.get('sub_copy', 'Produced by toho house').replace('\n', ' ')
+                    # ✨ 価格、所在地、駅徒歩の描画処理は削除
+
                     stroke_c = "white" if theme_tc == "black" else "black"
 
-                    # 1. 物件名
-                    font_prop = get_fitting_font(draw, prop_name_en, int(height * 0.15), max_w * 0.6)
-                    draw.text((width * 0.05, height * 0.05), prop_name_en, font=font_prop, fill=theme_tc, anchor="lt", stroke_width=3, stroke_fill=stroke_c)
+                    # 1. 物件名 (✨ 変更：prop_name_jpを使用、サイズ調整、幅拡大)
+                    font_prop = get_fitting_font(draw, prop_name_jp, int(height * 0.12), max_w * 0.8) # 日本語は少し小さく、幅を広く
+                    draw.text((width * 0.05, height * 0.05), prop_name_jp, font=font_prop, fill=theme_tc, anchor="lt", stroke_width=3, stroke_fill=stroke_c)
                     
-                    # 2. サブコピー
-                    font_sub = get_fitting_font(draw, sub_copy, int(height * 0.035), max_w * 0.6)
-                    draw.text((width * 0.05, height * 0.20), sub_copy, font=font_sub, fill=theme_tc, anchor="lt", stroke_width=2, stroke_fill=stroke_c)
-
-                    # 3. 価格
-                    font_price = get_fitting_font(draw, price_text, int(height * 0.09), width * 0.3)
-                    price_main_pos = (width * 0.95, height * 0.85)
-                    draw.text(price_main_pos, price_text, font=font_price, fill=theme_tc, anchor="rd", stroke_width=3, stroke_fill=stroke_c)
-                    
-                    # 4. 地域名
-                    font_city = get_fitting_font(draw, city_town_text, int(height * 0.07), width * 0.4)
-                    city_main_pos = (width * 0.95, height * 0.95)
-                    draw.multiline_text(city_main_pos, city_town_text, font=font_city, fill=theme_tc, anchor="rd", align="right", stroke_width=3, stroke_fill=stroke_c)
-
-                    # 5. 駅徒歩情報（円形）
-                    circle_x, circle_y = int(width * 0.15), int(height * 0.85)
-                    r_outer, r_inner = int(height * 0.10), int(height * 0.09)
-                    
-                    draw.ellipse([circle_x - r_outer, circle_y - r_outer, circle_x + r_outer, circle_y + r_outer], fill=None, outline="white", width=3)
-                    draw.ellipse([circle_x - r_inner, circle_y - r_inner, circle_x + r_inner, circle_y + r_inner], fill=None, outline="white", width=1)
-                    
-                    font_station = get_fitting_font(draw, station_info_text, int(height * 0.04), r_inner * 1.6)
-                    draw.multiline_text((circle_x, circle_y), station_info_text, font=font_station, fill="white", anchor="mm", align="center", stroke_width=2, stroke_fill="black")
+                    # 2. サブコピー (✨ 変更：幅拡大)
+                    font_sub = get_fitting_font(draw, sub_copy, int(height * 0.035), max_w * 0.8) # 幅を広く
+                    draw.text((width * 0.05, height * 0.18), sub_copy, font=font_sub, fill=theme_tc, anchor="lt", stroke_width=2, stroke_fill=stroke_c)
                 
                 # ────────── ② 空撮地図 ──────────
                 elif page_data['type'] == 'aerial_map':
@@ -578,6 +577,10 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
 
 # --- 5. 画面表示とPowerPoint作成 ---
 if st.session_state.finished_pages:
+    # ✨ 追加：PowerPoint作成時にも、選んだテーマの文字色を認識させる
+    theme_info = THEMES[selected_style_key]
+    theme_tc = theme_info["text_color"]
+
     st.write("---")
     st.subheader("🎉 完成したパンフレット")
     
@@ -606,6 +609,30 @@ if st.session_state.finished_pages:
         p.font.size = Pt(14)
         p.font.color.rgb = RGBColor(100, 100, 100)
 
+    # ✨ 追加：駅徒歩用の円形グラフィックを追加する機能
+    def add_station_info_circle(slide_obj, x, y, radius, text, color=(255, 255, 255)):
+        # 円形グラフィックを追加
+        circle = slide_obj.shapes.add_shape(MSO_SHAPE.OVAL, x, y, radius*2, radius*2)
+        circle.fill.solid()
+        circle.fill.fore_color.rgb = RGBColor(0, 0, 0) # 黒背景
+        circle.line.color.rgb = RGBColor(255, 255, 255) # 白枠
+        circle.line.width = Pt(1.5)
+        
+        # テキストを配置
+        tf = circle.text_frame
+        tf.word_wrap = True
+        # テキストフレームを円に合わせる
+        tf.clear() # デフォルトのテキストをクリア
+        p = tf.add_paragraph()
+        p.text = text
+        p.font.size = Pt(14)
+        p.font.color.rgb = RGBColor(color[0], color[1], color[2]) # 白文字
+        p.font.bold = True
+        p.alignment = PP_ALIGN.CENTER
+        # テキストフレームの余白を調整
+        tf.margin_bottom = tf.margin_left = tf.margin_right = tf.margin_top = Inches(0.1)
+
+
     for i, page_img in enumerate(st.session_state.finished_pages):
         slide = prs.slides.add_slide(prs.slide_layouts[6]) 
         
@@ -613,6 +640,39 @@ if st.session_state.finished_pages:
         page_img.save(img_io, format='PNG')
         img_io.seek(0)
         slide.shapes.add_picture(img_io, 0, 0, width=prs.slide_width, height=prs.slide_height)
+
+        # ✨ 修正：1ページ目（表紙）に所在地と駅徒歩を手入力用に配置
+        if i == 0 and st.session_state.ai_data:
+            p1_data = st.session_state.ai_data[0]
+            city_town_text = p1_data.get('city_town', '地域名')
+            station_info_text = p1_data.get('station_info', '駅徒歩X分')
+            
+            if orientation == "横向き (Landscape)":
+                # 所在地（右下）
+                tx_box_city = slide.shapes.add_textbox(Inches(6.5), Inches(6.5), Inches(3.0), Inches(0.8))
+                # 駅徒歩（左下、円形、少し下）
+                add_station_info_circle(slide, Inches(0.5), Inches(5.8), Inches(0.8), station_info_text)
+            else:
+                # 所在地（右下、少し上）
+                tx_box_city = slide.shapes.add_textbox(Inches(3.5), Inches(8.5), Inches(3.5), Inches(0.8))
+                # 駅徒歩（左下、円形、少し下）
+                add_station_info_circle(slide, Inches(0.5), Inches(7.5), Inches(1.0), station_info_text)
+            
+            # 所在地のテキストフレーム設定
+            tf_city = tx_box_city.text_frame
+            tf_city.word_wrap = True
+            p_city = tf_city.add_paragraph()
+            p_city.text = city_town_text
+            p_city.font.size = Pt(28)
+            # 背景に合わせて文字色を変更（theme_tcを使う）
+            if theme_tc == "black":
+                p_city.font.color.rgb = RGBColor(0, 0, 0) # 黒文字
+            else:
+                p_city.font.color.rgb = RGBColor(255, 255, 255) # 白文字
+            p_city.font.bold = True
+            p_city.alignment = PP_ALIGN.RIGHT
+
+        # (以下、既存のページ処理が続く...)
 
         # 3ページ目（MAP & ACCESS）
         if i == 2 and st.session_state.ai_data:
