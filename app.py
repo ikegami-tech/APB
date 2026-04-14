@@ -164,43 +164,59 @@ if generate_btn and uploaded_file is not None:
     # まずGeminiクライアントを初期化します（これを最初に行うことでエラーを防ぎます）
     gemini_client = genai.Client(api_key=gemini_api_key)
 
+    # ✨ 修正：段階的に待機時間を長くして5回まで再試行する最強の便利関数
+    def generate_with_retry(model_name, prompt_contents, generation_config=None):
+        # 待機時間（秒）の設定：30秒, 1分(60秒), 3分(180秒), 5分(300秒), 10分(600秒)
+        wait_times = [30, 60, 180, 300, 600]
+        max_attempts = len(wait_times) + 1 # 初回1回 ＋ 再試行5回 ＝ 計6回トライ
+        
+        for attempt in range(max_attempts):
+            try:
+                # 意図的に毎回2秒休ませてからリクエストを送る（連投によるエラーを未然に防止）
+                time.sleep(2)
+                
+                if generation_config:
+                    return gemini_client.models.generate_content(model=model_name, contents=prompt_contents, config=generation_config)
+                else:
+                    return gemini_client.models.generate_content(model=model_name, contents=prompt_contents)
+            
+            except Exception as inner_e:
+                # 503(混雑) または 429(制限超過) エラーなら指定時間待機する
+                if ("503" in str(inner_e) or "429" in str(inner_e)) and attempt < len(wait_times):
+                    wait_sec = wait_times[attempt]
+                    
+                    # 画面表示用に「○分」か「○秒」の分かりやすい文字列を作る
+                    if wait_sec >= 60:
+                        time_str = f"{wait_sec // 60}分"
+                    else:
+                        time_str = f"{wait_sec}秒"
+                    
+                    st.warning(f"サーバー制限に到達しました。{time_str}待機して再試行します... (再試行 {attempt + 1}/5)")
+                    time.sleep(wait_sec)
+                else:
+                    # 全く別のエラー、または5回の長期待機がすべて失敗した場合はエラーを出してストップ
+                    raise inner_e
+
     # --- 販売図面（PDF/画像）の文字読み取り（OCR） ---
     if not st.session_state.pdf_text:
         st.write("📄 販売図面をAI（OCR）で読み取っています...")
         file_bytes = uploaded_file.getvalue()
         filename_lower = uploaded_file.name.lower()
         
-        # 拡張子に合わせてMIMEタイプを設定
-        if filename_lower.endswith(".pdf"):
-            mime_type = "application/pdf"
-        elif filename_lower.endswith(".png"):
-            mime_type = "image/png"
-        else:
-            mime_type = "image/jpeg"
+        if filename_lower.endswith(".pdf"): mime_type = "application/pdf"
+        elif filename_lower.endswith(".png"): mime_type = "image/png"
+        else: mime_type = "image/jpeg"
             
         try:
-            # ✨ 修正：サーバー混雑エラーが出た場合、自動で最大3回まで再チャレンジする機能を追加
-            max_retries = 3
-            for attempt in range(max_retries):
-                try:
-                    ocr_analysis = gemini_client.models.generate_content(
-                        model='gemini-2.5-flash',
-                        contents=[
-                            "この販売図面（画像またはPDF）に書かれているすべての文字情報を、正確に読み取ってテキスト化してください。物件名（フリガナや英語名も）、価格、所在地、交通（最寄り駅と徒歩分数）などの主要項目は絶対に漏らさないでください。",
-                            types.Part.from_bytes(data=file_bytes, mime_type=mime_type)
-                        ]
-                    )
-                    st.session_state.pdf_text = ocr_analysis.text
-                    break  # 成功したらループを抜ける
-                
-                except Exception as inner_e:
-                    # 503エラー（混雑）だった場合は数秒待つ
-                    if "503" in str(inner_e) and attempt < max_retries - 1:
-                        st.warning(f"Googleのサーバーが混雑しています。5秒待機して再試行します... ({attempt + 1}/{max_retries})")
-                        time.sleep(5)
-                    else:
-                        raise inner_e  # 別のエラーか、上限に達したらエラーを外に出す
-
+            # ✨ 便利関数を使ってOCRを実行
+            ocr_analysis = generate_with_retry(
+                model_name='gemini-2.5-flash',
+                prompt_contents=[
+                    "この販売図面（画像またはPDF）に書かれているすべての文字情報を、正確に読み取ってテキスト化してください。物件名（フリガナや英語名も）、価格、所在地、交通（最寄り駅と徒歩分数）などの主要項目は絶対に漏らさないでください。",
+                    types.Part.from_bytes(data=file_bytes, mime_type=mime_type)
+                ]
+            )
+            st.session_state.pdf_text = ocr_analysis.text
         except Exception as e:
             st.error(f"図面の読み取りエラー: {e}")
             st.session_state.pdf_text = "読み取り失敗"
@@ -209,7 +225,6 @@ if generate_btn and uploaded_file is not None:
         try:
             st.write("AIが物件情報、指定地域、デザインテーマを分析中...")
             
-            # 変数の定義
             theme_info = THEMES[selected_style_key]
             current_theme_name = custom_style_description if selected_style_key == "other" else theme_info["name"]
 
@@ -218,14 +233,12 @@ if generate_btn and uploaded_file is not None:
             if madori_file:
                 st.write("🔍 間取り図と入力された特徴から、強力な画像生成プロンプトを作成中...")
                 m_bytes = madori_file.getvalue()
-                
-                # ユーザーの入力を英語プロンプトに強制反映させるための準備
                 user_instruction = f"\n\n[USER'S ABSOLUTE REQUIREMENTS]\n{room_features_input}" if room_features_input else ""
                 
-                # 画像生成AIの「クセ」をねじ伏せる、超強力なプロンプト生成指示
-                analysis = gemini_client.models.generate_content(
-                    model='gemini-2.5-flash',
-                    contents=[
+                # ✨ 便利関数を使って間取り図を解析
+                analysis = generate_with_retry(
+                    model_name='gemini-2.5-flash',
+                    prompt_contents=[
                         f"""Analyze the attached Japanese floor plan (LDK area) and generate a highly detailed, STRICT English prompt for an Image Generation AI.
 
 {user_instruction}
@@ -241,21 +254,17 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                         types.Part.from_bytes(data=m_bytes, mime_type="image/jpeg")
                     ]
                 )
-                # 前後の余計な空白や改行を削除
                 room_description = analysis.text.strip()
                 
             elif room_features_input:
-                # 間取り図がない場合はGeminiにユーザー入力を英語のプロンプトに翻訳させる
-                trans = gemini_client.models.generate_content(
-                    model='gemini-2.5-flash',
-                    contents=[f"Translate the following interior design requirements into a highly detailed English prompt for an image generation AI. Output ONLY the English prompt string, no conversational text.\nRequirements: {room_features_input}\nTheme: {current_theme_name}"]
+                trans = generate_with_retry(
+                    model_name='gemini-2.5-flash',
+                    prompt_contents=[f"Translate the following interior design requirements into a highly detailed English prompt for an image generation AI. Output ONLY the English prompt string, no conversational text.\nRequirements: {room_features_input}\nTheme: {current_theme_name}"]
                 )
                 room_description = trans.text.strip()
             
-            # 比率の指示を動的に変える
             ratio_text = "4:3（横長）" if orientation == "横向き (Landscape)" else "3:4（縦長）"
             
-            # --- 修正：4ページ目（間取り図）のヘッダーに情報を盛り込むためのプロンプト ---
             prompt = f"""
             あなたはプロの不動産ライターです。提供された【補助データ】を隅々まで解析し、以下の7ページ構成のパンフレット（比率 {ratio_text}）を作成してください。
             
@@ -264,12 +273,11 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
             2. **city_town**: 物件の「所在地」から市区町村と町名を抽出してください。（例：東京都府中市美好町... → 府中市 美好町）
             3. **station_info**: 「交通」の項目から、最も主要な駅名と徒歩分数を抽出してください。改行を入れて見やすくしてください。（例：中央線 国分寺駅 徒歩5分 → 国分寺駅\n徒歩5分）
             4. **price**: 販売価格を抽出してください。
-            # ✨ 4ページ目（FLOOR PLAN）用のデータ抽出
-            5. **property_name_jp**: 【補助データ】のOCRテキストの中から、最も目立つ場所に書かれている名称（通常はタイトル）、または物件概要欄から特定される物件名を日本語表記で特定し、抽出してください。
-            6. **land_area**: 【補助データ】から土地面積を抽出してください。「土地」という文字と「㎡」単位を含めてください。（例：土地 100.77㎡）
-            7. **building_area**: 【補助データ】から建物面積を抽出してください。「建物」という文字と「㎡」単位を含めてください。（例：建物 100.77㎡）
-            8. **price_jp**: 【補助データ】から価格を日本語表記（万円単位）で抽出してください。（例：3,650万円）
-            9. **デザインスタイル**: {current_theme_name} の雰囲気に合わせた魅力的な言葉選びをしてください。
+            5. **land_area**: 【補助データ】から土地面積を抽出してください。「土地」という文字と「㎡」単位を含めてください。（例：土地 100.77㎡）
+            6. **building_area**: 【補助データ】から建物面積を抽出してください。「建物」という文字と「㎡」単位を含めてください。（例：建物 100.77㎡）
+            7. **price_jp**: 【補助データ】から価格を日本語表記（万円単位）で抽出してください。（例：3,650万円）
+            8. **デザインスタイル**: {current_theme_name} の雰囲気に合わせた魅力的な言葉選びをしてください。
+            9. **property_name_jp**: 【補助データ】のOCRテキストの中から、最も目立つ場所に書かれている名称（通常はタイトル）、または物件概要欄から特定される物件名を日本語表記で特定し、抽出してください。（例：ラ・フレーズ国分寺）
 
             出力は必ず以下のJSON配列形式のみにしてください。
             [
@@ -295,7 +303,6 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
               }},
               {{
                 "page": 4, "type": "floor_plan",
-                # headline, sub_headlineは削除し、必要な情報を追加
                 "property_name_jp": "抽出した物件名（日本語）",
                 "land_area": "抽出した土地面積（例：土地 --- ㎡）",
                 "building_area": "抽出した建物面積（例：建物 --- ㎡）",
@@ -321,10 +328,11 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
             {st.session_state.pdf_text}
             """
             
-            response = gemini_client.models.generate_content(
-                model='gemini-2.5-flash', 
-                contents=prompt, 
-                config=types.GenerateContentConfig(response_mime_type="application/json")
+            # ✨ 便利関数を使ってJSON（文章）を生成
+            response = generate_with_retry(
+                model_name='gemini-2.5-flash', 
+                prompt_contents=prompt, 
+                generation_config=types.GenerateContentConfig(response_mime_type="application/json")
             )
             
             raw_json = response.text.strip()
@@ -412,29 +420,6 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                     except Exception as e:
                         st.error(f"表紙画像生成エラー: {e}") 
                         bg_image = Image.new('RGB', (width, height), color=theme_bg)
-
-                    draw = ImageDraw.Draw(bg_image)
-                    max_w = width * 0.9
-
-                    # ✨ 変更：物件名を日本語から取得するように
-                    prop_name_jp = page_data.get('property_name_jp', '').replace('\n', ' ')
-                    
-                    # ✨ 修正：JPが空の場合はデフォルト値「物件名」を使う
-                    if not prop_name_jp:
-                        prop_name_jp = '物件名'
-
-                    sub_copy = page_data.get('sub_copy', 'Produced by toho house').replace('\n', ' ')
-                    # ✨ 価格、所在地、駅徒歩の描画処理は削除
-
-                    stroke_c = "white" if theme_tc == "black" else "black"
-
-                    # 1. 物件名 (✨ 変更：prop_name_jpを使用、サイズ調整、幅拡大)
-                    font_prop = get_fitting_font(draw, prop_name_jp, int(height * 0.12), max_w * 0.8) # 日本語は少し小さく、幅を広く
-                    draw.text((width * 0.05, height * 0.05), prop_name_jp, font=font_prop, fill=theme_tc, anchor="lt", stroke_width=3, stroke_fill=stroke_c)
-                    
-                    # 2. サブコピー (✨ 変更：幅拡大)
-                    font_sub = get_fitting_font(draw, sub_copy, int(height * 0.035), max_w * 0.8) # 幅を広く
-                    draw.text((width * 0.05, height * 0.18), sub_copy, font=font_sub, fill=theme_tc, anchor="lt", stroke_width=2, stroke_fill=stroke_c)
                 
                 # ────────── ② 空撮地図 ──────────
                 elif page_data['type'] == 'aerial_map':
@@ -641,35 +626,58 @@ if st.session_state.finished_pages:
         img_io.seek(0)
         slide.shapes.add_picture(img_io, 0, 0, width=prs.slide_width, height=prs.slide_height)
 
-        # ✨ 修正：1ページ目（表紙）に所在地と駅徒歩を手入力用に配置
+        # ✨ 修正：1ページ目（表紙）に全テキストを手入力（編集可能）な状態で配置
         if i == 0 and st.session_state.ai_data:
             p1_data = st.session_state.ai_data[0]
             city_town_text = p1_data.get('city_town', '地域名')
             station_info_text = p1_data.get('station_info', '駅徒歩X分')
+            property_name_jp_text = p1_data.get('property_name_jp', '物件名')
+            sub_copy_text = p1_data.get('sub_copy', 'サブコピー')
+            
+            # テーマに合わせて文字色を決定
+            text_color_rgb = RGBColor(0, 0, 0) if theme_tc == "black" else RGBColor(255, 255, 255)
             
             if orientation == "横向き (Landscape)":
-                # 所在地（右下）
+                # 物件名とサブコピー（左上）
+                tx_box_prop = slide.shapes.add_textbox(Inches(0.5), Inches(0.5), Inches(9.0), Inches(0.8))
+                tx_box_sub = slide.shapes.add_textbox(Inches(0.5), Inches(1.3), Inches(9.0), Inches(0.6))
+                # 所在地と駅徒歩（下部）
                 tx_box_city = slide.shapes.add_textbox(Inches(6.5), Inches(6.5), Inches(3.0), Inches(0.8))
-                # 駅徒歩（左下、円形、少し下）
                 add_station_info_circle(slide, Inches(0.5), Inches(5.8), Inches(0.8), station_info_text)
             else:
-                # 所在地（右下、少し上）
+                # 物件名とサブコピー（左上）
+                tx_box_prop = slide.shapes.add_textbox(Inches(0.5), Inches(0.5), Inches(6.5), Inches(0.8))
+                tx_box_sub = slide.shapes.add_textbox(Inches(0.5), Inches(1.3), Inches(6.5), Inches(0.8))
+                # 所在地と駅徒歩（下部）
                 tx_box_city = slide.shapes.add_textbox(Inches(3.5), Inches(8.5), Inches(3.5), Inches(0.8))
-                # 駅徒歩（左下、円形、少し下）
                 add_station_info_circle(slide, Inches(0.5), Inches(7.5), Inches(1.0), station_info_text)
             
-            # 所在地のテキストフレーム設定
+            # 物件名のテキスト設定
+            tf_prop = tx_box_prop.text_frame
+            tf_prop.word_wrap = True
+            p_prop = tf_prop.paragraphs[0]
+            p_prop.text = property_name_jp_text
+            p_prop.font.size = Pt(40)
+            p_prop.font.bold = True
+            p_prop.font.color.rgb = text_color_rgb
+            
+            # サブコピーのテキスト設定
+            tf_sub = tx_box_sub.text_frame
+            tf_sub.word_wrap = True
+            p_sub = tf_sub.paragraphs[0]
+            p_sub.text = sub_copy_text
+            p_sub.font.size = Pt(18)
+            p_sub.font.bold = True
+            p_sub.font.color.rgb = text_color_rgb
+
+            # 所在地のテキスト設定
             tf_city = tx_box_city.text_frame
             tf_city.word_wrap = True
-            p_city = tf_city.add_paragraph()
+            p_city = tf_city.paragraphs[0]
             p_city.text = city_town_text
             p_city.font.size = Pt(28)
-            # 背景に合わせて文字色を変更（theme_tcを使う）
-            if theme_tc == "black":
-                p_city.font.color.rgb = RGBColor(0, 0, 0) # 黒文字
-            else:
-                p_city.font.color.rgb = RGBColor(255, 255, 255) # 白文字
             p_city.font.bold = True
+            p_city.font.color.rgb = text_color_rgb
             p_city.alignment = PP_ALIGN.RIGHT
 
         # (以下、既存のページ処理が続く...)
