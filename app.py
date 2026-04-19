@@ -278,6 +278,7 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
             7. **price_jp**: 【補助データ】から価格を日本語表記（万円単位）で抽出してください。（例：3,650万円）
             8. **デザインスタイル**: {current_theme_name} の雰囲気に合わせた魅力的な言葉選びをしてください。
             9. **property_name_jp**: 【補助データ】のOCRテキストの中から、最も目立つ場所に書かれている名称（通常はタイトル）、または物件概要欄から特定される物件名を日本語表記で特定し、抽出してください。（例：ラ・フレーズ国分寺）
+            10. **city_town_clean**: 【補助データ】の所在地から市区町村と町名を抽出し、余計な文字（東京都など）を省いてください（例：府中市美好町）。これをImagen生成用に保持します。
 
             出力は必ず以下のJSON配列形式のみにしてください。
             [
@@ -295,6 +296,7 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                 "headline": "FUTURE VISION", 
                 "sub_headline": "未来を描く",
                 "main_text": "【補助データ】の周辺環境情報を基に、このテーマの客層に刺さる紹介文を3〜4行で作成してください。"
+                "city_town_clean": "抽出したImagen用地域名（例：府中市美好町）" # ✨ここに追加
               }},
               {{
                 "page": 3, "type": "access", "headline": "MAP & ACCESS", 
@@ -392,14 +394,17 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                 ## ────────── ① 表紙 ──────────
                 if page_data['type'] == 'cover':
                     st.write(f"🎨 表紙の背景（街並み）をAIで生成中...（テーマ: {NEIGHBORHOOD_THEMES[selected_neighborhood_key]}）")
-                    
-                    # ✨ 修正：選択されたテーマに基づいて街並みのプロンプトを切り替える
+
+                    # ✨ 追加：ユーザーが選択した物件種別（戸建て/マンション）の英語
+                    property_type_en = "detached houses" if selected_property_key == "house" else "apartment buildings"
+
+                    # ✨ 修正：日本の一般的な住宅街、建築事情をより強く反映した街並みプロンプト
                     neighborhood_prompts = {
-                        "green": "beautiful lush green Japanese neighborhood with many trees, a park nearby, and sunlight filtering through leaves",
-                        "urban": "sophisticated modern Japanese cityscape with clean architecture, paved streets, and a stylish urban atmosphere",
-                        "quiet": "quiet and upscale Japanese residential area with elegant streetscapes and a peaceful atmosphere",
-                        "station": "vibrant and convenient Japanese station-front area with high-end shops, clean streets, and a lively atmosphere",
-                        "open": "open and airy Japanese streetscape with a wide blue sky, perhaps near a river or a wide tree-lined boulevard"
+                        "green": f"A peaceful Japanese residential street with lush greenery, street trees, and sunlight filtering through leaves, featuring modern Japanese {property_type_en}. Wide, well-paved road.",
+                        "urban": f"A sophisticated modern Japanese cityscape with clean architecture, paved streets, and a stylish urban atmosphere, featuring modern Japanese {property_type_en} and office buildings. Eye-level view.",
+                        "quiet": f"An upscale, quiet Japanese residential neighborhood with elegant streetscapes and a peaceful atmosphere, featuring large and high-end Japanese {property_type_en}. Asphalt road, power lines (not dominant).",
+                        "station": f"A vibrant and convenient Japanese station-front area with high-end shops, clean streets, and a lively atmosphere, featuring Japanese {property_type_en} and commercial buildings.",
+                        "open": f"An open and airy Japanese streetscape with a wide blue sky, near a river or a wide tree-lined boulevard, featuring Japanese {property_type_en}."
                     }
                     
                     target_cityscape = neighborhood_prompts[selected_neighborhood_key]
@@ -424,6 +429,8 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                 # ────────── ② 空撮地図 ──────────
                 elif page_data['type'] == 'aerial_map':
                     st.write(f"🎨 空撮マップの背景画像をAIで生成中...（種別: {selected_property_type_label}）")
+
+                    target_city_town = page_data.get('city_town_clean', '日本の都市部')
                     
                     # ✨ 修正：空撮画像も、選んだ規模に合わせて街並みを変える
                     if selected_property_key == "house":
@@ -437,9 +444,23 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                             aerial_desc = "dense urban Japanese cityscape, featuring realistic high-rise tower mansions, large roads, and skyscrapers"
 
                     try:
+                        base_prompt = (
+                            f"Photorealistic drone photography, bird's-eye view, Google Earth style aerial shot of {aerial_desc} in {target_city_town}, Tokyo area, Japan. "
+                            "Highly detailed, true-to-life lighting. Features typical realistic Japanese townscape, building density, narrow asphalt streets with utility poles, "
+                            "realistic Japanese housing materials like siding walls and tiled roofs, realistic signage, and urban infrastructure. "
+                            "Shows sprawling suburban landscape, building density, narrow streets, and the proximity to green spaces like Sayama Hills. "
+                            "NOT a 3D render, NOT a miniature toy, NO tilt-shift effect, NO cartoon, NO text, NO labels. Professional real estate photography."
+                        )
+                        
+                        negative_prompt = (
+                            "No brick architecture, no large grassy lawns, no classic Western-style town layouts, no sprawling Western-style suburbia, no prominent Western-style churches or buildings."
+                        )
+                        
+                        final_prompt = f"{base_prompt} Avoid {negative_prompt}"
+                        
                         image_result = gemini_client.models.generate_images(
                             model='imagen-4.0-generate-001',
-                            prompt=f"Photorealistic drone photography, bird's-eye view, Google Earth style aerial shot of {aerial_desc}. Highly detailed, true-to-life lighting, actual real-world Japanese townscape. NOT a 3D render, NOT a miniature toy, NO tilt-shift effect, NO cartoon, NO text, NO labels. Professional real estate photography.",
+                            prompt=final_prompt,
                             config=types.GenerateImagesConfig(
                                 number_of_images=1,
                                 aspect_ratio="4:3" if orientation == "横向き (Landscape)" else "3:4"
