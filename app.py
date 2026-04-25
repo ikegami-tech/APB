@@ -73,43 +73,75 @@ with col_u1:
     uploaded_file = st.file_uploader("販売図面（PDFまたは画像）をアップロード", type=["pdf", "png", "jpg", "jpeg"])
 with col_u2:
     madori_file = st.file_uploader("間取り図の画像をアップロード（P.4用）", type=["png", "jpg", "jpeg"])
-    
-    # ✨ 追加：間取り図から生成される画像の特徴を入力する項目
-    room_features_input = st.text_area(
-        "💡 お部屋の特徴（AIに確実に反映させたい部分）",
-        placeholder="例：キッチンは壁付けI型で右奥。バルコニー側の窓は壁一面の大きなサッシ。対面キッチンにはしない。"
-    )
 
+# 【重要】このファイル変更時のリセット処理はそのまま残します
 if uploaded_file is not None and uploaded_file.name != st.session_state.current_file:
     st.session_state.finished_pages = []
     st.session_state.ai_data = None
     st.session_state.current_file = uploaded_file.name
     st.session_state.pdf_text = ""
+
+# ✨✨ ここに構図（レイアウト）の選択UIを挿入 ✨✨
+st.write("---")
+st.subheader("🛋️ 理想の空間レイアウト（構図）を選択")
+st.write("間取り図をどのようなカメラアングルで描画するか選択してください。")
+
+# 画像を小さく並べるための設定
+# ✨ 修正：画面を「1 : 1 : 2」の比率で分割し、右側に余白を作って間隔を詰める
+col_img1, col_img2, _ = st.columns([1, 1, 2])
+with col_img1:
+    try:
+        st.image("1.jpg", caption="① 横長の広々としたレイアウト", width=350)
+    except:
+        st.info("※画像が見つかりません。1.jpgを配置してください。")
+with col_img2:
+    try:
+        st.image("2.jpg", caption="② 縦長の奥行きのあるレイアウト", width=350)
+    except:
+        st.info("※画像が見つかりません。2.jpgを配置してください。")
+
+layout_styles = {
+    "horizontal": "① 横長レイアウト（窓面が広く、開放感のある構図）",
+    "vertical": "② 縦長レイアウト（手前から奥へと視線が抜ける奥行きのある構図）"
+}
+selected_layout_key = st.radio(
+    "希望のレイアウト構図：",
+    options=list(layout_styles.keys()),
+    format_func=lambda x: layout_styles[x],
+    horizontal=True
+)
+# ✨✨ 追加はここまで ✨✨
+
 st.write("---")
 st.subheader("🏠 物件・表紙の設定")
-col_p1, col_p2 = st.columns(2)
 
-with col_p1:
-    property_types = {"house": "戸建て", "apartment": "マンション"}
-    selected_property_key = st.radio(
-        "物件の種別：", 
-        options=list(property_types.keys()), 
-        format_func=lambda x: property_types[x],
-        horizontal=True
-    )
-    selected_property_type_label = property_types[selected_property_key]
+# 物件種別の選択
+property_types = {"house": "戸建て", "apartment": "マンション"}
+selected_property_key = st.radio(
+    "物件の種別：", 
+    options=list(property_types.keys()), 
+    format_func=lambda x: property_types[x],
+    horizontal=True
+)
+selected_property_type_label = property_types[selected_property_key]
 
-with col_p2:
-    if selected_property_key == "apartment":
-        apt_scales = {"low": "低層", "mid": "中層", "high": "高層タワー"}
+# ✨ 修正：マンション規模の選択肢を「低層(5階以下)」と「中層・高層」に変更
+if selected_property_key == "apartment":
+    apt_scales = {
+        "low": "低層（5階以下）", 
+        "mid_high": "中層・高層（6階以上）"
+    }
+    col_scale, _, _ = st.columns(3)
+    with col_scale:
         selected_apt_scale = st.selectbox(
             "マンションの規模（データ用）：",
             options=list(apt_scales.keys()),
             format_func=lambda x: apt_scales[x]
         )
-    else:
-        selected_apt_scale = "house"
+else:
+    selected_apt_scale = "house"
 
+st.write("") # 少し隙間を空ける
 # ✨ 追加：表紙のイメージテーマを選択（5つの選択肢）
 st.write("🖼️ **表紙の背景イメージ（街並み）を選択してください**")
 NEIGHBORHOOD_THEMES = {
@@ -148,6 +180,14 @@ if selected_style_key == "other":
 st.write("---")
 st.subheader("🏢 担当店舗の選択")
 selected_branch_name = st.selectbox("担当店舗を選んでください：", list(BRANCH_DATA.keys()))
+
+st.write("---")
+st.subheader("💡 お部屋の特徴設定")
+room_features_input = st.text_area(
+    "間取り図から生成される画像の特徴（AIに確実に反映させたい部分）",
+    placeholder="例：キッチンは壁付けI型で右奥。バルコニー側の窓は壁一面の大きなサッシ。対面キッチンにはしない。",
+    height=100
+)
 
 # --- 修正：スライドの向き選択UIを追加 ---
 st.write("---")
@@ -228,12 +268,45 @@ if generate_btn and uploaded_file is not None:
             theme_info = THEMES[selected_style_key]
             current_theme_name = custom_style_description if selected_style_key == "other" else theme_info["name"]
 
-            # --- 間取り図をAIに読み取らせる ---
+            # ✨✨ ここから追加：マンションの外観サンプル画像を解析 ✨✨
+            apt_style_prompt = ""
+            if selected_property_key == "apartment":
+                st.write(f"🏢 マンション規模（{selected_apt_scale}）のサンプル画像を解析中...")
+                # 選択された規模に応じてファイル名を決定 (apt_low.jpg など)
+                sample_img_path = f"apt_{selected_apt_scale}.jpg" 
+                
+                if os.path.exists(sample_img_path):
+                    with open(sample_img_path, "rb") as f:
+                        s_bytes = f.read()
+                    try:
+                        # 画像の外観特徴を英語のプロンプトに変換させる
+                        analysis_apt = generate_with_retry(
+                            model_name='gemini-2.5-flash',
+                            prompt_contents=[
+                                "Analyze this apartment building's exterior design (colors, materials, window styles, overall architectural shape). Generate a short, STRICT English prompt for an Image generation AI to create a building with a very similar architectural style. Output ONLY the English prompt string. Do NOT use markdown.",
+                                types.Part.from_bytes(data=s_bytes, mime_type="image/jpeg")
+                            ]
+                        )
+                        apt_style_prompt = analysis_apt.text.strip()
+                    except Exception as e:
+                        st.warning(f"マンション画像の解析エラー: {e}")
+                else:
+                    st.info(f"※ サンプル画像 ({sample_img_path}) が見つからないため、通常生成します。")
+
+# --- 間取り図をAIに読み取らせる ---
             room_description = "A modern living room" # 読み取れなかった時の予備
             if madori_file:
                 st.write("🔍 間取り図と入力された特徴から、強力な画像生成プロンプトを作成中...")
                 m_bytes = madori_file.getvalue()
-                user_instruction = f"\n\n[USER'S ABSOLUTE REQUIREMENTS]\n{room_features_input}" if room_features_input else ""
+                
+                # ✨ 追加：選択されたレイアウト構図の英語指示を定義
+                layout_instruction = ""
+                if selected_layout_key == "horizontal":
+                    layout_instruction = "CAMERA ANGLE: Wide shot, landscape composition, parallel to the main window. Emphasize the horizontal breadth and spaciousness of the room. Bright, open feeling with massive windows spanning the background."
+                else:
+                    layout_instruction = "CAMERA ANGLE: Deep shot, one-point perspective, looking down the length of the room (e.g., from the dining area in the foreground towards the living area and window in the background). Emphasize depth and structured spatial arrangement."
+
+                user_instruction = f"\n\n[USER'S ABSOLUTE REQUIREMENTS]\n{room_features_input}\n\n[COMPOSITION REQUIREMENT]\n{layout_instruction}"
                 
                 # ✨ 便利関数を使って間取り図を解析
                 analysis = generate_with_retry(
@@ -246,7 +319,7 @@ if generate_btn and uploaded_file is not None:
 [CRITICAL RULES TO OVERCOME AI BIAS]
 1. Kitchen (Crucial): Image AIs always default to island kitchens. If the floor plan or user indicates a wall-mounted kitchen (壁付けキッチン), you MUST explicitly write: "single-wall kitchen, cabinets and stove placed flat against the back wall, NO island, NO peninsula, wide open floor space in front".
 2. Windows: If a large window is requested, explicitly write: "massive wall-to-wall and floor-to-ceiling panoramic windows, clear view, no vertical pillars blocking the view".
-3. Layout: Specify exactly where things are based on the floor plan (e.g., "kitchen on the left side, dining table in the center, large window at the far back").
+3. Layout: Specify exactly where things are based on the floor plan (e.g., "kitchen on the left side, dining table in the center, large window at the far back"). Ensure it aligns perfectly with the COMPOSITION REQUIREMENT.
 4. Style: Match the theme "{current_theme_name}". High-end architectural photography, 8k resolution.
 
 [OUTPUT FORMAT]
@@ -257,6 +330,7 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                 room_description = analysis.text.strip()
                 
             elif room_features_input:
+                # 間取り図がなく、テキスト入力だけがある場合
                 trans = generate_with_retry(
                     model_name='gemini-2.5-flash',
                     prompt_contents=[f"Translate the following interior design requirements into a highly detailed English prompt for an image generation AI. Output ONLY the English prompt string, no conversational text.\nRequirements: {room_features_input}\nTheme: {current_theme_name}"]
@@ -391,27 +465,37 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                 st.write(f"🖼️ {page_data['page']}ページ目（{page_data['type']}）を合成中...")
                 bg_image = None
                 
-                ## ────────── ① 表紙 ──────────
+                # ────────── ① 表紙 ──────────
                 if page_data['type'] == 'cover':
-                    st.write(f"🎨 表紙の背景（街並み）をAIで生成中...（テーマ: {NEIGHBORHOOD_THEMES[selected_neighborhood_key]}）")
+                    st.write(f"🎨 表紙の背景（{selected_property_type_label}の街並み）をAIで生成中...（テーマ: {NEIGHBORHOOD_THEMES[selected_neighborhood_key]}）")
+                    
+                    # ✨ OCRテキスト解析結果から、Imagen生成用の所在地（市区町村名）を取得
+                    # すでにOCR結果からGemini FlashがJSON生成時に city_town_clean を抽出しています。
+                    target_city_town = page_data.get('city_town_clean', '日本の都市部')
 
-                    # ✨ 追加：ユーザーが選択した物件種別（戸建て/マンション）の英語
-                    property_type_en = "detached houses" if selected_property_key == "house" else "apartment buildings"
+                    # ✨ ユーザーが選択した物件種別（戸建て/マンション・規模）の英語説明文
+                    if selected_property_key == "house":
+                        property_desc = "modern Japanese detached houses (建売住宅)"
+                    else:
+                        if selected_apt_scale == "low":
+                            property_desc = "low-rise boutique Japanese apartment buildings (under 5 stories)"
+                        else:
+                            property_desc = "modern mid-to-high-rise Japanese apartment buildings"
 
-                    # ✨ 修正：日本の一般的な住宅街、建築事情をより強く反映した街並みプロンプト
+                    # ✨ 修正：街並みテーマと物件特徴を組み合わせた Imagen プロンプト
                     neighborhood_prompts = {
-                        "green": f"A peaceful Japanese residential street with lush greenery, street trees, and sunlight filtering through leaves, featuring modern Japanese {property_type_en}. Wide, well-paved road.",
-                        "urban": f"A sophisticated modern Japanese cityscape with clean architecture, paved streets, and a stylish urban atmosphere, featuring modern Japanese {property_type_en} and office buildings. Eye-level view.",
-                        "quiet": f"An upscale, quiet Japanese residential neighborhood with elegant streetscapes and a peaceful atmosphere, featuring large and high-end Japanese {property_type_en}. Asphalt road, power lines (not dominant).",
-                        "station": f"A vibrant and convenient Japanese station-front area with high-end shops, clean streets, and a lively atmosphere, featuring Japanese {property_type_en} and commercial buildings.",
-                        "open": f"An open and airy Japanese streetscape with a wide blue sky, near a river or a wide tree-lined boulevard, featuring Japanese {property_type_en}."
+                        "green": f"A peaceful Japanese residential street with lush greenery, street trees, and sunlight filtering through leaves, featuring modern Japanese {property_desc}. Wide, well-paved road.",
+                        "urban": f"A sophisticated modern Japanese cityscape with clean architecture and a stylish urban atmosphere, featuring modern Japanese {property_desc} and office buildings. Eye-level view.",
+                        "quiet": f"An upscale, quiet Japanese residential neighborhood with elegant streetscapes and a peaceful atmosphere, featuring high-end Japanese {property_desc}. Asphalt road, power lines (not dominant).",
+                        "station": f"A vibrant and convenient Japanese residential area near a station, featuring {property_desc} and commercial buildings, clean streets.",
+                        "open": f"An open and airy Japanese streetscape with a wide blue sky, near a river or a wide tree-lined boulevard, featuring Japanese {property_desc}."
                     }
                     
                     target_cityscape = neighborhood_prompts[selected_neighborhood_key]
 
                     try:
-                        # 街並みを主役にしつつ、テキスト用の余白を考慮したプロンプト
-                        prompt=f"Photorealistic high-end architectural photography of a {target_cityscape} in Japan. Eye-level view, wide angle, clean and bright. Full frame single image, NO buildings in the center to allow for text placement. NO text, NO logos, NO people."
+                        # ✨ 修正：地域名（target_city_town）を含めつつ、住宅街・物件外観として生成
+                        prompt=f"Photorealistic high-end architectural photography of a {target_cityscape} in {target_city_town}, Japan. Eye-level view, wide angle, clean and bright. Full frame single image, NO buildings in the center to allow for text placement. NO text, NO logos, NO people."
                         image_result = gemini_client.models.generate_images(
                             model='imagen-4.0-generate-001',
                             prompt=prompt,
@@ -426,6 +510,7 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                         st.error(f"表紙画像生成エラー: {e}") 
                         bg_image = Image.new('RGB', (width, height), color=theme_bg)
                 
+                
                 # ────────── ② 空撮地図 ──────────
                 elif page_data['type'] == 'aerial_map':
                     st.write(f"🎨 空撮マップの背景画像をAIで生成中...（種別: {selected_property_type_label}）")
@@ -434,14 +519,18 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                     
                     # ✨ 修正：空撮画像も、選んだ規模に合わせて街並みを変える
                     if selected_property_key == "house":
-                        aerial_desc = "dense suburban residential area in Japan, featuring realistic Japanese detached houses, narrow streets, and typical roofing"
+                        aerial_desc = f"sprawling suburban residential area in {target_city_town}, Japan, featuring realistic Japanese detached houses (建売住宅) and specific local landmarks like Sayama green tea fields (狭山茶の茶畑) nearby. Shows visible local amenities like a large supermarket (イオン/マルエツ), a primary school complex with sports fields, and building density with narrow streets."
                     else:
                         if selected_apt_scale == "low":
-                            aerial_desc = "peaceful Japanese residential neighborhood, featuring 3-story low-rise apartment buildings and houses, lots of green trees"
+                            aerial_desc = f"peaceful suburban Japanese residential neighborhood in {target_city_town}, Japan, featuring 3-story low-rise apartment buildings and realistic detached houses, with extensive green spaces and local parks."
                         elif selected_apt_scale == "mid":
-                            aerial_desc = "typical Japanese urban cityscape, featuring medium-density mid-rise 6-story apartment buildings and roads"
+                            aerial_desc = f"typical Japanese urban cityscape in {target_city_town}, Japan, featuring medium-density mid-rise 6-story apartment buildings and local amenity areas, with narrow streets and building density."
                         else: # high
-                            aerial_desc = "dense urban Japanese cityscape, featuring realistic high-rise tower mansions, large roads, and skyscrapers"
+                            aerial_desc = f"dense urban Japanese cityscape in {target_city_town}, Japan, featuring realistic high-rise tower mansions, large roads, and skyscrapers near a prominent train station, with realistic signage."
+                        
+                        # ✨✨ 追加：解析したマンションの外観特徴をプロンプトに強力に反映させる ✨✨
+                        if apt_style_prompt:
+                            aerial_desc += f" The main focal point is a massive, prominent apartment building with this specific architectural style: [{apt_style_prompt}]."
 
                     try:
                         base_prompt = (
@@ -496,40 +585,58 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                 elif page_data['type'] == 'access':
                     st.write(f"🎨 MAP & ACCESSの背景画像をAIで生成中...")
                     try:
+                        # Imagenによる森の画像生成
                         image_result = gemini_client.models.generate_images(
                             model='imagen-4.0-generate-001',
                             prompt="Photorealistic beautiful nature background, lush green trees, soft sunlight, bright and clean landscape, suitable for a real estate flyer background. NO text, NO logos.",
                             config=types.GenerateImagesConfig(number_of_images=1, aspect_ratio="4:3" if orientation == "横向き (Landscape)" else "3:4")
                         )
                         generated_bytes = image_result.generated_images[0].image.image_bytes
-                        base_bg = Image.open(BytesIO(generated_bytes)).convert("RGB").resize((width, height))
-                        bg_image = Image.blend(base_bg, Image.new('RGB', (width, height), color=(255, 255, 255)), alpha=0.5)
+                        bg_image = Image.open(BytesIO(generated_bytes)).convert("RGB").resize((width, height))
                     except Exception as e:
                         st.warning(f"3ページ目の画像生成エラー: {e}")
-                        bg_image = Image.new('RGB', (width, height), color=(240, 245, 240))
+                        bg_image = Image.new('RGB', (width, height), color=(255, 255, 255))
 
+                    # ✨ 画面全体に「白い半透明のフィルター」を被せて、森をうっすら透けさせる
+                    overlay = Image.new('RGBA', bg_image.size, (255, 255, 255, 225)) 
+                    bg_image = Image.alpha_composite(bg_image.convert('RGBA'), overlay).convert('RGB')
+                    
                     draw = ImageDraw.Draw(bg_image)
-                    draw.rectangle([(0, 0), (width, height * 0.12)], fill=theme_ac)
-                    try: font_headline = ImageFont.truetype(FONT_PATH, int(height * 0.08))
-                    except: font_headline = ImageFont.load_default()
-                    draw.text((width*0.05, height*0.06), "MAP & ACCESS", font=font_headline, fill="white", anchor="lm")
-                    # ✨ 枠の焼き付けを削除しました
+                    
+                    # ✨ ヘッダーの下にスタイリッシュなアクセントラインを引く
+                    draw.line([(width*0.05, height*0.15), (width*0.95, height*0.15)], fill=theme_ac, width=3)
+                    
+                    try: 
+                        font_headline = ImageFont.truetype(FONT_PATH, int(height * 0.08))
+                        font_sub = ImageFont.truetype(FONT_PATH, int(height * 0.03))
+                    except: 
+                        font_headline = font_sub = ImageFont.load_default()
+                    
+                    # 白背景ベースなので、文字色は黒とアクセントカラーに変更
+                    draw.text((width*0.05, height*0.05), "MAP & ACCESS", font=font_headline, fill="black", anchor="la")
+                    draw.text((width*0.05, height*0.12), "周辺環境・アクセス", font=font_sub, fill=theme_ac, anchor="la")
 
                 # ────────── ④ 間取り図 ──────────
                 elif page_data['type'] == 'floor_plan':
-                    bg_image = Image.new('RGB', (width, height), color="white")
+                    # ✨ テーマ背景色を適用し、アクセントラインでスタイリッシュに
+                    bg_image = Image.new('RGB', (width, height), color=theme_bg)
                     draw = ImageDraw.Draw(bg_image)
-                    header_h = int(height * 0.16)
-                    draw.rectangle([(0, 0), (width, header_h)], fill=theme_ac)
+                    header_h = int(height * 0.15)
+                    draw.line([(0, header_h), (width, header_h)], fill=theme_ac, width=4)
 
                     if madori_file:
                         m_img = Image.open(madori_file).convert("RGB")
-                        m_img.thumbnail((width * 0.9, height * 0.8))
-                        p_x = (width - m_img.width) // 2
-                        p_y = (header_h + (height - header_h - m_img.height) // 2)
-                        bg_image.paste(m_img, (int(p_x), int(p_y)))
+                        # 間取り図にうっすら枠線をつけてカード風にする処理
+                        border_color = (200, 200, 200)
+                        m_img_with_border = Image.new('RGB', (m_img.width + 4, m_img.height + 4), border_color)
+                        m_img_with_border.paste(m_img, (2, 2))
+                        m_img_with_border.thumbnail((width * 0.85, height * 0.75))
+                        
+                        p_x = (width - m_img_with_border.width) // 2
+                        p_y = (header_h + (height - header_h - m_img_with_border.height) // 2)
+                        bg_image.paste(m_img_with_border, (int(p_x), int(p_y)))
                     else:
-                        draw.text((width/2, height/2), "間取り図がアップロードされていません", fill="gray", anchor="mm")
+                        draw.text((width/2, height/2), "間取り図がアップロードされていません", fill=theme_tc, anchor="mm")
                 
                 # ────────── ⑤ 内観（間取り図を基にAI生成） ──────────
                 elif page_data['type'] == 'interior_hq':
@@ -546,25 +653,33 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                         st.error(f"内観生成エラー: {e}")
                         bg_image = Image.new('RGB', (width, height), color=(240, 240, 240))
 
+                    # ✨ 画像の下部にシックな半透明帯を配置し、高級感を演出
+                    overlay = Image.new('RGBA', bg_image.size, (0, 0, 0, 0))
+                    draw_ov = ImageDraw.Draw(overlay)
+                    draw_ov.rectangle([(0, height * 0.82), (width, height)], fill=(0, 0, 0, 180))
+                    draw_ov.line([(0, height * 0.82), (width, height * 0.82)], fill=theme_ac + (255,), width=4)
+                    bg_image = Image.alpha_composite(bg_image.convert('RGBA'), overlay).convert('RGB')
+                    
                     draw = ImageDraw.Draw(bg_image)
-                    draw.rectangle([(0, 0), (width, height * 0.12)], fill=(20, 35, 75))
-                    f_h = get_fitting_font(draw, "INTERIOR VISION", int(height * 0.08), width * 0.5)
+                    f_h = get_fitting_font(draw, "INTERIOR VISION", int(height * 0.07), width * 0.5)
                     sub_text = page_data.get('sub_headline', '')
-                    f_s = get_fitting_font(draw, sub_text, int(height * 0.04), width * 0.4)
-                    draw.text((width*0.05, height*0.06), "INTERIOR VISION", font=f_h, fill="white", anchor="lm")
-                    draw.text((width*0.95, height*0.06), sub_text, font=f_s, fill="white", anchor="rm")
+                    f_s = get_fitting_font(draw, sub_text, int(height * 0.03), width * 0.4)
+                    draw.text((width*0.05, height*0.87), "INTERIOR VISION", font=f_h, fill="white", anchor="la")
+                    draw.text((width*0.95, height*0.90), sub_text, font=f_s, fill="white", anchor="ra")
                 
                 # ────────── ⑥ 内観ギャラリー ──────────
                 elif page_data['type'] == 'interior':
-                    bg_image = Image.new('RGB', (width, height), color="white")
+                    # ✨ 4ページ目と同じスタイリッシュなヘッダー
+                    bg_image = Image.new('RGB', (width, height), color=theme_bg)
                     draw = ImageDraw.Draw(bg_image)
-                    draw.rectangle([(0, 0), (width, height * 0.12)], fill=theme_ac)
+                    header_h = int(height * 0.15)
+                    draw.line([(0, header_h), (width, header_h)], fill=theme_ac, width=4)
                     
-                    f_h = get_fitting_font(draw, "INTERIOR GALLERY", int(height * 0.08), width * 0.5)
-                    f_s = get_fitting_font(draw, "内観ギャラリー", int(height * 0.04), width * 0.4)
-                    draw.text((width*0.05, height*0.06), "INTERIOR GALLERY", font=f_h, fill="white", anchor="lm")
-                    draw.text((width*0.95, height*0.06), "内観ギャラリー", font=f_s, fill="white", anchor="rm")
-                    # ✨ 枠の焼き付けを削除しました
+                    f_h = get_fitting_font(draw, "INTERIOR GALLERY", int(height * 0.07), width * 0.5)
+                    f_s = get_fitting_font(draw, "内観ギャラリー", int(height * 0.025), width * 0.4)
+                    text_fill = "black" if theme_tc == "black" else "white"
+                    draw.text((width*0.05, height*0.04), "INTERIOR GALLERY", font=f_h, fill=text_fill, anchor="la")
+                    draw.text((width*0.05, height*0.11), "内観ギャラリー", font=f_s, fill=theme_ac, anchor="la")
 
                 # ────────── ⑦ 会社案内 ──────────
                 elif page_data['type'] == 'company':
@@ -602,18 +717,38 @@ if st.session_state.finished_pages:
     else:
         prs.slide_width, prs.slide_height = Inches(7.5), Inches(10)
 
-    # ✨ PowerPoint上に「自由に動かせる枠」を作るための便利機能
+    # ✨ PowerPoint上に「自由に動かせる枠」を作るための便利機能（スタイリッシュ版）
     def add_placeholder_box(slide_obj, left, top, width, height, text):
         tx_box = slide_obj.shapes.add_textbox(left, top, width, height)
+        
+        # ✨ 修正：塗りつぶしを透明ではなく、非常に薄いグレーにして「画像置き場」感を出す
         tx_box.fill.solid()
-        tx_box.fill.fore_color.rgb = RGBColor(245, 245, 245) # 薄いグレー背景
-        tx_box.line.color.rgb = RGBColor(180, 180, 180)      # 枠線
+        tx_box.fill.fore_color.rgb = RGBColor(245, 245, 245)
+        
+        # ✨ 修正：枠線をテーマカラーから、悪目立ちしないスタイリッシュなグレーの細線に変更
+        tx_box.line.color.rgb = RGBColor(210, 210, 210) 
+        tx_box.line.width = Pt(1)
+        
         tf = tx_box.text_frame
         tf.word_wrap = True
-        p = tf.paragraphs[0]
-        p.text = text
-        p.font.size = Pt(14)
-        p.font.color.rgb = RGBColor(100, 100, 100)
+        tf.clear()
+        
+        # ✨ 追加：1行目に英語のダミーテキスト（IMAGE PLACEHOLDER）を配置してデザイン性を高める
+        p_en = tf.add_paragraph()
+        p_en.text = "IMAGE PLACEHOLDER"
+        p_en.font.size = Pt(11)
+        p_en.font.bold = True
+        p_en.font.color.rgb = RGBColor(170, 170, 170) # 薄めのグレー
+        p_en.alignment = PP_ALIGN.CENTER
+        
+        # ✨ 修正：2行目に元の日本語テキストを、かっこよく控えめな色とサイズで配置
+        p_jp = tf.add_paragraph()
+        # テキスト内の【 】などの記号を消してクリーンにする
+        clean_text = text.replace("【", "").replace("】", "").replace(" ", "")
+        p_jp.text = clean_text
+        p_jp.font.size = Pt(9)
+        p_jp.font.color.rgb = RGBColor(140, 140, 140)
+        p_jp.alignment = PP_ALIGN.CENTER
 
     # ✨ 追加：駅徒歩用の円形グラフィックを追加する機能
     def add_station_info_circle(slide_obj, x, y, radius, text, color=(255, 255, 255)):
@@ -711,28 +846,52 @@ if st.session_state.finished_pages:
             life_text = p3_data.get('life_info', '周辺施設情報がありません')
             if isinstance(life_text, list): life_text = "\n".join(str(x) for x in life_text)
             
+            # --- テキストボックスの配置 ---
             if orientation == "横向き (Landscape)":
-                add_placeholder_box(slide, Inches(0.5), Inches(1.1), Inches(4.5), Inches(3.0), "【 MAP画像 挿入枠 】\n※自由にサイズ変更・削除できます")
-                tx_box_acc = slide.shapes.add_textbox(Inches(0.5), Inches(4.5), Inches(4.0), Inches(2.5))
-                tx_box_life = slide.shapes.add_textbox(Inches(5.0), Inches(4.5), Inches(4.5), Inches(2.5))
+                add_placeholder_box(slide, Inches(0.5), Inches(1.5), Inches(4.5), Inches(5.5), "【 MAP画像 挿入枠 】\n※自由にサイズ変更・削除できます")
+                tx_box_acc = slide.shapes.add_textbox(Inches(5.5), Inches(1.5), Inches(4.0), Inches(2.0))
+                tx_box_life = slide.shapes.add_textbox(Inches(5.5), Inches(3.8), Inches(4.0), Inches(3.2))
             else:
                 add_placeholder_box(slide, Inches(0.5), Inches(1.5), Inches(6.5), Inches(3.5), "【 MAP画像 挿入枠 】\n※自由にサイズ変更・削除できます")
                 tx_box_acc = slide.shapes.add_textbox(Inches(0.5), Inches(5.5), Inches(6.5), Inches(1.5))
                 tx_box_life = slide.shapes.add_textbox(Inches(0.5), Inches(7.2), Inches(6.5), Inches(2.5))
             
+            # ✨ 修正：文字色をテーマに合わせ、見出しを強調してかっこよくする
+            text_color_rgb = RGBColor(0, 0, 0) if theme_tc == "black" else RGBColor(255, 255, 255)
+            ac_r, ac_g, ac_b = theme_info["accent_color"]
+            accent_color_rgb = RGBColor(ac_r, ac_g, ac_b)
+
+            # --- 交通アクセスのテキスト設定 ---
             tf_acc = tx_box_acc.text_frame
             tf_acc.word_wrap = True
-            p_acc = tf_acc.add_paragraph()
-            p_acc.text = "【 交通アクセス 】\n" + acc_text
-            p_acc.font.size = Pt(14)
-            p_acc.font.color.rgb = RGBColor(50, 50, 50)
+            tf_acc.clear() # 初期化
             
+            p_acc_head = tf_acc.add_paragraph()
+            p_acc_head.text = "■ 交通アクセス"
+            p_acc_head.font.size = Pt(16)
+            p_acc_head.font.bold = True
+            p_acc_head.font.color.rgb = accent_color_rgb # 見出しはアクセントカラー
+            
+            p_acc_body = tf_acc.add_paragraph()
+            p_acc_body.text = acc_text
+            p_acc_body.font.size = Pt(14)
+            p_acc_body.font.color.rgb = text_color_rgb # 本文はテーマカラー
+
+            # --- 周辺環境のテキスト設定 ---
             tf_life = tx_box_life.text_frame
             tf_life.word_wrap = True
-            p_life = tf_life.add_paragraph()
-            p_life.text = "【 Life Information 】\n" + life_text
-            p_life.font.size = Pt(14)
-            p_life.font.color.rgb = RGBColor(50, 50, 50)
+            tf_life.clear() # 初期化
+            
+            p_life_head = tf_life.add_paragraph()
+            p_life_head.text = "■ Life Information"
+            p_life_head.font.size = Pt(16)
+            p_life_head.font.bold = True
+            p_life_head.font.color.rgb = accent_color_rgb # 見出しはアクセントカラー
+            
+            p_life_body = tf_life.add_paragraph()
+            p_life_body.text = life_text
+            p_life_body.font.size = Pt(14)
+            p_life_body.font.color.rgb = text_color_rgb # 本文はテーマカラー
 
         # 4ページ目（間取り図）
         if i == 3 and st.session_state.ai_data:
@@ -754,33 +913,88 @@ if st.session_state.finished_pages:
                 tb_area = slide.shapes.add_textbox(Inches(4.5), Inches(0.1), Inches(2.5), Inches(0.5))
                 tb_price = slide.shapes.add_textbox(Inches(4.5), Inches(0.6), Inches(2.5), Inches(0.8))
             
+            # 4ページ目（間取り図）
+        if i == 3 and st.session_state.ai_data:
+            p4_data = st.session_state.ai_data[3]
+            # ... (中略。座標設定などはそのまま) ...
+            
+            # ✨ 修正：文字色をテーマカラー（theme_tc）に合わせる
+            text_color_rgb = RGBColor(0, 0, 0) if theme_tc == "black" else RGBColor(255, 255, 255)
+            
             tf_title = tb_title.text_frame
             p_title = tf_title.paragraphs[0]
             p_title.text = prop_name_jp
             p_title.font.size = Pt(28)
-            p_title.font.color.rgb = RGBColor(255, 255, 255)
+            p_title.font.color.rgb = text_color_rgb # ここを変更
             p_title.font.bold = True
             
             tf_area = tb_area.text_frame
             p_area1 = tf_area.paragraphs[0]
             p_area1.text = land_area
             p_area1.font.size = Pt(12)
-            p_area1.font.color.rgb = RGBColor(255, 255, 255)
+            p_area1.font.color.rgb = text_color_rgb # ここを変更
             p_area1.alignment = PP_ALIGN.RIGHT
             if building_area:
                 p_area2 = tf_area.add_paragraph()
                 p_area2.text = building_area
                 p_area2.font.size = Pt(12)
-                p_area2.font.color.rgb = RGBColor(255, 255, 255)
+                p_area2.font.color.rgb = text_color_rgb # ここを変更
                 p_area2.alignment = PP_ALIGN.RIGHT
             
             tf_price = tb_price.text_frame
             p_price = tf_price.paragraphs[0]
             p_price.text = price_jp
             p_price.font.size = Pt(32)
-            p_price.font.color.rgb = RGBColor(255, 255, 255)
+            p_price.font.color.rgb = text_color_rgb # ここを変更
             p_price.font.bold = True
             p_price.alignment = PP_ALIGN.RIGHT
+
+        # 7ページ目（会社案内）
+        if i == 6 and st.session_state.ai_data:
+            c_data = st.session_state.ai_data[6]
+            
+            # --- 消えてしまっていた座標設定（tx_boxの定義） ---
+            if orientation == "横向き (Landscape)":
+                add_placeholder_box(slide, Inches(0.5), Inches(0.2), Inches(9.0), Inches(3.2), "【 店舗案内図 挿入枠 】\n※自由にサイズ変更・削除できます")
+                add_placeholder_box(slide, Inches(0.5), Inches(3.6), Inches(4.3), Inches(1.8), "【 店舗外観 挿入枠 】")
+                add_placeholder_box(slide, Inches(5.2), Inches(3.6), Inches(4.3), Inches(1.8), "【 店舗内観 挿入枠 】")
+                tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(5.6), Inches(9.0), Inches(1.7))
+            else:
+                add_placeholder_box(slide, Inches(0.5), Inches(0.2), Inches(6.5), Inches(3.2), "【 店舗案内図 挿入枠 】\n※自由にサイズ変更・削除できます")
+                add_placeholder_box(slide, Inches(0.5), Inches(3.6), Inches(3.1), Inches(3.5), "【 店舗外観 挿入枠 】")
+                add_placeholder_box(slide, Inches(3.9), Inches(3.6), Inches(3.1), Inches(3.5), "【 店舗内観 挿入枠 】")
+                tx_box = slide.shapes.add_textbox(Inches(0.5), Inches(7.5), Inches(6.5), Inches(2.0))
+                
+            fill = tx_box.fill
+            fill.solid()
+            # ✨ 修正：テーマの背景色・アクセントカラーを使う
+            bg_r, bg_g, bg_b = theme_info["bg_color"]
+            fill.fore_color.rgb = RGBColor(bg_r, bg_g, bg_b)
+            
+            # 枠線もつける
+            ac_r, ac_g, ac_b = theme_info["accent_color"]
+            tx_box.line.color.rgb = RGBColor(ac_r, ac_g, ac_b)
+            tx_box.line.width = Pt(2)
+            
+            tf = tx_box.text_frame
+            tf.word_wrap = True
+            tf.clear() 
+            
+            # 文字色
+            text_color_rgb = RGBColor(0, 0, 0) if theme_tc == "black" else RGBColor(255, 255, 255)
+
+            p_name = tf.add_paragraph()
+            p_name.text = c_data.get('company_name', '株式会社 東宝ハウス')
+            p_name.font.bold = True
+            p_name.font.size = Pt(28)
+            p_name.font.color.rgb = text_color_rgb
+            p_name.alignment = PP_ALIGN.CENTER
+
+            p_info = tf.add_paragraph()
+            p_info.text = f"{c_data.get('license', '')}\n{c_data.get('address', '')}\nフリーダイヤル {c_data.get('tel', '')}"
+            p_info.font.size = Pt(16)
+            p_info.font.color.rgb = text_color_rgb
+            p_info.alignment = PP_ALIGN.CENTER
 
         # 6ページ目（内観ギャラリー）
         if i == 5:
@@ -814,21 +1028,33 @@ if st.session_state.finished_pages:
                 
             fill = tx_box.fill
             fill.solid()
-            fill.fore_color.rgb = RGBColor(195, 160, 100)
+            # ✨ 修正：テーマの背景色・アクセントカラーを使う
+            bg_r, bg_g, bg_b = theme_info["bg_color"]
+            fill.fore_color.rgb = RGBColor(bg_r, bg_g, bg_b)
+            
+            # 枠線もつける
+            ac_r, ac_g, ac_b = theme_info["accent_color"]
+            tx_box.line.color.rgb = RGBColor(ac_r, ac_g, ac_b)
+            tx_box.line.width = Pt(2)
             
             tf = tx_box.text_frame
             tf.word_wrap = True
             tf.clear() 
             
+            # 文字色
+            text_color_rgb = RGBColor(0, 0, 0) if theme_tc == "black" else RGBColor(255, 255, 255)
+
             p_name = tf.add_paragraph()
             p_name.text = c_data.get('company_name', '株式会社 東宝ハウス')
             p_name.font.bold = True
             p_name.font.size = Pt(28)
+            p_name.font.color.rgb = text_color_rgb
             p_name.alignment = PP_ALIGN.CENTER
 
             p_info = tf.add_paragraph()
             p_info.text = f"{c_data.get('license', '')}\n{c_data.get('address', '')}\nフリーダイヤル {c_data.get('tel', '')}"
             p_info.font.size = Pt(16)
+            p_info.font.color.rgb = text_color_rgb
             p_info.alignment = PP_ALIGN.CENTER
 
     pptx_out = BytesIO()
