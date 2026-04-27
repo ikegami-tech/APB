@@ -4,6 +4,7 @@ import json
 import fitz  # PyMuPDF
 import glob
 import time
+import random
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.enum.text import PP_ALIGN
@@ -66,6 +67,11 @@ if "current_file" not in st.session_state:
     st.session_state.current_file = None
 if "pdf_text" not in st.session_state:
     st.session_state.pdf_text = ""
+if "cover_choices" not in st.session_state:
+    st.session_state.cover_choices = []
+if "selected_cover_index" not in st.session_state:
+    st.session_state.selected_cover_index = 0    
+    
 
 # --- 修正：PDFだけでなく画像も許可し、特徴入力欄を追加 ---
 col_u1, col_u2 = st.columns(2)
@@ -115,7 +121,10 @@ selected_layout_key = st.radio(
 st.write("---")
 st.subheader("🏠 物件・表紙の設定")
 
-# 物件種別の選択
+st.write("---")
+st.subheader("🏠 物件の設定")
+
+# 1. 物件種別の選択
 property_types = {"house": "戸建て", "apartment": "マンション"}
 selected_property_key = st.radio(
     "物件の種別：", 
@@ -125,7 +134,7 @@ selected_property_key = st.radio(
 )
 selected_property_type_label = property_types[selected_property_key]
 
-# ✨ 修正：マンション規模の選択肢を「低層(5階以下)」と「中層・高層」に変更
+# 2. マンション規模の選択
 if selected_property_key == "apartment":
     apt_scales = {
         "low": "低層（5階以下）", 
@@ -141,126 +150,147 @@ if selected_property_key == "apartment":
 else:
     selected_apt_scale = "house"
 
-st.write("") # 少し隙間を空ける
-# ✨ 追加：表紙のイメージテーマを選択（5つの選択肢）
-st.write("🖼️ **表紙の背景イメージ（街並み）を選択してください**")
-NEIGHBORHOOD_THEMES = {
-    "green": "1. 自然豊かな街並み（街路樹・公園・緑が多い）",
-    "urban": "2. 都会的・モダンな街並み（洗練されたビル・舗装された道路）",
-    "quiet": "3. 閑静な住宅街（落ち着いた雰囲気・邸宅地）",
-    "station": "4. 利便性の高い駅前（賑わい・店舗・明るい夜景も可）",
-    "open": "5. 開放感のある街並み（空が広い・リバーサイド・並木道）"
-}
-selected_neighborhood_key = st.radio(
-    "表紙に使用するイメージ：",
-    options=list(NEIGHBORHOOD_THEMES.keys()),
-    format_func=lambda x: NEIGHBORHOOD_THEMES[x],
-    horizontal=False
-)
-# ここまでを追加
-st.write("---")
-st.subheader("🎨 パンフレットのデザインテーマを選択")
-selected_style_key = st.radio(
-    "デザインの方向性を選んでください：", 
-    options=list(THEMES.keys()), 
-    format_func=lambda x: THEMES[x]["name"],
-    index=0
-)
+# 3. デザインテーマを「高級・ラグジュアリー」に固定
+selected_style_key = "luxury"
 theme_info = THEMES[selected_style_key]
-
-# --- 追加：⑦その他を選択した場合の自由入力欄 ---
 custom_style_description = ""
-if selected_style_key == "other":
-    custom_style_description = st.text_input(
-        "どのようなデザインスタイルにしたいか入力してください：",
-        placeholder="例：北欧風の明るい木目調、ヴィンテージ風のレンガ造り、など"
-    )
 
-# --- 修正：店舗選択UIを追加 ---
+# 4. 担当店舗の選択（ここで定義される）
 st.write("---")
 st.subheader("🏢 担当店舗の選択")
 selected_branch_name = st.selectbox("担当店舗を選んでください：", list(BRANCH_DATA.keys()))
+
+# 5. 店舗情報を取得（必ず st.selectbox より下に書く）
+branch_info = BRANCH_DATA[selected_branch_name]
 
 st.write("---")
 st.subheader("💡 お部屋の特徴設定")
 room_features_input = st.text_area(
     "間取り図から生成される画像の特徴（AIに確実に反映させたい部分）",
-    placeholder="例：キッチンは壁付けI型で右奥。バルコニー側の窓は壁一面の大きなサッシ。対面キッチンにはしない。",
+    placeholder="例：キッチンは壁付けI型で右奥。バルコニー側の窓は壁一面の大きなサッシ。",
     height=100
 )
 
-# --- 修正：スライドの向き選択UIを追加 ---
+# 6. スライドの向き選択
 st.write("---")
 st.subheader("📏 スライドの向きを選択")
-orientation = st.radio("作成するパンフレットの向き：", ["横向き (Landscape)", "縦向き (Portrait)"], index=0)
+orientation = st.radio("作成するパンフレットの向き：", ["横向き (Landscape)", "縦向き (Portrait)"], index=1)
+
+# 7. 生成ボタン
+generate_btn = st.button("🚀 選択したデザインで全6ページを生成開始", disabled=not uploaded_file)
 # 選択された店舗の詳細を取得
 branch_info = BRANCH_DATA[selected_branch_name]
 
-generate_btn = st.button("🚀 選択したデザインで全6ページを生成開始", disabled=not uploaded_file)
+# --- 4. メイン処理（表紙4案生成 ＆ 全ページ生成） ---
 
-# --- 4. メイン処理 ---
-if generate_btn and uploaded_file is not None:
-    
-    # まずGeminiクライアントを初期化します（これを最初に行うことでエラーを防ぎます）
-    gemini_client = genai.Client(api_key=gemini_api_key)
+# まずGeminiクライアントを初期化
+gemini_client = genai.Client(api_key=gemini_api_key)
 
-    # ✨ 修正：段階的に待機時間を長くして5回まで再試行する最強の便利関数
-    def generate_with_retry(model_name, prompt_contents, generation_config=None):
-        # 待機時間（秒）の設定：30秒, 1分(60秒), 3分(180秒), 5分(300秒), 10分(600秒)
-        wait_times = [30, 60, 180, 300, 600]
-        max_attempts = len(wait_times) + 1 # 初回1回 ＋ 再試行5回 ＝ 計6回トライ
-        
-        for attempt in range(max_attempts):
-            try:
-                # 意図的に毎回2秒休ませてからリクエストを送る（連投によるエラーを未然に防止）
-                time.sleep(2)
-                
-                if generation_config:
-                    return gemini_client.models.generate_content(model=model_name, contents=prompt_contents, config=generation_config)
-                else:
-                    return gemini_client.models.generate_content(model=model_name, contents=prompt_contents)
-            
-            except Exception as inner_e:
-                # 503(混雑) または 429(制限超過) エラーなら指定時間待機する
-                if ("503" in str(inner_e) or "429" in str(inner_e)) and attempt < len(wait_times):
-                    wait_sec = wait_times[attempt]
-                    
-                    # 画面表示用に「○分」か「○秒」の分かりやすい文字列を作る
-                    if wait_sec >= 60:
-                        time_str = f"{wait_sec // 60}分"
-                    else:
-                        time_str = f"{wait_sec}秒"
-                    
-                    st.warning(f"サーバー制限に到達しました。{time_str}待機して再試行します... (再試行 {attempt + 1}/5)")
-                    time.sleep(wait_sec)
-                else:
-                    # 全く別のエラー、または5回の長期待機がすべて失敗した場合はエラーを出してストップ
-                    raise inner_e
-
-    # --- 販売図面（PDF/画像）の文字読み取り（OCR） ---
-    if not st.session_state.pdf_text:
-        st.write("📄 販売図面をAI（OCR）で読み取っています...")
-        file_bytes = uploaded_file.getvalue()
-        filename_lower = uploaded_file.name.lower()
-        
-        if filename_lower.endswith(".pdf"): mime_type = "application/pdf"
-        elif filename_lower.endswith(".png"): mime_type = "image/png"
-        else: mime_type = "image/jpeg"
-            
+# ✨ 修正：再試行関数（これはそのまま維持します）
+def generate_with_retry(model_name, prompt_contents, generation_config=None):
+    wait_times = [30, 60, 180, 300, 600]
+    max_attempts = len(wait_times) + 1
+    for attempt in range(max_attempts):
         try:
-            # ✨ 便利関数を使ってOCRを実行
-            ocr_analysis = generate_with_retry(
-                model_name='gemini-2.5-flash',
-                prompt_contents=[
-                    "この販売図面（画像またはPDF）に書かれているすべての文字情報を、正確に読み取ってテキスト化してください。物件名（フリガナや英語名も）、価格、所在地、交通（最寄り駅と徒歩分数）などの主要項目は絶対に漏らさないでください。",
-                    types.Part.from_bytes(data=file_bytes, mime_type=mime_type)
-                ]
-            )
-            st.session_state.pdf_text = ocr_analysis.text
-        except Exception as e:
-            st.error(f"図面の読み取りエラー: {e}")
-            st.session_state.pdf_text = "読み取り失敗"
+            time.sleep(2)
+            if generation_config:
+                return gemini_client.models.generate_content(model=model_name, contents=prompt_contents, config=generation_config)
+            else:
+                return gemini_client.models.generate_content(model=model_name, contents=prompt_contents)
+        except Exception as inner_e:
+            if ("503" in str(inner_e) or "429" in str(inner_e)) and attempt < len(wait_times):
+                wait_sec = wait_times[attempt]
+                st.warning(f"サーバー制限に到達しました。{wait_sec}秒待機して再試行します... (再試行 {attempt + 1}/5)")
+                time.sleep(wait_sec)
+            else:
+                raise inner_e
 
+# ✨ 2つのステップに分けるためのボタン配置
+col_btn1, col_btn2 = st.columns(2)
+with col_btn1:
+    btn_gen_covers = st.button("🎨 まずは表紙案を4つ作成する", disabled=not uploaded_file)
+with col_btn2:
+    btn_gen_all = st.button("🚀 選んだ表紙で全ページを完成させる", disabled=not st.session_state.cover_choices)
+
+# --- 4-A. 表紙案を4つ生成する処理 ---
+if btn_gen_covers and uploaded_file is not None:
+    # 1. OCR（文字読み取り）がまだなら実行
+    if not st.session_state.pdf_text:
+        with st.status("📄 販売図面をAI（OCR）で読み取っています..."):
+            file_bytes = uploaded_file.getvalue()
+            filename_lower = uploaded_file.name.lower()
+            if filename_lower.endswith(".pdf"): mime_type = "application/pdf"
+            elif filename_lower.endswith(".png"): mime_type = "image/png"
+            else: mime_type = "image/jpeg"
+            
+            try:
+                ocr_analysis = generate_with_retry(
+                    model_name='gemini-2.5-flash',
+                    prompt_contents=[
+                        "図面から物件名、所在地、最寄り駅情報を正確に抽出してください。Imagen生成用の地名（市区町村）も特定してください。",
+                        types.Part.from_bytes(data=file_bytes, mime_type=mime_type)
+                    ]
+                )
+                st.session_state.pdf_text = ocr_analysis.text
+            except Exception as e:
+                st.error(f"OCRエラー: {e}")
+                st.stop()
+
+# 2. LEON風の表紙画像をシチュエーション別に4枚生成
+    with st.status("📸 異なるシチュエーションで表紙デザインを4案生成中...") as status:
+        prop_type_en = "detached house" if selected_property_key == "house" else "apartment building"
+        target_city_town = "Tokyo"
+        if "所在地" in st.session_state.pdf_text:
+             target_city_town = st.session_state.pdf_text.split("所在地")[-1][:10]
+
+# ✨ 修正箇所：1つではなく、4つの異なるシチュエーションをリストで作ります
+        base_style = "High-end luxury lifestyle magazine cover photography. Cinematic lighting, professional architectural and lifestyle photography, 8k resolution. Top area is clear for typography. NO text, NO logos, NO written words."
+        
+        # --- ここを書き換え ---
+        prompts = [
+            f"High-end luxury magazine photography. A happy Japanese family playing on a stylish street in {target_city_town}, featuring modern {prop_type_en}. Golden hour, NO text.",
+            f"High-end luxury magazine photography. A dandy Japanese man drinking coffee in a luxury modern living room in {target_city_town}. Cinematic lighting, NO text.",
+            f"High-end luxury magazine photography. A happy Japanese family playing in a private lush green garden in {target_city_town}. Warm sunlight, NO text.",
+            f"High-end luxury magazine photography. A happy Japanese family enjoying a picnic in a large green park in {target_city_town}. Airy atmosphere, NO text."
+        ]
+
+        try:
+            temp_choices = []
+            # 4つのプロンプトをループで1枚ずつ生成します
+            for i, p in enumerate(prompts):
+                st.write(f"案 {i+1} を作成中...")
+                img_res = gemini_client.models.generate_images(
+                    model='imagen-4.0-generate-001',
+                    prompt=p,
+                    config=types.GenerateImagesConfig(
+                        number_of_images=1, 
+                        aspect_ratio="4:3" if orientation == "横向き (Landscape)" else "3:4"
+                    )
+                )
+                temp_choices.append(Image.open(BytesIO(img_res.generated_images[0].image.image_bytes)))
+            
+            # 全て生成し終わったらセッションに保存してリロード
+            st.session_state.cover_choices = temp_choices
+            st.rerun()
+
+        except Exception as e:
+            st.error(f"画像生成中にエラーが発生しました: {e}")
+
+# --- 4-B. 生成された4案を表示して選ばせるUI ---
+if st.session_state.cover_choices and not st.session_state.finished_pages:
+    st.write("---")
+    st.subheader("📸 お好きな表紙デザインを1つ選んでください")
+    cols = st.columns(4)
+    for idx, img in enumerate(st.session_state.cover_choices):
+        with cols[idx]:
+            st.image(img, caption=f"デザイン案 {idx+1}", use_container_width=True)
+            if st.button(f"案 {idx+1} を選択", key=f"select_cover_{idx}"):
+                st.session_state.selected_cover_index = idx
+                st.success(f"案 {idx+1} を選択しました！上の「全ページを完成させる」ボタンを押してください。")
+
+# ✅ 修正：ここに条件を追加します
+if btn_gen_all: 
+    # 右上の「全ページを完成させる」ボタンが押された時だけ、以下の処理が動く
     with st.status("🎨 6ページのパンフレットを作成中...（約1分かかります）", expanded=True) as status:
         try:
             st.write("AIが物件情報、指定地域、デザインテーマを分析中...")
@@ -465,51 +495,13 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                 st.write(f"🖼️ {page_data['page']}ページ目（{page_data['type']}）を合成中...")
                 bg_image = None
                 
-                # ────────── ① 表紙 ──────────
+# ────────── ① 表紙（LEON風：背景画像のみをセット） ──────────
                 if page_data['type'] == 'cover':
-                    st.write(f"🎨 表紙の背景（{selected_property_type_label}の街並み）をAIで生成中...（テーマ: {NEIGHBORHOOD_THEMES[selected_neighborhood_key]}）")
-                    
-                    # ✨ OCRテキスト解析結果から、Imagen生成用の所在地（市区町村名）を取得
-                    # すでにOCR結果からGemini FlashがJSON生成時に city_town_clean を抽出しています。
-                    target_city_town = page_data.get('city_town_clean', '日本の都市部')
-
-                    # ✨ ユーザーが選択した物件種別（戸建て/マンション・規模）の英語説明文
-                    if selected_property_key == "house":
-                        property_desc = "modern Japanese detached houses (建売住宅)"
+                    # 【重要】文字を書くコードはすべて削除し、選んだ画像をセットするだけにします
+                    if st.session_state.cover_choices:
+                        bg_image = st.session_state.cover_choices[st.session_state.selected_cover_index].copy().resize((width, height))
                     else:
-                        if selected_apt_scale == "low":
-                            property_desc = "low-rise boutique Japanese apartment buildings (under 5 stories)"
-                        else:
-                            property_desc = "modern mid-to-high-rise Japanese apartment buildings"
-
-                    # ✨ 修正：街並みテーマと物件特徴を組み合わせた Imagen プロンプト
-                    neighborhood_prompts = {
-                        "green": f"A peaceful Japanese residential street with lush greenery, street trees, and sunlight filtering through leaves, featuring modern Japanese {property_desc}. Wide, well-paved road.",
-                        "urban": f"A sophisticated modern Japanese cityscape with clean architecture and a stylish urban atmosphere, featuring modern Japanese {property_desc} and office buildings. Eye-level view.",
-                        "quiet": f"An upscale, quiet Japanese residential neighborhood with elegant streetscapes and a peaceful atmosphere, featuring high-end Japanese {property_desc}. Asphalt road, power lines (not dominant).",
-                        "station": f"A vibrant and convenient Japanese residential area near a station, featuring {property_desc} and commercial buildings, clean streets.",
-                        "open": f"An open and airy Japanese streetscape with a wide blue sky, near a river or a wide tree-lined boulevard, featuring Japanese {property_desc}."
-                    }
-                    
-                    target_cityscape = neighborhood_prompts[selected_neighborhood_key]
-
-                    try:
-                        # ✨ 修正：地域名（target_city_town）を含めつつ、住宅街・物件外観として生成
-                        prompt=f"Photorealistic high-end architectural photography of a {target_cityscape} in {target_city_town}, Japan. Eye-level view, wide angle, clean and bright. Full frame single image, NO buildings in the center to allow for text placement. NO text, NO logos, NO people."
-                        image_result = gemini_client.models.generate_images(
-                            model='imagen-4.0-generate-001',
-                            prompt=prompt,
-                            config=types.GenerateImagesConfig(
-                                number_of_images=1,
-                                aspect_ratio="4:3" if orientation == "横向き (Landscape)" else "3:4"
-                            )
-                        )
-                        generated_bytes = image_result.generated_images[0].image.image_bytes
-                        bg_image = Image.open(BytesIO(generated_bytes)).convert("RGB").resize((width, height))
-                    except Exception as e:
-                        st.error(f"表紙画像生成エラー: {e}") 
                         bg_image = Image.new('RGB', (width, height), color=theme_bg)
-                
                 
                 # ────────── ② 空撮地図 ──────────
                 elif page_data['type'] == 'aerial_map':
@@ -750,6 +742,10 @@ if st.session_state.finished_pages:
         p_jp.font.color.rgb = RGBColor(140, 140, 140)
         p_jp.alignment = PP_ALIGN.CENTER
 
+        # 日本語を縦書き（改行区切り）に変換する関数
+    def to_vertical(text):
+        return "\n".join(list(text))
+
     # ✨ 追加：駅徒歩用の円形グラフィックを追加する機能
     def add_station_info_circle(slide_obj, x, y, radius, text, color=(255, 255, 255)):
         # 円形グラフィックを追加
@@ -782,61 +778,97 @@ if st.session_state.finished_pages:
         img_io.seek(0)
         slide.shapes.add_picture(img_io, 0, 0, width=prs.slide_width, height=prs.slide_height)
 
-        # ✨ 修正：1ページ目（表紙）に全テキストを手入力（編集可能）な状態で配置
+# --- パワポ 1ページ目（LEON風：文字あふれ防止・4パターンランダム） ---
         if i == 0 and st.session_state.ai_data:
             p1_data = st.session_state.ai_data[0]
-            city_town_text = p1_data.get('city_town', '地域名')
-            station_info_text = p1_data.get('station_info', '駅徒歩X分')
-            property_name_jp_text = p1_data.get('property_name_jp', '物件名')
-            sub_copy_text = p1_data.get('sub_copy', 'サブコピー')
-            
-            # テーマに合わせて文字色を決定
-            text_color_rgb = RGBColor(0, 0, 0) if theme_tc == "black" else RGBColor(255, 255, 255)
-            
+            prop_name = p1_data.get('property_name_jp', '物件名').upper() 
+            address_text = p1_data.get('city_town', '') 
+            sub_copy = p1_data.get('sub_copy', '') 
+            station_info = p1_data.get('station_info', '').replace('\\n', '\n')
+
+            def to_vertical(text):
+                return "\n".join(list(text))
+
+            v_address = to_vertical(address_text)
+            layout_pattern = random.randint(1, 4)
+            sw = prs.slide_width
+            sh = prs.slide_height
+
+            # --- ① 物件名（ロゴ）のサイズ自動調整 ---
             if orientation == "横向き (Landscape)":
-                # 物件名とサブコピー（左上）
-                tx_box_prop = slide.shapes.add_textbox(Inches(0.5), Inches(0.5), Inches(9.0), Inches(0.8))
-                tx_box_sub = slide.shapes.add_textbox(Inches(0.5), Inches(1.3), Inches(9.0), Inches(0.6))
-                # 所在地と駅徒歩（下部）
-                tx_box_city = slide.shapes.add_textbox(Inches(6.5), Inches(6.5), Inches(3.0), Inches(0.8))
-                add_station_info_circle(slide, Inches(0.5), Inches(5.8), Inches(0.8), station_info_text)
+                if len(prop_name) > 10: logo_font_size = Pt(60)
+                elif len(prop_name) > 7: logo_font_size = Pt(70)
+                else: logo_font_size = Pt(85)
+                logo_y = Inches(0.4)
             else:
-                # 物件名とサブコピー（左上）
-                tx_box_prop = slide.shapes.add_textbox(Inches(0.5), Inches(0.5), Inches(6.5), Inches(0.8))
-                tx_box_sub = slide.shapes.add_textbox(Inches(0.5), Inches(1.3), Inches(6.5), Inches(0.8))
-                # 所在地と駅徒歩（下部）
-                tx_box_city = slide.shapes.add_textbox(Inches(3.5), Inches(8.5), Inches(3.5), Inches(0.8))
-                add_station_info_circle(slide, Inches(0.5), Inches(7.5), Inches(1.0), station_info_text)
-            
-            # 物件名のテキスト設定
-            tf_prop = tx_box_prop.text_frame
-            tf_prop.word_wrap = True
-            p_prop = tf_prop.paragraphs[0]
-            p_prop.text = property_name_jp_text
-            p_prop.font.size = Pt(40)
-            p_prop.font.bold = True
-            p_prop.font.color.rgb = text_color_rgb
-            
-            # サブコピーのテキスト設定
-            tf_sub = tx_box_sub.text_frame
-            tf_sub.word_wrap = True
-            p_sub = tf_sub.paragraphs[0]
-            p_sub.text = sub_copy_text
-            p_sub.font.size = Pt(18)
-            p_sub.font.bold = True
-            p_sub.font.color.rgb = text_color_rgb
+                if len(prop_name) > 10: logo_font_size = Pt(38)
+                elif len(prop_name) > 7: logo_font_size = Pt(45)
+                else: logo_font_size = Pt(55)
+                # ✨ 修正1：上端ギリギリを防ぐため、少し下へ(0.6 -> 0.8)
+                logo_y = Inches(0.8)
 
-            # 所在地のテキスト設定
-            tf_city = tx_box_city.text_frame
-            tf_city.word_wrap = True
-            p_city = tf_city.paragraphs[0]
-            p_city.text = city_town_text
-            p_city.font.size = Pt(28)
-            p_city.font.bold = True
-            p_city.font.color.rgb = text_color_rgb
-            p_city.alignment = PP_ALIGN.RIGHT
+            tx_logo = slide.shapes.add_textbox(Inches(0.5), logo_y, sw - Inches(1.0), Inches(1.2))
+            tf_logo = tx_logo.text_frame
+            tf_logo.word_wrap = False
+            p_logo = tf_logo.paragraphs[0]
+            p_logo.text = prop_name
+            p_logo.font.size = logo_font_size
+            p_logo.font.bold = True
+            p_logo.font.color.rgb = RGBColor(255, 255, 255)
+            p_logo.alignment = PP_ALIGN.CENTER
 
-        # (以下、既存のページ処理が続く...)
+            # --- ② パターン別配置（座標の最適化） ---
+            if layout_pattern == 1:
+                tx_addr = slide.shapes.add_textbox(sw - Inches(1.0), Inches(2.0), Inches(0.8), sh - Inches(4.0))
+                # ✨ 修正2：キャッチコピー全体を上へ移動 (sh - Inches(2.2) -> sh * 0.6)
+                tx_sub = slide.shapes.add_textbox(Inches(0.5), sh * 0.6, sw - Inches(1.0), Inches(0.8))
+                sub_align = PP_ALIGN.LEFT
+                current_sub_text = sub_copy
+            
+            elif layout_pattern == 2:
+                tx_addr = slide.shapes.add_textbox(Inches(0.2), Inches(2.0), Inches(0.8), sh - Inches(4.0))
+                # ✨ 修正2：キャッチコピー全体を上へ移動
+                tx_sub = slide.shapes.add_textbox(Inches(0.5), sh * 0.6, sw - Inches(1.0), Inches(0.8))
+                sub_align = PP_ALIGN.RIGHT
+                current_sub_text = sub_copy
+
+            elif layout_pattern == 3:
+                tx_addr = slide.shapes.add_textbox(sw - Inches(1.0), Inches(2.0), Inches(0.8), sh - Inches(4.0))
+                tx_sub = slide.shapes.add_textbox(Inches(0.5), Inches(2.5), Inches(0.8), sh * 0.5)
+                sub_align = PP_ALIGN.CENTER
+                current_sub_text = to_vertical(sub_copy[:15])
+            
+            else:
+                tx_addr = slide.shapes.add_textbox(Inches(0.2), Inches(2.0), Inches(0.8), sh - Inches(4.0))
+                # ✨ 修正2：キャッチコピー全体を上へ移動
+                tx_sub = slide.shapes.add_textbox(Inches(0.5), sh * 0.55, sw - Inches(1.0), Inches(1.0))
+                sub_align = PP_ALIGN.CENTER
+                current_sub_text = sub_copy
+
+            # --- ③ 住所（縦書き）の設定 ---
+            tf_addr = tx_addr.text_frame
+            tf_addr.text = v_address
+            addr_font_size = Pt(20) if orientation == "縦向き (Portrait)" else Pt(24)
+            for para in tf_addr.paragraphs:
+                para.font.size = addr_font_size
+                para.font.bold = True
+                para.font.color.rgb = RGBColor(255, 255, 255)
+                para.alignment = PP_ALIGN.CENTER
+
+            # --- ④ キャッチコピーの設定 ---
+            tf_sub = tx_sub.text_frame
+            tf_sub.text = current_sub_text
+            sub_font_size = Pt(16) if orientation == "縦向き (Portrait)" else Pt(22)
+            for para in tf_sub.paragraphs:
+                para.font.size = sub_font_size
+                para.font.bold = True
+                para.font.color.rgb = RGBColor(255, 255, 255)
+                para.alignment = sub_align
+
+            # --- ⑤ 駅情報サークル（見切れ解消のため上へ移動） ---
+            # ✨ 修正3：円を上へ移動 (sh - Inches(1.3) -> sh - Inches(2.0))
+            circle_y = sh - Inches(2.0)
+            add_station_info_circle(slide, Inches(0.3), circle_y, Inches(0.7), station_info)
 
         # 3ページ目（MAP & ACCESS）
         if i == 2 and st.session_state.ai_data:
