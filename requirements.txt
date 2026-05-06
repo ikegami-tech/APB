@@ -1,7 +1,6 @@
 streamlit
-google-genai
-pymupdf
+python-pptx
+PyMuPDF
 Pillow
+google-genai
 python-dotenv
-requests
-pypdf
