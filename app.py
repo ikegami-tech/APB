@@ -73,60 +73,27 @@ if "selected_cover_index" not in st.session_state:
     st.session_state.selected_cover_index = 0    
     
 
-# --- 修正：PDFだけでなく画像も許可し、特徴入力欄を追加 ---
+# --- 修正：空室写真アップロード欄を追加し、レイアウト選択UIを削除 ---
 col_u1, col_u2 = st.columns(2)
 with col_u1:
     uploaded_file = st.file_uploader("販売図面（PDFまたは画像）をアップロード", type=["pdf", "png", "jpg", "jpeg"])
 with col_u2:
     madori_file = st.file_uploader("間取り図の画像をアップロード（P.4用）", type=["png", "jpg", "jpeg"])
+    # ✨ 追加：空室写真のアップロード
+    empty_room_file = st.file_uploader("空室写真をアップロード（P.6 バーチャルステージング用）", type=["png", "jpg", "jpeg"])
 
-# 👇👇👇 ここから追加 👇👇👇
 st.write("---")
 st.subheader("🗺️ 地図画像のアップロード")
 map_file = st.file_uploader("地図に使用するマップ画像をアップロード（P.3 MAP & ACCESS用）", type=["png", "jpg", "jpeg"])
-st.caption("※アップロードすると、AIが自動で高級感のある色合いに調整し、駅徒歩バッジを配置します。")
-# 👆👆👆 ここまで追加 👆👆👆
 
-# 【重要】このファイル変更時のリセット処理はそのまま残します
+# ファイルリセット処理
 if uploaded_file is not None and uploaded_file.name != st.session_state.current_file:
     st.session_state.finished_pages = []
     st.session_state.ai_data = None
     st.session_state.current_file = uploaded_file.name
     st.session_state.pdf_text = ""
-
-# ✨✨ ここに構図（レイアウト）の選択UIを挿入 ✨✨
-st.write("---")
-st.subheader("🛋️ 理想の空間レイアウト（構図）を選択")
-st.write("間取り図をどのようなカメラアングルで描画するか選択してください。")
-
-# 画像を小さく並べるための設定
-# ✨ 修正：間に「0.2」の小さな余白（スペーサー）を挟んで重なりを防止します
-col_img1, col_space, col_img2, _ = st.columns([2, 0.2, 2, 4])
-
-with col_img1:
-    try:
-        # width=350を消し、枠の幅に合わせて自動縮小する設定に変更
-        st.image("1.jpg", caption="① 横長の広々としたレイアウト", use_container_width=True)
-    except:
-        st.info("※画像が見つかりません。1.jpgを配置してください。")
-
-with col_img2:
-    try:
-        # こちらも枠に合わせて自動縮小
-        st.image("2.jpg", caption="② 縦長の奥行きのあるレイアウト", use_container_width=True)
-    except:
-        st.info("※画像が見つかりません。2.jpgを配置してください。")
-
-layout_styles = {
-    "horizontal": "① 横長レイアウト（窓面が広く、開放感のある構図）",
-    "vertical": "② 縦長レイアウト（手前から奥へと視線が抜ける奥行きのある構図）"
-}
-selected_layout_key = st.radio(
-    "希望のレイアウト構図：",
-    options=list(layout_styles.keys()),
-    format_func=lambda x: layout_styles[x],
-    horizontal=True
-)
+# ✨ 修正：UIは削除し、内部処理用のデフォルト値を設定
+selected_layout_key = "horizontal"
 
 # --- 物件設定（画面からは非表示にし、裏側で「戸建て」に固定） ---
 selected_property_key = "house"
@@ -216,6 +183,7 @@ def generate_with_retry(model_name, prompt_contents, generation_config=None):
 
 if btn_generate and uploaded_file is not None:
     with st.status("📄 パンフレットを作成中...（約2分かかります）", expanded=True) as status:
+        progress_msg = st.empty()
         try:
             # --- 4-A. OCR ＆ 表紙生成 ---
             st.write("🔍 販売図面をAI（OCR）で読み取っています...")
@@ -356,7 +324,7 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
             6. **building_area**: 【補助データ】から建物面積を抽出してください。「建物」という文字と「㎡」単位を含めてください。（例：建物 100.77㎡）
             7. **price_jp**: 【補助データ】から価格を日本語表記（万円単位）で抽出してください。（例：3,650万円）
             8. **デザインスタイル**: {current_theme_name} の雰囲気に合わせた魅力的な言葉選びをしてください。
-            9. **property_name_jp**: 【補助データ】のOCRテキストの中から、最も目立つ場所に書かれている名称（通常はタイトル）、または物件概要欄から特定される物件名を日本語表記で特定し、抽出してください。（例：ラ・フレーズ国分寺）
+            9. **property_name_jp**: 【補助データ】のOCRテキストの中から、最も目立つ場所に書かれている名称（通常はタイトル）、または物件概要欄から特定される物件名を日本語表記で特定し、抽出してください。部屋番号（〜号室など）の記載がある場合は必ず含めてください。（例：パークシティひばりが丘 410号室）
             10. **city_town_clean**: 【補助データ】の所在地から市区町村と町名を抽出し、余計な文字（東京都など）を省いてください（例：府中市美好町）。これをImagen生成用に保持します。
 
             出力は必ず以下のJSON配列形式のみにしてください。
@@ -629,13 +597,29 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                     else:
                         draw.text((width/2, height/2), "間取り図がアップロードされていません", fill="white", anchor="mm")
                 
-                # ────────── ⑤ 内観（間取り図を基にAI生成） ──────────
+                # ────────── ⑤ 内観（✨空室写真ベースのバーチャルステージング対応） ──────────
                 elif page_data['type'] == 'interior_hq':
-                    st.write(f"🎨 間取り図に合わせたお部屋を生成中...")
+                    st.write(f"🎨 完成予想イメージを生成中...")
+                    
+                    # ✨ 空室写真がアップロードされている場合は、その構造を解析して家具を合成する
+                    if empty_room_file:
+                        st.write("🔍 アップロードされた空室写真を解析し、構造を維持しつつ家具を配置します...")
+                        e_bytes = empty_room_file.getvalue()
+                        analysis_img = generate_with_retry(
+                            model_name='gemini-2.5-flash',
+                            prompt_contents=[
+                                f"Analyze this empty room photo precisely. Generate a highly detailed English prompt for an Image Generation AI to recreate this EXACT room structure (same window placement, floor, wall) BUT add elegant {current_theme_name} style furniture. Output ONLY the prompt string.",
+                                types.Part.from_bytes(data=e_bytes, mime_type="image/jpeg")
+                            ]
+                        )
+                        final_room_prompt = analysis_img.text.strip()
+                    else:
+                        final_room_prompt = room_description # 空室写真がない場合は間取り図から
+
                     try:
                         image_result = gemini_client.models.generate_images(
                             model='imagen-4.0-generate-001',
-                            prompt=room_description,
+                            prompt=final_room_prompt,
                             config=types.GenerateImagesConfig(number_of_images=1, aspect_ratio="4:3" if orientation == "横向き (Landscape)" else "3:4")
                         )
                         generated_bytes = image_result.generated_images[0].image.image_bytes
@@ -1108,20 +1092,33 @@ if st.session_state.finished_pages:
             # ✨ 修正：お手本に合わせた高級感のあるブロンズゴールドと游明朝の指定
             luxury_gold = RGBColor(185, 160, 110)
             
+            # ✨ 修正1：テキストボックスの座標と幅を調整し、左右のエリアを明確に分ける
             if orientation == "横向き (Landscape)":
-                tb_title = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(6.0), Inches(0.8))
-                tb_area = slide.shapes.add_textbox(Inches(6.8), Inches(0.1), Inches(2.7), Inches(0.5))
-                tb_price = slide.shapes.add_textbox(Inches(6.8), Inches(0.6), Inches(2.7), Inches(0.8))
+                tb_title = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(5.8), Inches(1.2))
+                tb_area = slide.shapes.add_textbox(Inches(6.5), Inches(0.1), Inches(3.0), Inches(0.8))
+                tb_price = slide.shapes.add_textbox(Inches(6.5), Inches(0.8), Inches(3.0), Inches(0.8))
             else:
-                tb_title = slide.shapes.add_textbox(Inches(0.5), Inches(0.4), Inches(4.5), Inches(0.8))
-                tb_area = slide.shapes.add_textbox(Inches(5.0), Inches(0.1), Inches(2.2), Inches(0.6))
-                tb_price = slide.shapes.add_textbox(Inches(5.0), Inches(0.7), Inches(2.2), Inches(0.8))
-            
+                tb_title = slide.shapes.add_textbox(Inches(0.4), Inches(0.3), Inches(4.2), Inches(1.2))
+                tb_area = slide.shapes.add_textbox(Inches(4.6), Inches(0.1), Inches(2.7), Inches(0.8))
+                tb_price = slide.shapes.add_textbox(Inches(4.6), Inches(0.8), Inches(2.7), Inches(0.8))
+             
             # 物件タイトル
             tf_title = tb_title.text_frame
+            tf_title.word_wrap = True # 長すぎる場合は改行して被りを防ぐ
             p_title = tf_title.paragraphs[0]
             p_title.text = prop_name_jp
-            p_title.font.size = Pt(32)
+            
+            # ✨ 修正：号室を含んで長くなっても見切れないよう、文字数に合わせてサイズを細かく調整
+            name_len = len(prop_name_jp)
+            if name_len > 20:
+                p_title.font.size = Pt(20)
+            elif name_len > 14:
+                p_title.font.size = Pt(24)
+            elif name_len > 10:
+                p_title.font.size = Pt(28)
+            else:
+                p_title.font.size = Pt(32)
+                
             p_title.font.name = "游明朝"
             p_title.font.bold = True
             p_title.font.color.rgb = luxury_gold
@@ -1133,16 +1130,20 @@ if st.session_state.finished_pages:
             tf_area.clear()
             p_land = tf_area.add_paragraph()
             p_land.text = land_area
-            p_land.font.size = Pt(11)
+            p_land.font.size = Pt(16) # ✨ 修正4：面積の文字を Pt(11) から Pt(16) に拡大
             p_land.font.color.rgb = luxury_gold
             p_land.alignment = PP_ALIGN.RIGHT
+            try: p_land.font.shadow = True 
+            except: pass
             
             if building_area:
                 p_build = tf_area.add_paragraph()
                 p_build.text = building_area
-                p_build.font.size = Pt(11)
+                p_build.font.size = Pt(16) # ✨ 修正4：面積の文字を Pt(11) から Pt(16) に拡大
                 p_build.font.color.rgb = luxury_gold
                 p_build.alignment = PP_ALIGN.RIGHT
+                try: p_build.font.shadow = True 
+                except: pass
             
             # 価格
             tf_price = tb_price.text_frame
@@ -1156,12 +1157,12 @@ if st.session_state.finished_pages:
             try: p_price.font.shadow = True # 価格にも影を付ける
             except: pass
 
-# ────────── ⑥ 内観ギャラリー（✨PPTX側で重なり解消・配置修正版） ──────────
+# ────────── ⑥ 内観ギャラリー（✨PPTX側で重なり解消・配置修正済みの決定版） ──────────
         elif p_type == 'interior':
             sw, sh = prs.slide_width, prs.slide_height
             luxury_gold = RGBColor(185, 160, 110)
             
-            # ✨ 修正2: 各要素のY座標の隙間を広げ、被りを完全に無くす
+            # ✨ 各要素のY座標の隙間を広げ、被りを完全に無くす
             if orientation == "横向き (Landscape)":
                 en_y   = Inches(0.2)
                 jp_y   = Inches(0.7)
@@ -1213,7 +1214,7 @@ if st.session_state.finished_pages:
             p_head_en.font.color.rgb = RGBColor(255, 255, 255) 
             p_head_en.alignment = PP_ALIGN.LEFT
             
-            # ✨ 修正3: 文字が見切れないように枠の高さを Inches(0.6) に拡大
+            # ✨ 文字が見切れないように枠の高さを拡大
             tx_head_jp = slide.shapes.add_textbox(sw * 0.05, jp_y, sw * 0.4, Inches(0.6))
             tf_head_jp = tx_head_jp.text_frame
             tf_head_jp.clear()
