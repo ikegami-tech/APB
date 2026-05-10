@@ -7,7 +7,7 @@ import time
 import random
 from pptx import Presentation
 from pptx.util import Inches, Pt
-from pptx.enum.text import PP_ALIGN
+from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.dml.color import RGBColor
 from google import genai
 from dotenv import load_dotenv
@@ -186,7 +186,7 @@ if btn_generate and uploaded_file is not None:
         progress_msg = st.empty()
         try:
             # --- 4-A. OCR ＆ 表紙生成 ---
-            st.write("🔍 販売図面をAI（OCR）で読み取っています...")
+            progress_msg.info("🔍 販売図面をAI（OCR）で読み取っています...")
             file_bytes = uploaded_file.getvalue()
             filename_lower = uploaded_file.name.lower()
             if filename_lower.endswith(".pdf"): mime_type = "application/pdf"
@@ -204,7 +204,7 @@ if btn_generate and uploaded_file is not None:
 
 # ✨ 修正：表紙が選択されている時だけ画像生成を実行し、3パターンのプロンプトを設定
             if "cover" in selected_pages_keys:
-                st.write("📸 表紙のデザイン案を3パターン生成中...")
+                progress_msg.info("📸 表紙のデザイン案を3パターン生成中...")
                 target_city_town = "Tokyo"
                 if "所在地" in st.session_state.pdf_text:
                     target_city_town = st.session_state.pdf_text.split("所在地")[-1][:10]
@@ -216,8 +216,8 @@ if btn_generate and uploaded_file is not None:
                     # 案2：一軒家の室内で寛ぐ男性（✨外の景色を最小限にする指示を追加） [cite: 20-22]
                     f"High-end luxury lifestyle photography. A sophisticated Japanese man relaxing and drinking coffee in a modern, spacious luxury living room of a detached house in {target_city_town}. Focus on the premium interior design, close-up shot. Windows are softly blurred or showing very minimal outdoor scenery to emphasize the indoor atmosphere. NO text.",
                     
-                    # 案3：マンションの室内で遊ぶ家族(✨外の景色を最小限にする指示を追加）
-                    f"High-end luxury lifestyle photography. A happy Japanese family playing in a stylish, high-ceiling living room of a luxury modern apartment in {target_city_town}. Large windows showing a distant city skyline view. Sophisticated interior design, bright natural light, warm family atmosphere. NO text."
+                    # 案3：マンションの室内で遊ぶ家族(✨外の景色を最小限にする指示を追加、タワマン感を排除） [cite: 22]
+                    f"High-end luxury lifestyle photography. A happy Japanese family playing in a stylish, high-ceiling living room of a luxury modern apartment in {target_city_town}. Large windows are softly blurred or show very minimal outdoor scenery, carefully avoiding a distant tower apartment skyline view to emphasize the cozy indoor atmosphere. Sophisticated interior design, bright natural light, warm family atmosphere. NO text."
                 ]
 
                 temp_choices = []
@@ -236,27 +236,26 @@ if btn_generate and uploaded_file is not None:
                 st.write("⏭️ 表紙が未選択のため、画像生成をスキップします。")
             # --- 4-B. 全ページデータ（JSON）の生成 ---
 
-            st.write("AIが物件情報、指定地域、デザインテーマを分析中...")
+# --- 4-B. 全ページデータ（JSON）の生成 ---
+            progress_msg.info("🔍 AIが物件情報、指定地域、デザインテーマを分析中...")
             
             theme_info = THEMES[selected_style_key]
             current_theme_name = custom_style_description if selected_style_key == "other" else theme_info["name"]
 
-            # ✨✨ ここから追加：マンションの外観サンプル画像を解析 ✨✨
+            # マンションの外観サンプル画像を解析
             apt_style_prompt = ""
             if selected_property_key == "apartment":
-                st.write(f"🏢 マンション規模（{selected_apt_scale}）のサンプル画像を解析中...")
-                # 選択された規模に応じてファイル名を決定 (apt_low.jpg など)
+                progress_msg.info(f"🏢 マンション規模（{selected_apt_scale}）のサンプル画像を解析中...")
                 sample_img_path = f"apt_{selected_apt_scale}.jpg" 
                 
                 if os.path.exists(sample_img_path):
                     with open(sample_img_path, "rb") as f:
                         s_bytes = f.read()
                     try:
-                        # 画像の外観特徴を英語のプロンプトに変換させる
                         analysis_apt = generate_with_retry(
                             model_name='gemini-2.5-flash',
                             prompt_contents=[
-                                "Analyze this apartment building's exterior design (colors, materials, window styles, overall architectural shape). Generate a short, STRICT English prompt for an Image generation AI to create a building with a very similar architectural style. Output ONLY the English prompt string. Do NOT use markdown.",
+                                "Analyze this apartment building's exterior design (colors, materials, window styles, overall architectural shape). Generate a short, STRICT English prompt. Output ONLY the English prompt string.",
                                 types.Part.from_bytes(data=s_bytes, mime_type="image/jpeg")
                             ]
                         )
@@ -264,12 +263,12 @@ if btn_generate and uploaded_file is not None:
                     except Exception as e:
                         st.warning(f"マンション画像の解析エラー: {e}")
                 else:
-                    st.info(f"※ サンプル画像 ({sample_img_path}) が見つからないため、通常生成します。")
+                    progress_msg.info(f"※ サンプル画像 ({sample_img_path}) が見つからないため、通常生成します。")
 
-# --- 間取り図をAIに読み取らせる ---
-            room_description = "A modern living room" # 読み取れなかった時の予備
+            # 間取り図解析
+            room_description = "A modern living room"
             if madori_file:
-                st.write("🔍 間取り図と入力された特徴から、強力な画像生成プロンプトを作成中...")
+                progress_msg.info("🔍 間取り図から強力な画像生成プロンプトを作成中...")
                 m_bytes = madori_file.getvalue()
                 
                 # ✨ 追加：選択されたレイアウト構図の英語指示を定義
@@ -642,26 +641,22 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                     draw.text((width*0.05, height*0.87), "INTERIOR VISION", font=f_h, fill="white", anchor="la")
                     draw.text((width*0.95, height*0.90), sub_text, font=f_s, fill="white", anchor="ra")
                 
-# ────────── ⑥ 内観ギャラリー（✨ Imagen 3 による高級背景生成版） ──────────
-                elif page_data['type'] == 'interior':
-                    # ✨ 修正1: 会社案内と同じように、1回生成した背景を保存して使い回す
-                    if "interior_bg_image" in st.session_state and st.session_state.interior_bg_image:
-                        st.write(f"🖼️ 内観ギャラリーの高級背景（1回目に生成されたもの）を使い回します...")
-                        bg_image = st.session_state.interior_bg_image.copy()
+# ────────── ⑥ 内観ギャラリー ＆ ⑦ 会社案内 背景生成 ──────────
+                elif page_data['type'] in ['interior', 'company']:
+                    # ✨ 修正：P.7とP.8で背景を共通化し、統一感を出す
+                    if "shared_luxury_bg" in st.session_state and st.session_state.shared_luxury_bg:
+                        progress_msg.info(f"🖼️ 高級背景（共通デザイン）を適用中...")
+                        bg_image = st.session_state.shared_luxury_bg.copy()
                     else:
-                        st.write(f"🎨 内観ギャラリーの高級背景（石目・スポットライト・金粉）をImagen 3で生成中...")
-                        
+                        progress_msg.info(f"🎨 高級背景（石目・スポットライト・金粉）をImagenで生成中...")
                         bg_prompt = (
-                            "A cinematic, high-end luxury background for an interior gallery showcase. "
-                            "Deep charcoal black stone and metal texture with a soft spotlight effect in the center. "
-                            "Elegant golden dust particles scattered around the center area. "
-                            "Cinematic lighting, premium atmosphere. "
-                            "NO text, NO floor plans, NO logos."
+                            "A cinematic, high-end luxury background for an interior gallery. "
+                            "Deep charcoal black stone texture with a soft spotlight effect in the center. "
+                            "Elegant golden dust particles. NO text, NO logos."
                         )
-                        
                         try:
                             image_result = gemini_client.models.generate_images(
-                                model='imagen-4.0-generate-001',
+                                model='imagen-3.0-generate-001', # ✨ 適切なモデル名に修正
                                 prompt=bg_prompt,
                                 config=types.GenerateImagesConfig(
                                     number_of_images=1, 
@@ -670,52 +665,19 @@ Output ONLY the final English prompt string. Do NOT output any conversational te
                             )
                             generated_bytes = image_result.generated_images[0].image.image_bytes
                             bg_image = Image.open(BytesIO(generated_bytes)).convert("RGB").resize((width, height))
-                            st.session_state.interior_bg_image = bg_image.copy() # ✨ ここで保存
+                            st.session_state.shared_luxury_bg = bg_image.copy() # 保存
                         except Exception as e:
-                            st.warning(f"内観ギャラリーの背景生成エラー: {e}")
-                            bg_image = Image.new('RGB', (width, height), color=(30, 30, 30))
-                    
-                    # ※PPTX側で綺麗な線を引くため、PIL側の線（draw.rectangle）は削除しました
-
-# ────────── ⑦ 会社案内 ──────────
-                elif page_data['type'] == 'company':
-                    # ✨ 修正：会社案内ページのデザインを統一するため、セッション状態に背景画像を保存して使い回します
-                    if "company_bg_image" in st.session_state and st.session_state.company_bg_image:
-                        st.write(f"🖼️ 会社案内の高級背景（1回目に生成されたもの）を使い回します...")
-                        bg_image = st.session_state.company_bg_image.copy()
-                    else:
-                        st.write(f"🎨 会社案内の最高級背景（石目・スポットライト）を生成中...")
-                        # Imagen への指示プロンプト（ユーザーの注釈に従って木目を削除、柱/ロープ排除、石目ポリッシュに変更）
-                        bg_prompt = (
-                            "A cinematic, high-end luxury background for a real estate corporate profile. "
-                            "Deep charcoal black polished stone texture with a soft spotlight effect in the center. "
-                            "Elegant golden dust particles scattered around the center area. "
-                            "Cinematic lighting, premium atmosphere. "
-                            "NO columns, NO ropes, NO vertical elements, NO text, NO logos."
-                        )
-                        try:
-                            # Imagen 3 モデルで画像生成を実行
-                            image_result = gemini_client.models.generate_images(
-                                model='imagen-4.0-generate-001',
-                                prompt=bg_prompt,
-                                config=types.GenerateImagesConfig(
-                                    number_of_images=1, 
-                                    aspect_ratio="4:3" if orientation == "横向き (Landscape)" else "3:4"
+                            st.warning(f"背景生成エラー（予備デザインを適用）: {e}")
+                            # ✨ 修正：AIが失敗しても真っ黒にせず、高級グラデーションを自作
+                            bg_image = Image.new('RGB', (width, height), color=(20, 20, 25))
+                            draw_grad = ImageDraw.Draw(bg_image)
+                            for r in range(height, 0, -5):
+                                alpha = int(100 * (r / height))
+                                draw_grad.ellipse(
+                                    [(width/2 - r, height/2 - r), (width/2 + r, height/2 + r)],
+                                    outline=(30 + (100-alpha)//2, 30 + (80-alpha)//2, 40)
                                 )
-                            )
-                            generated_bytes = image_result.generated_images[0].image.image_bytes
-                            bg_image = Image.open(BytesIO(generated_bytes)).convert("RGB").resize((width, height))
-                            st.session_state.company_bg_image = bg_image.copy() # 生成された画像を保存
-                        except Exception as e:
-                            st.warning(f"背景生成エラー: {e}")
-                            bg_image = Image.new('RGB', (width, height), color=(20, 20, 20))
-
-                    draw = ImageDraw.Draw(bg_image)
-                    gold_line_color = (190, 155, 100)
-                    
-                    # 中央の仕切り線のみプレビューに描画（文字はパワポ側で入れるため描画しない）
-                    line_len = width * 0.05
-                    draw.line([(width/2 - line_len, height*0.58), (width/2 + line_len, height*0.58)], fill=gold_line_color, width=2)
+                            st.session_state.shared_luxury_bg = bg_image.copy()
 
                 if bg_image:
                     generated_pages_with_data.append((page_data, bg_image))
@@ -1157,135 +1119,85 @@ if st.session_state.finished_pages:
             try: p_price.font.shadow = True # 価格にも影を付ける
             except: pass
 
-# ────────── ⑥ 内観ギャラリー（✨PPTX側で重なり解消・配置修正済みの決定版） ──────────
+# ────────── ⑥ 内観ギャラリー（✨P.7：金色の線あり・5枚枠） ──────────
         elif p_type == 'interior':
             sw, sh = prs.slide_width, prs.slide_height
             luxury_gold = RGBColor(185, 160, 110)
             
-            # ✨ 各要素のY座標の隙間を広げ、被りを完全に無くす
+            # 座標設定
             if orientation == "横向き (Landscape)":
-                en_y   = Inches(0.2)
-                jp_y   = Inches(0.7)
-                bar_y  = Inches(1.4)
-                main_y = Inches(1.6)
-                main_h = Inches(2.5)
-                sub1_y = Inches(4.3)
-                sub2_y = Inches(5.8)
-                sub_h  = Inches(1.3)
+                en_y, jp_y, bar_y, main_y, main_h = Inches(0.2), Inches(0.7), Inches(1.4), Inches(1.6), Inches(2.5)
+                sub1_y, sub2_y, sub_h = Inches(4.3), Inches(5.8), Inches(1.3)
             else:
-                en_y   = Inches(0.3)
-                jp_y   = Inches(0.8)
-                bar_y  = Inches(1.5)
-                main_y = Inches(1.7)
-                main_h = Inches(3.7)
-                sub1_y = Inches(5.6)
-                sub2_y = Inches(7.6)
-                sub_h  = Inches(1.8)
+                en_y, jp_y, bar_y, main_y, main_h = Inches(0.3), Inches(0.8), Inches(1.5), Inches(1.7), Inches(3.7)
+                sub1_y, sub2_y, sub_h = Inches(5.6), Inches(7.6), Inches(1.8)
 
-            # ✨ 最背面：ゴールドの金属質感バーを描画
+            # ゴールドバー（P.7は必要）
             gold_bar = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, bar_y, sw, Pt(6))
             gold_bar.fill.solid()
             gold_bar.fill.fore_color.rgb = luxury_gold
-            gold_bar.line.fill.background() # 枠線を消す
+            gold_bar.line.fill.background()
 
-            # ✨ 中面：プレースホルダーを配置
+            # 5枚の画像枠
             if orientation == "横向き (Landscape)":
-                add_placeholder_box(slide, Inches(0.5), main_y, Inches(9.0), main_h, "【 メイン画像 挿入枠 】\n※自由にサイズ変更・削除できます", luxury_gold, show_icon=True, label_text="MAIN SLOT")
-                add_placeholder_box(slide, Inches(0.5), sub1_y, Inches(4.3), sub_h, "【 サブ画像 】", luxury_gold, show_icon=True, label_text="SUB SLOT Detail 1")
-                add_placeholder_box(slide, Inches(5.2), sub1_y, Inches(4.3), sub_h, "【 サブ画像 】", luxury_gold, show_icon=True, label_text="SUB SLOT Detail 2")
-                add_placeholder_box(slide, Inches(0.5), sub2_y, Inches(4.3), sub_h, "【 サブ画像 】", luxury_gold, show_icon=True, label_text="SUB SLOT Detail 3")
-                add_placeholder_box(slide, Inches(5.2), sub2_y, Inches(4.3), sub_h, "【 サブ画像 】", luxury_gold, show_icon=True, label_text="SUB SLOT Detail 4")
+                add_placeholder_box(slide, Inches(0.5), main_y, Inches(9.0), main_h, "【 メイン画像 】", luxury_gold, show_icon=True, label_text="MAIN SLOT")
+                add_placeholder_box(slide, Inches(0.5), sub1_y, Inches(4.3), sub_h, "【 サブ画像1 】", luxury_gold, show_icon=True, label_text="SUB 1")
+                add_placeholder_box(slide, Inches(5.2), sub1_y, Inches(4.3), sub_h, "【 サブ画像2 】", luxury_gold, show_icon=True, label_text="SUB 2")
+                add_placeholder_box(slide, Inches(0.5), sub2_y, Inches(4.3), sub_h, "【 サブ画像3 】", luxury_gold, show_icon=True, label_text="SUB 3")
+                add_placeholder_box(slide, Inches(5.2), sub2_y, Inches(4.3), sub_h, "【 サブ画像4 】", luxury_gold, show_icon=True, label_text="SUB 4")
             else:
-                add_placeholder_box(slide, Inches(0.5), main_y, Inches(6.5), main_h, "【 メイン画像 挿入枠 】\n※自由にサイズ変更・削除できます", luxury_gold, show_icon=True, label_text="MAIN SLOT")
-                add_placeholder_box(slide, Inches(0.5), sub1_y, Inches(3.1), sub_h, "【 サブ画像 】", luxury_gold, show_icon=True, label_text="SUB SLOT Detail 1")
-                add_placeholder_box(slide, Inches(3.9), sub1_y, Inches(3.1), sub_h, "【 サブ画像 】", luxury_gold, show_icon=True, label_text="SUB SLOT Detail 2")
-                add_placeholder_box(slide, Inches(0.5), sub2_y, Inches(3.1), sub_h, "【 サブ画像 】", luxury_gold, show_icon=True, label_text="SUB SLOT Detail 3")
-                add_placeholder_box(slide, Inches(3.9), sub2_y, Inches(3.1), sub_h, "【 サブ画像 】", luxury_gold, show_icon=True, label_text="SUB SLOT Detail 4")
+                add_placeholder_box(slide, Inches(0.5), main_y, Inches(6.5), main_h, "【 メイン画像 】", luxury_gold, show_icon=True, label_text="MAIN SLOT")
+                add_placeholder_box(slide, Inches(0.5), sub1_y, Inches(3.1), sub_h, "【 サブ1 】", luxury_gold, show_icon=True, label_text="SUB 1")
+                add_placeholder_box(slide, Inches(3.9), sub1_y, Inches(3.1), sub_h, "【 サブ2 】", luxury_gold, show_icon=True, label_text="SUB 2")
+                add_placeholder_box(slide, Inches(0.5), sub2_y, Inches(3.1), sub_h, "【 サブ3 】", luxury_gold, show_icon=True, label_text="SUB 3")
+                add_placeholder_box(slide, Inches(3.9), sub2_y, Inches(3.1), sub_h, "【 サブ4 】", luxury_gold, show_icon=True, label_text="SUB 4")
 
-            # ✨ 最前面：ヘッダーテキスト
+            # ヘッダー（P.7は必要）
             tx_head_en = slide.shapes.add_textbox(sw * 0.05, en_y, sw * 0.5, Inches(0.5))
-            tf_head_en = tx_head_en.text_frame
-            tf_head_en.clear()
-            p_head_en = tf_head_en.add_paragraph()
-            p_head_en.text = "INTERIOR GALLERY"
-            p_head_en.font.size = Pt(28) 
-            p_head_en.font.name = "游ゴシック"
-            p_head_en.font.bold = True
-            p_head_en.font.color.rgb = RGBColor(255, 255, 255) 
-            p_head_en.alignment = PP_ALIGN.LEFT
+            tx_head_en.text_frame.paragraphs[0].text = "INTERIOR GALLERY"
+            tx_head_en.text_frame.paragraphs[0].font.size, tx_head_en.text_frame.paragraphs[0].font.color.rgb = Pt(28), RGBColor(255, 255, 255)
             
-            # ✨ 文字が見切れないように枠の高さを拡大
             tx_head_jp = slide.shapes.add_textbox(sw * 0.05, jp_y, sw * 0.4, Inches(0.6))
-            tf_head_jp = tx_head_jp.text_frame
-            tf_head_jp.clear()
-            p_head_jp = tf_head_jp.add_paragraph()
-            p_head_jp.text = "内観ギャラリー"
-            p_head_jp.font.size = Pt(16)
-            p_head_jp.font.name = "游明朝" 
-            p_head_jp.font.bold = True
-            p_head_jp.font.color.rgb = luxury_gold 
-            p_head_jp.alignment = PP_ALIGN.LEFT
-            try: p_head_jp.font.shadow = True 
-            except: pass
+            tx_head_jp.text_frame.paragraphs[0].text = "内観ギャラリー"
+            tx_head_jp.text_frame.paragraphs[0].font.size, tx_head_jp.text_frame.paragraphs[0].font.name, tx_head_jp.text_frame.paragraphs[0].font.color.rgb = Pt(16), "游明朝", luxury_gold
 
-# ────────── ⑦ 会社案内（✨ご要望通りの質感・装飾・重複解消版） ──────────
+        # ────────── ⑦ 会社案内（✨P.8：文字・線を消して3枚大型化版） ──────────
         elif p_type == 'company':
-            # --- スライド1：Produced By (メインブランド) ---
-            slide_brand = slide 
-            sw = prs.slide_width
-            sh = prs.slide_height
-            
-            gold_main = RGBColor(190, 155, 100)    # テキスト2用の金
-            gold_white = RGBColor(245, 240, 225)   # テキスト3用の白に近い金
+            sw, sh = prs.slide_width, prs.slide_height
+            luxury_gold = RGBColor(185, 160, 110)
+            gold_main = luxury_gold # NameError回避
 
-            # テキスト1: PRODUCED BY (上部・小さく・英語・金の文字)
-            tx_produced = slide_brand.shapes.add_textbox(0, sh * 0.35, sw, Inches(0.5))
-            tf_produced = tx_produced.text_frame
-            p_produced = tf_produced.paragraphs[0]
-            p_produced.text = "P R O D U C E D   B Y"
-            p_produced.font.size = Pt(14)
-            p_produced.font.name = "Arial"
-            p_produced.font.bold = True
-            p_produced.font.color.rgb = gold_main
-            p_produced.alignment = PP_ALIGN.CENTER
-            try: p_produced.font.shadow = True
-            except: pass
+            # ヘッダーを削除したため、上から大きく配置
+            if orientation == "横向き (Landscape)":
+                main_y, main_h = Inches(0.4), Inches(4.2)
+                sub_y, sub_h = Inches(4.8), Inches(2.1)
+                sub_w = Inches(4.3)
+            else:
+                main_y, main_h = Inches(0.5), Inches(5.5)
+                sub_y, sub_h = Inches(6.2), Inches(3.0)
+                sub_w = Inches(3.1)
 
-            # テキスト2: 会社名 (中央・大きく・金の明朝体)
-            tx_cname = slide_brand.shapes.add_textbox(0, sh * 0.43, sw, Inches(1.0))
-            tf_cname = tx_cname.text_frame
-            p_cname = tf_cname.paragraphs[0]
-            p_cname.text = page_data.get('company_name', '株式会社 東宝ハウス練馬')
-            p_cname.font.size = Pt(48)
-            p_cname.font.name = "游明朝"
-            p_cname.font.bold = True
-            p_cname.font.color.rgb = gold_main
-            p_cname.alignment = PP_ALIGN.CENTER
-            try: p_cname.font.shadow = True
-            except: pass
+            # 3つの大型画像枠
+            if orientation == "横向き (Landscape)":
+                add_placeholder_box(slide, Inches(0.5), main_y, Inches(9.0), main_h, "【 会社案内 メイン画像 】", luxury_gold, show_icon=True, label_text="COMPANY MAIN")
+                add_placeholder_box(slide, Inches(0.5), sub_y, sub_w, sub_h, "【 オフィス写真 】", luxury_gold, show_icon=True, label_text="OFFICE")
+                add_placeholder_box(slide, Inches(5.2), sub_y, sub_w, sub_h, "【 スタッフ写真 】", luxury_gold, show_icon=True, label_text="STAFF")
+            else:
+                add_placeholder_box(slide, Inches(0.5), main_y, Inches(6.5), main_h, "【 会社案内 メイン画像 】", luxury_gold, show_icon=True, label_text="COMPANY MAIN")
+                add_placeholder_box(slide, Inches(0.5), sub_y, sub_w, sub_h, "【 オフィス写真 】", luxury_gold, show_icon=True, label_text="OFFICE")
+                add_placeholder_box(slide, Inches(3.9), sub_y, sub_w, sub_h, "【 スタッフ写真 】", luxury_gold, show_icon=True, label_text="STAFF")
 
-            # 装飾: 薄い金の水平線 (テキスト2のすぐ下)
-            line_w = Inches(1.2)
-            line = slide_brand.shapes.add_shape(MSO_SHAPE.RECTANGLE, (sw - line_w) / 2, sh * 0.58, line_w, Pt(1))
-            line.fill.solid()
-            line.fill.fore_color.rgb = gold_main
-            line.line.fill.background()
-
-            # テキスト3: ブランドメッセージ (✨位置を下方に移動して視認性を向上)
-            # sh * 0.65 から sh * 0.82 に変更しました
-            tx_slogan = slide_brand.shapes.add_textbox(0, sh * 0.82, sw, Inches(0.5))
-            tf_slogan = tx_slogan.text_frame
-            p_slogan = tf_slogan.paragraphs[0]
+            # ブランドメッセージ（最下部に配置）
+            tx_slogan = slide.shapes.add_textbox(0, sh * 0.94, sw, Inches(0.4))
+            p_slogan = tx_slogan.text_frame.paragraphs[0]
             p_slogan.text = "「住まい」を通じて、お客様の人生に確かな価値を。"
-            p_slogan.font.size = Pt(16)
-            p_slogan.font.name = "游明朝"
-            p_slogan.font.color.rgb = gold_white # 白に近い金
+            p_slogan.font.size, p_slogan.font.name = Pt(14), "游明朝"
+            p_slogan.font.color.rgb = RGBColor(245, 240, 225)
             p_slogan.alignment = PP_ALIGN.CENTER
 
-            # --- スライド2：Contact & Thank you (✨地図枠付き) ---
+# --- スライド2：Contact & Thank you（THANK YOUページ） ---
             slide_thanks = prs.slides.add_slide(prs.slide_layouts[6]) 
-            bg_thanks = slide_thanks.background
-            fill_thanks = bg_thanks.fill
+            fill_thanks = slide_thanks.background.fill
             fill_thanks.solid()
             fill_thanks.fore_color.rgb = RGBColor(252, 248, 242)
 
@@ -1294,66 +1206,41 @@ if st.session_state.finished_pages:
             top_line.fill.fore_color.rgb = gold_main
             top_line.line.fill.background()
 
-            tx_ty = slide_thanks.shapes.add_textbox(0, sh * 0.15, sw, Inches(1.0))
-            tf_ty = tx_ty.text_frame
-            p_ty = tf_ty.paragraphs[0]
+            tx_ty = slide_thanks.shapes.add_textbox(0, sh * 0.12, sw, Inches(1.0)) # 少し上に移動
+            p_ty = tx_ty.text_frame.paragraphs[0]
             p_ty.text = "THANK YOU"
-            p_ty.font.size = Pt(48)
-            p_ty.font.name = "Times New Roman"
-            p_ty.font.color.rgb = RGBColor(30, 30, 30)
-            p_ty.alignment = PP_ALIGN.CENTER
+            p_ty.font.size, p_ty.font.name, p_ty.alignment = Pt(48), "Times New Roman", PP_ALIGN.CENTER
 
-            tx_msg = slide_thanks.shapes.add_textbox(0, sh * 0.28, sw, Inches(0.5))
-            tf_msg = tx_msg.text_frame
-            p_msg = tf_msg.paragraphs[0]
-            p_msg.text = "物件見学のご予約・詳細資料のご請求は下記までお気軽にお問い合わせください。"
-            p_msg.font.size = Pt(12)
-            p_msg.font.name = "游ゴシック"
-            p_msg.font.color.rgb = RGBColor(80, 80, 80)
-            p_msg.alignment = PP_ALIGN.CENTER
+            # ✨ 修正1：店舗案内図の枠を少し小さくし、位置を上に上げて重なりを防止
+            map_box_w, map_box_h = Inches(5.5), Inches(2.2) 
+            add_placeholder_box(slide_thanks, (sw - map_box_w) / 2, sh * 0.30, map_box_w, map_box_h, "店舗案内図（地図）")
 
-            map_box_w, map_box_h = Inches(5.5), Inches(2.8)
-            add_placeholder_box(slide_thanks, (sw - map_box_w) / 2, sh * 0.35, map_box_w, map_box_h, "店舗案内図（地図）")
-
-            box_w, box_h = Inches(6.5), Inches(1.8)
-            box = slide_thanks.shapes.add_shape(MSO_SHAPE.RECTANGLE, (sw - box_w) / 2, sh * 0.68, box_w, box_h)
+            # ✨ 修正2：フリーダイヤル枠の開始位置（box_y）を sh * 0.68 まで下げて重なりを解消
+            box_w, box_h, box_y = Inches(6.5), Inches(1.8), sh * 0.68 
+            box = slide_thanks.shapes.add_shape(MSO_SHAPE.RECTANGLE, (sw - box_w) / 2, box_y, box_w, box_h)
             box.fill.solid()
             box.fill.fore_color.rgb = RGBColor(255, 255, 255)
             box.line.color.rgb = RGBColor(240, 240, 240)
             box.line.width = Pt(1)
 
-            tx_contact = slide_thanks.shapes.add_textbox((sw - box_w) / 2, sh * 0.73, box_w, box_h)
+            # テキストボックス
+            tx_contact = slide_thanks.shapes.add_textbox((sw - box_w) / 2, box_y, box_w, box_h)
             tf_contact = tx_contact.text_frame
+            tf_contact.vertical_anchor = MSO_ANCHOR.MIDDLE # 上下中央揃え 
+            
+            # ✨ 修正3：テキスト枠自体の余白をゼロにして、上下中央をより正確にする
+            tf_contact.margin_top = tf_contact.margin_bottom = 0
             tf_contact.clear()
+            
             p_tel = tf_contact.add_paragraph()
             p_tel.text = f"フリーダイヤル：{page_data.get('tel', '')}"
-            p_tel.font.size = Pt(26)
-            p_tel.font.bold = True
-            p_tel.font.color.rgb = gold_main 
-            p_tel.alignment = PP_ALIGN.CENTER
+            p_tel.font.size, p_tel.font.bold, p_tel.font.color.rgb, p_tel.alignment = Pt(26), True, gold_main, PP_ALIGN.CENTER
 
             p_info = tf_contact.add_paragraph()
             p_info.text = f"{page_data.get('license', '')}  |  {page_data.get('address', '')}"
-            p_info.font.size = Pt(10)
-            p_info.font.color.rgb = RGBColor(120, 120, 120)
-            p_info.alignment = PP_ALIGN.CENTER
+            p_info.font.size, p_info.font.color.rgb, p_info.alignment = Pt(10), RGBColor(120, 120, 120), PP_ALIGN.CENTER
 
-            tx_url = slide_thanks.shapes.add_textbox(Inches(0.5), sh - Inches(0.4), Inches(3.0), Inches(0.3))
-            p_url = tx_url.text_frame.paragraphs[0]
-            p_url.text = "WWW.TOHO-HOUSE.CO.JP"
-            p_url.font.size = Pt(8)
-            p_url.font.color.rgb = RGBColor(150, 150, 150)
-
-            tx_copy = slide_thanks.shapes.add_textbox(sw - Inches(3.5), sh - Inches(0.4), Inches(3.0), Inches(0.3))
-            p_copy = tx_copy.text_frame.paragraphs[0]
-            p_copy.text = f"© 2024 {page_data.get('company_name', '').upper()}"
-            p_copy.font.size = Pt(8)
-            p_copy.font.color.rgb = RGBColor(150, 150, 150)
-            p_copy.alignment = PP_ALIGN.RIGHT
-
-
-    # ✨ 修正：ここから下を「if st.session_state.finished_pages:」の中に含める（スペース4つ分入れる）
-    # これにより、パンフレットが完成した時だけ保存ボタンが表示されるようになります
+    # ✨ 修正：完成後のダウンロード処理
     pptx_out = BytesIO()
     prs.save(pptx_out)
     pptx_out.seek(0)
