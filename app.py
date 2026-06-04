@@ -21,13 +21,8 @@ load_dotenv()
 gemini_api_key = os.getenv("GEMINI_API_KEY")
 
 st.set_page_config(page_title="AI Pamphlet Builder", layout="wide")
-st.title("🏡 AI Pamphlet Builder (Template Mode)")
-st.write("用意したテンプレート画像とAIのテキスト解析を組み合わせ、全6ページのパワポ資料を安定して自動生成します。")
 
-# フォントのパス（実行環境に合わせて確認してください）
-FONT_PATH = './NotoSansCJKjp-Bold.ttf' 
-
-# --- 修正：デザインテーマを6種＋その他に拡張 ---
+# --- 1. 店舗・テーマデータの定義（ログイン処理で使うため最上部に移動） ---
 THEMES = {
     "luxury":       {"name": "1 高級・ラグジュアリー", "bg_color": (40, 40, 45), "text_color": "white", "accent_color": (180, 150, 80)},
     "family":       {"name": "2 ファミリー・温もり", "bg_color": (255, 245, 235), "text_color": "black", "accent_color": (240, 130, 50)},
@@ -36,29 +31,39 @@ THEMES = {
     "casual":       {"name": "5 カジュアル・ポップ", "bg_color": (255, 250, 220), "text_color": "black", "accent_color": (250, 100, 130)},
     "other":        {"name": "6 その他（自由入力スタイル）", "bg_color": (240, 240, 240), "text_color": "black", "accent_color": (100, 100, 100)}
 }
-# --- 追加：店舗ごとの詳細データ ---
+
 BRANCH_DATA = {
     "練馬": {
         "full_name": "株式会社 東宝ハウス練馬",
         "license": "東京都知事（4）第86488号",
         "address": "〒178-0063 東京都練馬区東大泉1-27-22光和ビル2F",
-        "tel": "0120-384-700"
+        "tel": "0120-384-700",
+        "login_id": "th-nerima",      
+        "password": "th-nerima"   
     },
     "国分寺": {
         "full_name": "株式会社 東宝ハウス国分寺",
         "license": "東京都知事（9）第42787号",
         "address": "〒185-0021 東京都国分寺市南町3-22-2",
-        "tel": "0120-13-3107"
+        "tel": "0120-13-3107",
+        "login_id": "kokubunji",   
+        "password": "kokubunji"   
     },
     "武蔵野": {
         "full_name": "株式会社 東宝ハウス武蔵野",
         "license": "東京都知事（3）第90333号",
         "address": "〒180-0004 東京都武蔵野市吉祥寺本町1-15-9",
-        "tel": "0120-15-3101"
+        "tel": "0120-15-3101",
+        "login_id": "musashino",   
+        "password": "musashino"   
     },
 }
 
-# --- 2. メモリ（セッション状態）の初期化 ---
+# --- 2. セッション状態（メモリ）の初期化 ---
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "user_branch" not in st.session_state:
+    st.session_state.user_branch = None
 if "finished_pages" not in st.session_state:
     st.session_state.finished_pages = []
 if "ai_data" not in st.session_state:
@@ -70,8 +75,396 @@ if "pdf_text" not in st.session_state:
 if "cover_choices" not in st.session_state:
     st.session_state.cover_choices = []
 if "selected_cover_index" not in st.session_state:
-    st.session_state.selected_cover_index = 0    
+    st.session_state.selected_cover_index = 0
+    # 👇👇👇 ここから追加（仮想パス・ページ遷移管理用） 👇👇👇
+if "current_page" not in st.session_state:
+    # URLの末尾に「?page=xxx」があればそのページを開き、なければメニューを開く
+    st.session_state.current_page = st.query_params.get("page", "menu")
+# 👆👆👆 ここまで追加 👆👆👆
+
+# --- 3. 🔒 ログイン認証画面（未ログイン時のみ、ライトグレー背景で描画） ---
+if not st.session_state.logged_in:
+    st.markdown("""
+    <style>
+        /* 2枚目と同じ明るいライトグレー背景に強制変更（最優先） */
+        .stApp, [data-testid="stAppViewContainer"] {
+            background-color: #ECEFF1 !important;
+        }
+        /* ログインカードを真っ白・綺麗な角丸に変更 */
+        [data-testid="stVerticalBlockBorderContainer"] {
+            background-color: #FFFFFF !important;
+            border: 1px solid #CFD8DC !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
+            border-radius: 12px !important;
+            padding: 2rem !important;
+        }
+        /* ログイン入力欄の中の文字色をダークグレーに固定 */
+        .stTextInput input {
+            color: #1E2D3D !important;
+            background-color: #FAFAFA !important;
+            border-radius: 8px !important;
+            border: 1px solid #E0E0E0 !important;
+        }
+        /* 各種文字色をお手本に合わせてダークグレーに統一 */
+        h2, p, label, span, div, p a {
+            color: #1E2D3D !important;
+            font-family: '游ゴシック', sans-serif !important;
+        }
+        /* ログインボタンのデザイン（✨フォーム用のボタンにも効くように変更） */
+        div.stButton > button, div.stFormSubmitButton > button {
+            border-radius: 8px !important;
+            border: none !important;
+            background-color: #00C2A0 !important;
+            color: white !important;
+            padding: 12px 24px !important;
+            font-weight: bold !important;
+            font-size: 16px !important;
+            transition: all 0.3s ease !important;
+        }
+        div.stButton > button:hover, div.stFormSubmitButton > button:hover {
+            background-color: #00A88B !important;
+        }
+    </style>
     
+    <div style="background-color: #1E2D3D; height: 16px; margin: -5rem -5rem 2rem -5rem; padding: 0;"></div>
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <div style="font-size: 56px; margin-bottom: 0.5rem;">📋</div>
+        <h2 style="margin: 0; font-weight: bold; letter-spacing: 1px;">らくらく販売図面 APB</h2>
+        <p style="font-size: 14px; margin-top: 0.5rem; opacity: 0.8;">会社限定・パンフレット自動生成システム</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col_log1, col_log2, col_log3 = st.columns([1, 1.4, 1])
+    with col_log2:
+        # ✨ 修正：st.container を st.form に変更してエンターキーを有効化
+        with st.form(key="login_form", border=True):
+            st.write("")
+            input_id = st.text_input("👤 ログインID", placeholder="th-xxxx")
+            input_pw = st.text_input("🔒 パスワード", type="password", placeholder="••••••••")
+            st.write("")
+            
+            # ✨ 修正：st.button を st.form_submit_button に変更
+            if st.form_submit_button("ログイン", use_container_width=True):
+                success = False
+                for branch_name, info in BRANCH_DATA.items():
+                    if input_id == info["login_id"] and input_pw == info["password"]:
+                        st.session_state.logged_in = True
+                        st.session_state.user_branch = branch_name
+                        # ✨ ログイン成功時はURLパスをメニューに設定
+                        st.query_params["page"] = "menu"
+                        st.session_state.current_page = "menu"
+                        success = True
+                        st.success(f"📌 認証成功：{info['full_name']} としてログインしました。")
+                        time.sleep(1)
+                        st.rerun()
+                
+                if not success:
+                    st.error("🚨 ログインIDまたはパスワードが正しくありません。")
+        
+        st.markdown("""
+            <div style="text-align: center; margin-top: 1.5rem; font-size: 13px;">
+                <span>ログインできませんか？</span><br>
+                <a href="#" style="color: #00C2A0; text-decoration: none; margin-right: 10px; font-weight: bold;">パスワードについて</a> | 
+                <a href="#" style="color: #00C2A0; text-decoration: none; margin-left: 10px; font-weight: bold;">ログインIDについて</a>
+            </div>
+        """, unsafe_allow_html=True)
+        
+    st.stop() # ログインするまでこれ以降の画面を完全にロック
+
+# --- 4. ログイン成功後の本番画面スタイル（✨アップローダー内の英語を完全日本語化・決定版） ---
+st.markdown("""
+<style>
+    /* 本番画面のライトグレー背景 */
+    .stApp, [data-testid="stAppViewContainer"] {
+        background-color: #F4F6F8 !important;
+    }
+    
+    /* 基本文字色を上品な濃紺に統一 */
+    h1, h2, h3, h4, h5, h6, label, p, span, small {
+        color: #1E2D3D !important;
+        font-family: "游ゴシックMedium", "Noto Sans JP", sans-serif !important;
+    }
+    
+    /* メインタイトルの下にブロンズゴールドのライン */
+    h1 {
+        font-weight: bold !important;
+        border-bottom: 2px solid #D3B582 !important; 
+        padding-bottom: 12px !important;
+        margin-bottom: 30px !important;
+    }
+    
+    /* マルチセレクト（ページ選択）の全体ボックスを「真っ白」に変更 */
+    div.stMultiSelect div[data-baseweb="select"] {
+        background-color: #FFFFFF !important;
+        border: 1px solid #CFD8DC !important;
+        border-radius: 8px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02) !important;
+    }
+    
+    /* 選択されたタグを「ミントグリーン ＆ 白文字」に変更 */
+    div.stMultiSelect span[data-baseweb="tag"] {
+        background-color: #00C2A0 !important;
+        color: #FFFFFF !important;
+        border-radius: 6px !important;
+        font-weight: bold !important;
+        padding: 4px 8px !important;
+    }
+    
+    /* タグの右側にある「×」ボタン（削除アイコン）も白にして同化を防ぐ */
+    div.stMultiSelect span[data-baseweb="tag"] svg {
+        fill: #FFFFFF !important;
+    }
+    
+    /* 右側の展開矢印（∨）や「×」クリアボタンの色も濃紺にして見やすく */
+    div.stMultiSelect div[data-baseweb="select"] svg {
+        fill: #1E2D3D !important;
+    }
+    
+    /* 入力欄（テキストボックス） */
+    .stTextInput div div input {
+        border-radius: 8px !important;
+        border: 1px solid #CFD8DC !important;
+        background-color: #FFFFFF !important;
+        color: #1E2D3D !important;
+        padding: 12px !important;
+    }
+    
+    /* ──────────────────────────────────────────────────────── */
+    /* 📦 アップローダー（ファイル選択枠）本体 ＆ 完全日本語化ロジック */
+    /* ──────────────────────────────────────────────────────── */
+    [data-testid="stFileUploaderDropzone"] {
+        border-radius: 12px !important;
+        border: 2px dashed #D3B582 !important;
+        background-color: #FFFFFF !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
+        transition: all 0.3s ease;
+        position: relative !important; /* 絶対配置の基準にする */
+    }
+    [data-testid="stFileUploaderDropzone"]:hover {
+        border-color: #00C2A0 !important;
+        background-color: #FAFAFA !important;
+    }
+    
+    /* 1. 枠内にある既存の英語テキスト要素を、タグに関わらず完全に透明化 ＆ 縮小 */
+    [data-testid="stFileUploaderDropzone"] div, 
+    [data-testid="stFileUploaderDropzone"] span, 
+    [data-testid="stFileUploaderDropzone"] small {
+        color: transparent !important;
+        font-size: 0 !important;
+    }
+    
+    /* 2. 透明化の巻き込みから「雲アイコン」と「選択ボタン」だけを救出して正しく再表示 */
+    [data-testid="stFileUploaderDropzone"] svg {
+        fill: #1E2D3D !important;
+    }
+    [data-testid="stFileUploaderDropzone"] button {
+        background-color: #1E2D3D !important;
+        border: none !important;
+        border-radius: 6px !important;
+        padding: 8px 16px !important;
+        font-weight: bold !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+        transition: all 0.2s ease !important;
+        position: relative !important;
+        min-width: 130px !important; 
+        height: 38px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    /* ボタン内の日本語テキストを最前面に描画 */
+    [data-testid="stFileUploaderDropzone"] button::after {
+        content: "ファイルを選択" !important; 
+        position: absolute !important;
+        color: #FFFFFF !important; 
+        font-size: 14px !important;
+        font-weight: bold !important;
+    }
+    [data-testid="stFileUploaderDropzone"] button:hover {
+        background-color: #D3B582 !important;
+    }
+    [data-testid="stFileUploaderDropzone"] button:hover::after {
+        color: #1E2D3D !important;
+    }
+    
+    /* 3. 英語が消えて空いたスペースに、Dropzone自体の疑似要素として日本語を強制挿入 */
+    [data-testid="stFileUploaderDropzone"]::before {
+        content: "ここにファイルをドラッグ＆ドロップ" !important;
+        position: absolute !important;
+        left: 70px !important; /* 雲アイコンの右側に配置 */
+        top: 22px !important;
+        font-size: 14px !important;
+        color: #1E2D3D !important;
+        font-weight: bold !important;
+    }
+    [data-testid="stFileUploaderDropzone"]::after {
+        content: "1ファイルあたり最大200MB" !important;
+        position: absolute !important;
+        left: 70px !important;
+        top: 46px !important;
+        font-size: 11px !important;
+        color: #546E7A !important;
+        font-weight: 500 !important;
+    }
+    
+    /* 4. アップロードが完了した後の「ファイル名表示エリア」は透明化させずクッキリ見せる */
+    [data-testid="ststyledFileUploaderFilesContainer"] * {
+        color: #1E2D3D !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+    }
+    /* ──────────────────────────────────────────────────────── */
+    
+    /* 生成ボタン（通常時：押せる状態） */
+    div.stButton > button {
+        border-radius: 8px !important;
+        border: none !important;
+        background-color: #00C2A0 !important;
+        color: white !important;
+        padding: 14px 36px !important;
+        font-weight: bold !important;
+        font-size: 16px !important;
+        box-shadow: 0 4px 14px rgba(0, 194, 160, 0.2) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    /* ボタンが押せる（有効な）ときだけマウスホバー効果を出す */
+    div.stButton > button:not(:disabled):hover {
+        background-color: #00A88B !important;
+        box-shadow: 0 6px 20px rgba(0, 194, 160, 0.3) !important;
+        transform: translateY(-1px);
+    }
+    
+    /* ボタンが押せない（無効化：disabled）のときはグレーアウトにする */
+    div.stButton > button:disabled {
+        background-color: #CFD8DC !important;
+        color: #90A4AE !important;
+        box-shadow: none !important;
+        cursor: not-allowed !important;
+        transform: none !important;
+        opacity: 0.8 !important;
+    }
+    
+    /* 区切り線 */
+    hr {
+        border-color: rgba(211, 181, 130, 0.25) !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ======================================================================
+# 🧭 仮想パス・ナビゲーションシステム（画面の切り替えロジック）
+# ======================================================================
+
+# ────────── 🏠 A. メニュー選択画面（✨左右から上下並びに変更） ──────────
+if st.session_state.current_page == "menu":
+    st.title("🎛️ APB 総合メニューポータル")
+    st.write("実行したい自動生成アプリケーションを選択してください。")
+    st.write("")
+
+    # 💡 columns（列分け）を使わず、containerを直接並べることで上下の縦並びにします
+    with st.container(border=True):
+        st.markdown("### 🏡 パンフレット自動作成 (APB)")
+        st.write("販売図面からAIが物件情報を自動抽出し、高級感のある全8ページのPowerPointパンフレットを一括生成します。")
+        st.write("")
+        if st.button("パンフレット生成を起動 🚀", use_container_width=True):
+            st.query_params["page"] = "pamphlet" # URLの末尾を ?page=pamphlet に変更
+            st.session_state.current_page = "pamphlet"
+            st.rerun()
+
+    st.write("") # 枠と枠の間の程よいスキマ
+
+    with st.container(border=True):
+        st.markdown("### 📄 販売図面自動作成 (新規機能)")
+        st.write("【新機能】物件の特徴や間取り・地図を入力し、レインズ等にそのまま登録できる高クオリティな販売図面（マイソク）を自動作成します。")
+        st.write("")
+        if st.button("販売図面生成を起動 📝", use_container_width=True):
+            st.query_params["page"] = "zumen" # URLの末尾を ?page=zumen に変更
+            st.session_state.current_page = "zumen"
+            st.rerun()
+                
+    st.stop() # メニュー表示時はこれより下の「パンフレットのアップローダー等」を動かさずに止める
+
+# ────────── 📄 B. 新機能：販売図面生成画面 ──────────
+elif st.session_state.current_page == "zumen":
+    if st.button("◀ 総合メニューに戻る", key="back_from_zumen"):
+        st.query_params["page"] = "menu"
+        st.session_state.current_page = "menu"
+        st.rerun()
+        
+    st.title("📄 販売図面自動作成（マイソク生成モード）")
+    st.write("---")
+    st.info("💡 ここに今後、販売図面作成用のファイルアップローダーや入力欄、生成システムを組み込んでいきます。")
+    
+    st.text_input("物件タイトル（図面用）")
+    st.multiselect("図面に掲載するアピールポイント", ["駅徒歩5分以内", "南道路につき日当たり良好", "閑静な住宅街", "築浅リフォーム済み"])
+    st.button("⚙️ 販売図面PDFをレンダリングする（開発中）", disabled=True)
+    
+    st.stop()
+
+# ────────── 🏡 C. 既存機能：パンフレット生成画面 ──────────
+elif st.session_state.current_page == "pamphlet":
+    if st.button("◀ 総合メニューに戻る", key="back_from_pamphlet"):
+        st.query_params["page"] = "menu"
+        st.session_state.current_page = "menu"
+        st.rerun()
+        
+    # ✨ 修正：パンフレット生成画面が「アクティブになった時だけ」このタイトルを表示します
+    st.title("🏡 APB(パンフレット自動作成)")
+    st.write("用意したテンプレート画像とAIのテキスト解析を組み合わせ、全6ページのパワポ資料を安定して自動生成します。")
+
+# 👇👇👇 ここから追加（ビジュアルを強化したログイン認証画面） 👇👇👇
+if not st.session_state.logged_in:
+    # ログイン画面専用の上部ナビゲーションバー風装飾
+    st.markdown("""
+        <div style="background-color: #1E2D3D; height: 12px; margin: -5rem -5rem 2rem -5rem; padding: 0;"></div>
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div style="font-size: 48px; margin-bottom: 0.5rem;">📋✨</div>
+            <h2 style="color: #1E2D3D; font-family: '游ゴシック', sans-serif; font-weight: bold; letter-spacing: 1px; margin: 0;">らくらく販売図面 APB</h2>
+            <p style="color: #707070; font-size: 14px; margin-top: 0.5rem;">会社限定・パンフレット自動生成システム</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    col_log1, col_log2, col_log3 = st.columns([1, 1.5, 1]) # 中央に綺麗に収めるバランス
+    with col_log2:
+        # 白い背景のカード風に見せるコンテナ
+        with st.container(border=True):
+            st.write("")
+            input_id = st.text_input("👤 ログインID", placeholder="th-xxxx")
+            input_pw = st.text_input("🔒 パスワード", type="password", placeholder="••••••••")
+            st.write("")
+            
+            if st.button("ログイン", use_container_width=True):
+                success = False
+                for branch_name, info in BRANCH_DATA.items():
+                    if input_id == info["login_id"] and input_pw == info["password"]:
+                        st.session_state.logged_in = True
+                        st.session_state.user_branch = branch_name
+                        # ✨ ログイン成功時はURLパスをメニューに設定
+                        st.query_params["page"] = "menu"
+                        st.session_state.current_page = "menu"
+                        success = True
+                        st.success(f"📌 認証成功：{info['full_name']} としてログインしました。")
+                        time.sleep(1)
+                        st.rerun()
+                
+                if not success:
+                    st.error("🚨 ログインIDまたはパスワードが正しくありません。")
+        
+        # 下部の案内リンク風テキスト
+        st.markdown("""
+            <div style="text-align: center; margin-top: 1.5rem; font-size: 13px;">
+                <span style="color: #555555;">ログインできませんか？</span><br>
+                <a href="#" style="color: #00C2A0; text-decoration: none; margin-right: 10px;">パスワードについて</a> | 
+                <a href="#" style="color: #00C2A0; text-decoration: none; margin-left: 10px;">ログインIDについて</a>
+            </div>
+        """, unsafe_allow_html=True)
+        
+    st.stop() # ログインするまでこれ以降の画面を完全にロック
+# 👆👆👆 ここまで追加 👆👆👆
+
+# フォントのパス（実行環境に合わせて確認してください）
+FONT_PATH = './NotoSansCJKjp-Bold.ttf' 
 
 # --- 修正：空室写真アップロード欄を追加し、レイアウト選択UIを削除 ---
 col_u1, col_u2 = st.columns(2)
@@ -105,10 +498,8 @@ selected_style_key = "luxury"
 theme_info = THEMES[selected_style_key]
 custom_style_description = ""
 
-# 4. 担当店舗の選択（ここで定義される）
-st.write("---")
-st.subheader("🏢 担当店舗の選択")
-selected_branch_name = st.selectbox("担当店舗を選んでください：", list(BRANCH_DATA.keys()))
+# --- 担当店舗の設定（✨ログインしたユーザーの店舗情報を自動適用） ---
+selected_branch_name = st.session_state.user_branch
 
 room_features_input = ""
 
