@@ -171,7 +171,7 @@ if not st.session_state.logged_in:
         
     st.stop() # ログインするまでこれ以降の画面を完全にロック
 
-# --- 4. ログイン成功後の本番画面スタイル（✨アップローダー内の英語を完全日本語化・決定版） ---
+# --- 4. ログイン成功後の本番画面スタイル（✨ボタン消滅を100%解決した完全日本語化版） ---
 st.markdown("""
 <style>
     /* 本番画面のライトグレー背景 */
@@ -230,7 +230,7 @@ st.markdown("""
     }
     
     /* ──────────────────────────────────────────────────────── */
-    /* 📦 アップローダー（ファイル選択枠）本体 ＆ 完全日本語化ロジック */
+    /* 📦 アップローダー（ファイル選択枠）本体 ＆ 安全な日本語化ロジック */
     /* ──────────────────────────────────────────────────────── */
     [data-testid="stFileUploaderDropzone"] {
         border-radius: 12px !important;
@@ -238,31 +238,39 @@ st.markdown("""
         background-color: #FFFFFF !important;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
         transition: all 0.3s ease;
-        position: relative !important; /* 絶対配置の基準にする */
+        
+        /* ボタン、アイコン、新しい日本語テキストを美しく1列に横並びさせる */
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 16px !important;
+        padding: 14px 20px !important;
     }
     [data-testid="stFileUploaderDropzone"]:hover {
         border-color: #00C2A0 !important;
         background-color: #FAFAFA !important;
     }
     
-    /* 1. 枠内にある既存の英語テキスト要素を、タグに関わらず完全に透明化 ＆ 縮小 */
-    [data-testid="stFileUploaderDropzone"] div, 
-    [data-testid="stFileUploaderDropzone"] span, 
-    [data-testid="stFileUploaderDropzone"] small {
+    /* 1. ✨ 修正：要素を消す(display:none)のをやめ、枠内の「地文の英語テキスト」だけを透明化して見えなくする */
+    [data-testid="stFileUploaderDropzone"] {
         color: transparent !important;
         font-size: 0 !important;
     }
     
-    /* 2. 透明化の巻き込みから「雲アイコン」と「選択ボタン」だけを救出して正しく再表示 */
+    /* 2. ✨ 修正：透明化の巻き込みから「雲アイコン」を救出して再表示 */
     [data-testid="stFileUploaderDropzone"] svg {
         fill: #1E2D3D !important;
+        min-width: 24px !important;
+        display: inline-block !important;
     }
+    
+    /* 3. ✨ 修正：透明化の巻き込みから「ボタン」を100%救出して再表示 ＆ デザイン適用 */
     [data-testid="stFileUploaderDropzone"] button {
         background-color: #1E2D3D !important;
         border: none !important;
         border-radius: 6px !important;
         padding: 8px 16px !important;
-        font-weight: bold !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
         transition: all 0.2s ease !important;
         position: relative !important;
@@ -271,8 +279,12 @@ st.markdown("""
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
+        
+        /* ボタン内の文字は透明のままにする（直後のafterで上書きするため） */
+        color: transparent !important;
+        font-size: 0 !important; 
     }
-    /* ボタン内の日本語テキストを最前面に描画 */
+    /* ボタンの文字を「ファイルを選択」に上書き */
     [data-testid="stFileUploaderDropzone"] button::after {
         content: "ファイルを選択" !important; 
         position: absolute !important;
@@ -287,27 +299,16 @@ st.markdown("""
         color: #1E2D3D !important;
     }
     
-    /* 3. 英語が消えて空いたスペースに、Dropzone自体の疑似要素として日本語を強制挿入 */
-    [data-testid="stFileUploaderDropzone"]::before {
-        content: "ここにファイルをドラッグ＆ドロップ" !important;
-        position: absolute !important;
-        left: 70px !important; /* 雲アイコンの右側に配置 */
-        top: 22px !important;
+    /* 4. ✨ 修正：ボタンの右側の空いたスペースに、Dropzoneの疑似要素として日本語の案内を綺麗に並べる */
+    [data-testid="stFileUploaderDropzone"]::after {
+        content: "ここにファイルをドラッグ＆ドロップ (最大200MB)" !important;
+        display: inline-block !important;
         font-size: 14px !important;
         color: #1E2D3D !important;
         font-weight: bold !important;
     }
-    [data-testid="stFileUploaderDropzone"]::after {
-        content: "1ファイルあたり最大200MB" !important;
-        position: absolute !important;
-        left: 70px !important;
-        top: 46px !important;
-        font-size: 11px !important;
-        color: #546E7A !important;
-        font-weight: 500 !important;
-    }
     
-    /* 4. アップロードが完了した後の「ファイル名表示エリア」は透明化させずクッキリ見せる */
+    /* 5. アップロード完了後の「ファイル名表示エリア」は透明化させずにクッキリ出す */
     [data-testid="ststyledFileUploaderFilesContainer"] * {
         color: #1E2D3D !important;
         font-size: 14px !important;
