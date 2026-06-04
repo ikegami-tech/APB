@@ -171,7 +171,7 @@ if not st.session_state.logged_in:
         
     st.stop() # ログインするまでこれ以降の画面を完全にロック
 
-# --- 4. ログイン成功後の本番画面スタイル（✨ボタン消滅を100%解決した完全日本語化版） ---
+# --- 4. ログイン成功後の本番画面スタイル（✨ダウンロードボタンの見やすさを100%改善版） ---
 st.markdown("""
 <style>
     /* 本番画面のライトグレー背景 */
@@ -191,6 +191,20 @@ st.markdown("""
         border-bottom: 2px solid #D3B582 !important; 
         padding-bottom: 12px !important;
         margin-bottom: 30px !important;
+    }
+    
+    /* 生成中ステータスバー（st.status）のヘッダーを濃紺 ＆ 文字を真っ白に固定 */
+    [data-testid="stStatusWidget"] summary {
+        background-color: #1E2D3D !important; 
+        color: #FFFFFF !important;            
+        border-radius: 8px !important;
+        padding: 8px 16px !important;
+    }
+    [data-testid="stStatusWidget"] summary * {
+        color: #FFFFFF !important;            
+    }
+    [data-testid="stStatusWidget"] summary svg {
+        fill: #FFFFFF !important;             
     }
     
     /* マルチセレクト（ページ選択）の全体ボックスを「真っ白」に変更 */
@@ -252,20 +266,26 @@ st.markdown("""
         background-color: #FAFAFA !important;
     }
     
-    /* 1. ✨ 修正：要素を消す(display:none)のをやめ、枠内の「地文の英語テキスト」だけを透明化して見えなくする */
-    [data-testid="stFileUploaderDropzone"] {
+    /* 枠内にある「すべての地文・ボタン内の英語テキスト要素」を透明化 ＆ 圧縮 */
+    [data-testid="stFileUploaderDropzone"] div,
+    [data-testid="stFileUploaderDropzone"] span,
+    [data-testid="stFileUploaderDropzone"] small,
+    [data-testid="stFileUploaderDropzone"] div:hover,
+    [data-testid="stFileUploaderDropzone"] span:hover,
+    [data-testid="stFileUploaderDropzone"] button:hover * {
         color: transparent !important;
         font-size: 0 !important;
+        line-height: 0 !important;
     }
     
-    /* 2. ✨ 修正：透明化の巻き込みから「雲アイコン」を救出して再表示 */
+    /* 透明化の巻き込みから「雲アイコン」を救出して再表示 */
     [data-testid="stFileUploaderDropzone"] svg {
         fill: #1E2D3D !important;
         min-width: 24px !important;
         display: inline-block !important;
     }
     
-    /* 3. ✨ 修正：透明化の巻き込みから「ボタン」を100%救出して再表示 ＆ デザイン適用 */
+    /* 透明化の巻き込みから「ボタン枠」を100%救出して再表示 ＆ デザイン適用 */
     [data-testid="stFileUploaderDropzone"] button {
         background-color: #1E2D3D !important;
         border: none !important;
@@ -279,18 +299,17 @@ st.markdown("""
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        
-        /* ボタン内の文字は透明のままにする（直後のafterで上書きするため） */
         color: transparent !important;
         font-size: 0 !important; 
     }
-    /* ボタンの文字を「ファイルを選択」に上書き */
+    /* ボタンの文字を「ファイルを選択」に強制上書き（最前面レイヤー） */
     [data-testid="stFileUploaderDropzone"] button::after {
         content: "ファイルを選択" !important; 
         position: absolute !important;
         color: #FFFFFF !important; 
         font-size: 14px !important;
         font-weight: bold !important;
+        line-height: normal !important;
     }
     [data-testid="stFileUploaderDropzone"] button:hover {
         background-color: #D3B582 !important;
@@ -299,45 +318,53 @@ st.markdown("""
         color: #1E2D3D !important;
     }
     
-    /* 4. ✨ 修正：ボタンの右側の空いたスペースに、Dropzoneの疑似要素として日本語の案内を綺麗に並べる */
+    /* ボタンの右側の空いたスペースに、日本語の案内を綺麗に並べる */
     [data-testid="stFileUploaderDropzone"]::after {
         content: "ここにファイルをドラッグ＆ドロップ (最大200MB)" !important;
         display: inline-block !important;
         font-size: 14px !important;
         color: #1E2D3D !important;
         font-weight: bold !important;
+        line-height: normal !important;
     }
     
-    /* 5. アップロード完了後の「ファイル名表示エリア」は透明化させずにクッキリ出す */
+    /* アップロード完了後の「ファイル名表示エリア」はクッキリ出す */
     [data-testid="ststyledFileUploaderFilesContainer"] * {
         color: #1E2D3D !important;
         font-size: 14px !important;
         font-weight: 500 !important;
+        line-height: normal !important;
     }
     /* ──────────────────────────────────────────────────────── */
     
-    /* 生成ボタン（通常時：押せる状態） */
-    div.stButton > button {
+    /* 🚀 生成ボタン ＆ 📥 ダウンロードボタン（通常時：押せる状態） */
+    /* ✨ 修正：stDownloadButton にも生成ボタンと全く同じ高級感あるスタイルを適用 */
+    div.stButton > button, div.stDownloadButton > button {
         border-radius: 8px !important;
         border: none !important;
-        background-color: #00C2A0 !important;
-        color: white !important;
+        background-color: #00C2A0 !important; /* 鮮やかなミントグリーン */
+        color: white !important;               /* 文字色を真っ白に固定 */
         padding: 14px 36px !important;
         font-weight: bold !important;
         font-size: 16px !important;
         box-shadow: 0 4px 14px rgba(0, 194, 160, 0.2) !important;
         transition: all 0.3s ease !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-decoration: none !important;    /* リンクの下線を消去 */
     }
     
     /* ボタンが押せる（有効な）ときだけマウスホバー効果を出す */
-    div.stButton > button:not(:disabled):hover {
+    div.stButton > button:not(:disabled):hover, div.stDownloadButton > button:not(:disabled):hover {
         background-color: #00A88B !important;
+        color: white !important;
         box-shadow: 0 6px 20px rgba(0, 194, 160, 0.3) !important;
         transform: translateY(-1px);
     }
     
     /* ボタンが押せない（無効化：disabled）のときはグレーアウトにする */
-    div.stButton > button:disabled {
+    div.stButton > button:disabled, div.stDownloadButton > button:disabled {
         background-color: #CFD8DC !important;
         color: #90A4AE !important;
         box-shadow: none !important;
