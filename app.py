@@ -598,31 +598,47 @@ if btn_generate and uploaded_file is not None:
             if "cover" in selected_pages_keys:
                 progress_msg.info("📸 表紙のデザイン案を3パターン生成中...")
                 target_city_town = "Tokyo"
+                
                 if "所在地" in st.session_state.pdf_text:
                     target_city_town = st.session_state.pdf_text.split("所在地")[-1][:10]
 
                 prompts = [
-                    # 案1：公園で遊ぶ幸せな4人家族（現状維持） [cite: 17-20]
+                    # 案1：公園で遊ぶ幸せな4人家族
                     f"High-end luxury magazine photography. A happy Japanese family (father, mother, and two children) playing happily in a beautiful sunny park in {target_city_town}. Bright natural daylight, soft sunlight filtering through trees. Modern and sophisticated casual style. NO text.",
-                    
-                    # 案2：一軒家の室内で寛ぐ男性（✨外の景色を最小限にする指示を追加） [cite: 20-22]
+                    # 案2：一軒家の室内で寛ぐ男性
                     f"High-end luxury lifestyle photography. A sophisticated Japanese man relaxing and drinking coffee in a modern, spacious luxury living room of a detached house in {target_city_town}. Focus on the premium interior design, close-up shot. Windows are softly blurred or showing very minimal outdoor scenery to emphasize the indoor atmosphere. NO text.",
-                    
-                    # 案3：マンションの室内で遊ぶ家族(✨外の景色を最小限にする指示を追加、タワマン感を排除） [cite: 22]
+                    # 案3：マンションの室内で遊ぶ家族
                     f"High-end luxury lifestyle photography. A happy Japanese family playing in a stylish, high-ceiling living room of a luxury modern apartment in {target_city_town}. Large windows are softly blurred or show very minimal outdoor scenery, carefully avoiding a distant tower apartment skyline view to emphasize the cozy indoor atmosphere. Sophisticated interior design, bright natural light, warm family atmosphere. NO text."
                 ]
 
                 temp_choices = []
-                for p in prompts:
-                    img_res = gemini_client.models.generate_images(
-                        model='imagen-4.0-generate-001',
-                        prompt=p,
-                        config=types.GenerateImagesConfig(
-                            number_of_images=1, 
-                            aspect_ratio="4:3" if orientation == "横向き (Landscape)" else "3:4"
-                        )
-                    )
-                    temp_choices.append(Image.open(BytesIO(img_res.generated_images[0].image.image_bytes)))
+                for idx, p in enumerate(prompts):
+                    # ✨ 修正：今何枚目を生成しているかをログに分かりやすく表示
+                    progress_msg.info(f"📸 表紙のデザイン案を生成中... (パターン {idx+1}/3)")
+                    
+                    # ✨ 修正：429制限を回避するため、各画像ごとに最大4回まで自動リトライするループを新設
+                    for attempt in range(4):
+                        try:
+                            img_res = gemini_client.models.generate_images(
+                                model='imagen-4.0-generate-001',
+                                prompt=p,
+                                config=types.GenerateImagesConfig(
+                                    number_of_images=1, 
+                                    aspect_ratio="4:3" if orientation == "横向き (Landscape)" else "3:4"
+                                )
+                            )
+                            temp_choices.append(Image.open(BytesIO(img_res.generated_images[0].image.image_bytes)))
+                            time.sleep(3) # 連投による制限を防ぐため、1枚成功するごとに3秒休憩を挟む
+                            break # 正常に生成できたらリトライループを抜けて次の画像へ
+                        except Exception as img_e:
+                            # サーバーの回数制限（429）を検知し、まだリトライ回数が残っている場合
+                            if "429" in str(img_e) and attempt < 3:
+                                progress_msg.warning(f"⏳ 画像生成の制限（429）に達しました。15秒後に自動で再試行します... (再試行 {attempt+1}/3)")
+                                time.sleep(15)
+                            else:
+                                # それ以外の致命的なエラー、または4回失敗した場合はエラーを投げて停止
+                                raise img_e
+
                 st.session_state.cover_choices = temp_choices
             else:
                 st.write("⏭️ 表紙が未選択のため、画像生成をスキップします。")
