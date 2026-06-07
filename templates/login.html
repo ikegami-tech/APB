@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ログイン - らくらく販売図面 APB</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body { background-color: #ECEFF1; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .login-card { background: white; border: 1px solid #CFD8DC; border-radius: 12px; padding: 40px; width: 400px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); text-align: center; position: relative; overflow: hidden; }
+        .login-top-bar { background-color: #1E2D3D; height: 12px; position: absolute; top: 0; left: 0; width: 100%; }
+        .login-title { color: #1E2D3D; font-size: 24px; font-weight: bold; margin: 20px 0 5px 0; }
+        .login-input-group { text-align: left; margin-bottom: 20px; }
+        .login-input-group label { display: block; font-weight: bold; color: #1E2D3D; margin-bottom: 8px; font-size: 14px; }
+        .login-input { width: 93%; padding: 12px; border: 1px solid #CFD8DC; border-radius: 8px; background-color: #FAFAFA; font-size: 16px; color: #1E2D3D; }
+        .btn-login { background-color: #00C2A0; color: white; border: none; width: 100%; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 12px rgba(0, 194, 160, 0.2); }
+        .btn-login:hover { background-color: #00A88B; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="login-top-bar"></div>
+        <div style="font-size: 56px; margin-bottom: 10px;">📋</div>
+        <h2 class="login-title">らくらく販売図面 APB</h2>
+        <p style="color: #707070; font-size: 13px; margin-bottom: 30px;">会社限定・パンフレット自動生成システム</p>
+        
+        <form onsubmit="event.preventDefault(); window.location.href='/menu';">
+            <div class="login-input-group">
+                <label>👤 ログインID</label>
+                <input type="text" class="login-input" placeholder="th-kokubunji" required>
+            </div>
+            <div class="login-input-group">
+                <label>🔒 パスワード</label>
+                <input type="password" class="login-input" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn-login">ログイン</button>
+        </form>
+    </div>
+</body>
+</html>

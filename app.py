@@ -76,11 +76,26 @@ if "cover_choices" not in st.session_state:
     st.session_state.cover_choices = []
 if "selected_cover_index" not in st.session_state:
     st.session_state.selected_cover_index = 0
-    # 👇👇👇 ここから追加（仮想パス・ページ遷移管理用） 👇👇👇
 if "current_page" not in st.session_state:
-    # URLの末尾に「?page=xxx」があればそのページを開き、なければメニューを開く
-    st.session_state.current_page = st.query_params.get("page", "menu")
-# 👆👆👆 ここまで追加 👆👆👆
+    st.session_state.current_page = "login"
+
+# 👇👇👇 ここから追加・修正：戻るボタンの強制同期（st.rerun追加版） 👇👇👇
+current_url_page = st.query_params.get("page")
+
+if current_url_page is None:
+    # URLに「?page=...」が無い場合（一番最初の画面に戻った時）
+    # ログイン済みならメニューへ、未ログインならログイン画面へ案内する
+    target_page = "menu" if st.session_state.logged_in else "login"
+else:
+    # URLに「?page=xxx」がある場合はその画面へ案内する
+    target_page = current_url_page
+
+# メモリ上の画面と、URLが指定する画面が食い違っている場合（戻るボタンが押された証拠！）
+if st.session_state.current_page != target_page:
+    st.session_state.current_page = target_page
+    st.query_params["page"] = target_page
+    st.rerun() # ✨ ココが重要：システムを強制再起動して画面を瞬時に切り替える！
+# 👆👆👆 ここまで追加・修正 👆👆👆
 
 # --- 3. 🔒 ログイン認証画面（未ログイン時のみ、ライトグレー背景で描画） ---
 if not st.session_state.logged_in:
@@ -406,10 +421,10 @@ if st.session_state.current_page == "menu":
         st.markdown("### 📄 販売図面自動作成 (新規機能)")
         st.write("【新機能】物件の特徴や間取り・地図を入力し、レインズ等にそのまま登録できる高クオリティな販売図面（マイソク）を自動作成します。")
         st.write("")
-        if st.button("販売図面生成を起動 📝", use_container_width=True):
-            st.query_params["page"] = "zumen" # URLの末尾を ?page=zumen に変更
-            st.session_state.current_page = "zumen"
-            st.rerun()
+        st.markdown(
+            """<a href="http://127.0.0.1:8000/" target="_self" style="display: block; text-align: center; background-color: #00C2A0; color: white; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">販売図面生成を起動 📝</a>""",
+            unsafe_allow_html=True
+        )
                 
     st.stop() # メニュー表示時はこれより下の「パンフレットのアップローダー等」を動かさずに止める
 
@@ -1151,46 +1166,46 @@ if st.session_state.finished_pages:
         prs.slide_width, prs.slide_height = Inches(7.5), Inches(10)
     
 # ✨ PowerPoint上に「自由に動かせる枠」を作るための便利機能（✨アイコン・ラベル・ゴールドフレーム・游明朝対応版）
-        def add_placeholder_box(slide_obj, left, top, width, height, text, luxury_gold_rgb=None, show_icon=False, label_text="MAIN SLOT"):
-            tx_box = slide_obj.shapes.add_textbox(left, top, width, height)
+    def add_placeholder_box(slide_obj, left, top, width, height, text, luxury_gold_rgb=None, show_icon=False, label_text="MAIN SLOT"):
+        tx_box = slide_obj.shapes.add_textbox(left, top, width, height)
+        
+        tx_box.fill.solid()
+        tx_box.fill.fore_color.rgb = RGBColor(245, 245, 245) # 予備の薄いグレー
+        
+        # ✨ 修正：ゴールドの金属質感フレームを追加
+        if luxury_gold_rgb:
+            tx_box.line.color.rgb = luxury_gold_rgb
+        else:
+            tx_box.line.color.rgb = RGBColor(185, 160, 110) # デフォルトゴールド
+        tx_box.line.width = Pt(1)
+        
+        tf = tx_box.text_frame
+        tf.word_wrap = True
+        tf.clear()
+        
+        # プレースホルダーの用途ラベルとアイコンを追加
+        if show_icon:
+            p_label = tf.add_paragraph()
+            p_label.text = label_text
+            p_label.font.size = Pt(9)
+            p_label.font.name = "游ゴシック"
+            p_label.font.color.rgb = RGBColor(150, 150, 150) # 薄いグレー
+            p_label.alignment = PP_ALIGN.CENTER
+            # 小さなアイコン（ここではテキストで代用）
+            p_icon = tf.add_paragraph()
+            p_icon.text = "🔍" # アイコンの代わり
+            p_icon.font.size = Pt(12)
+            p_icon.alignment = PP_ALIGN.CENTER
+        
             
-            tx_box.fill.solid()
-            tx_box.fill.fore_color.rgb = RGBColor(245, 245, 245) # 予備の薄いグレー
-            
-            # ✨ 修正：ゴールドの金属質感フレームを追加
-            if luxury_gold_rgb:
-                tx_box.line.color.rgb = luxury_gold_rgb
-            else:
-                tx_box.line.color.rgb = RGBColor(185, 160, 110) # デフォルトゴールド
-            tx_box.line.width = Pt(1)
-            
-            tf = tx_box.text_frame
-            tf.word_wrap = True
-            tf.clear()
-            
-            # プレースホルダーの用途ラベルとアイコンを追加
-            if show_icon:
-                p_label = tf.add_paragraph()
-                p_label.text = label_text
-                p_label.font.size = Pt(9)
-                p_label.font.name = "游ゴシック"
-                p_label.font.color.rgb = RGBColor(150, 150, 150) # 薄いグレー
-                p_label.alignment = PP_ALIGN.CENTER
-                # 小さなアイコン（ここではテキストで代用）
-                p_icon = tf.add_paragraph()
-                p_icon.text = "🔍" # アイコンの代わり
-                p_icon.font.size = Pt(12)
-                p_icon.alignment = PP_ALIGN.CENTER
-            
-                
-            # ✨ 修正：鮮明で読みやすい書体（日本語は明朝体）に変更
-            p_jp = tf.add_paragraph()
-            clean_text = text.replace("【", "").replace("】", "").replace(" ", "")
-            p_jp.text = clean_text
-            p_jp.font.size = Pt(11) # 少し大きく
-            p_jp.font.name = "游明朝" # 洗練された明朝体に変更
-            p_jp.font.color.rgb = RGBColor(80, 80, 80) # ダークグレー
-            p_jp.alignment = PP_ALIGN.CENTER
+        # ✨ 修正：鮮明で読みやすい書体（日本語は明朝体）に変更
+        p_jp = tf.add_paragraph()
+        clean_text = text.replace("【", "").replace("】", "").replace(" ", "")
+        p_jp.text = clean_text
+        p_jp.font.size = Pt(11) # 少し大きく
+        p_jp.font.name = "游明朝" # 洗練された明朝体に変更
+        p_jp.font.color.rgb = RGBColor(80, 80, 80) # ダークグレー
+        p_jp.alignment = PP_ALIGN.CENTER
 
     # ✨ 駅徒歩用の円形グラフィック機能
     def add_station_info_circle(slide_obj, x, y, radius, text, color=(245, 240, 225)):

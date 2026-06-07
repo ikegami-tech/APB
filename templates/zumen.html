@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>販売図面作成システム</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="app-container">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            🏢 TOHO HOUSE
+        </div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li onclick="window.location.href='/menu'"><span class="nav-icon">🏠</span> トップ</li>
+                <li><span class="nav-icon">📁</span> 販売図面一覧</li>
+                <li class="active"><span class="nav-icon">⊕</span> 販売図面作成</li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main-area">
+        <header class="main-header">
+            <div class="company-name">株式会社東宝ハウス国分寺</div>
+            <div class="header-actions">
+                <div class="settings-icon">⚙️</div>
+                <div class="dropdown-content">
+                    <a href="#">📋 会社情報の変更</a>
+                    <a href="http://localhost:8501/?page=login" style="color: #E74C3C;">🚪 ログアウト</a>
+                </div>
+            </div>
+        </header>
+
+        <div class="content">
+
+            <div id="app-zumen">
+
+            <div id="step-1-property" class="card">
+                <h2 class="page-title">販売図面を作成</h2>
+                <div class="form-box">
+                    <div class="form-label">
+                        <span class="required-badge">必須</span> 物件種別
+                    </div>
+                    <select class="custom-select" id="property-type">
+                        <option value="" disabled selected>物件種別を選択してください</option>
+                        <option value="マンション">🏢 マンション</option>
+                        <option value="戸建て">🏡 戸建て</option>
+                    </select>
+                </div>
+                <div class="btn-wrapper">
+                    <button class="btn-next" onclick="goToStep2()">次 へ</button>
+                </div>
+            </div>
+
+            <div id="step-2-design" class="card hidden" style="max-width: 1000px;">
+                <h2 class="page-title" style="font-size: 28px; border-left: 6px solid #1E2D3D; color: #000;">デザインサンプルを選択</h2>
+                <p style="font-size: 20px; color: #000; margin-bottom: 30px;">ベースとなる図面のデザインをクリックして下さい。</p>
+                
+                <div class="design-grid-2x2">
+                    <div class="design-image-card" onclick="goToEditor(1)">
+                        <img src="/static/sample3.png" alt="デザイン1" onerror="this.style.display='none'; this.parentNode.innerHTML='<div style=\'padding:40px;text-align:center;\'>デザイン1<br>(sample3.pngがありません)</div>';">
+                    </div>
+                    
+                    <div class="design-image-card" onclick="alert('デザイン2のレイアウトは後ほど作成します！\nまずはデザイン1をご確認ください。')">
+                        <img src="/static/sample2.png" alt="デザイン2" onerror="this.style.display='none'; this.parentNode.innerHTML='<div style=\'padding:40px;text-align:center;\'>デザイン2<br>(sample2.pngがありません)</div>';">
+                    </div>
+                    
+                    <div class="design-image-card" onclick="alert('デザイン3のレイアウトは後ほど作成します！')">
+                        <img src="/static/sample.png" alt="デザイン3" onerror="this.style.display='none'; this.parentNode.innerHTML='<div style=\'padding:40px;text-align:center;\'>デザイン3<br>(sample.pngがありません)</div>';">
+                    </div>
+                    
+                    <div class="design-image-card" onclick="alert('デザイン4のレイアウトは後ほど作成します！')">
+                        <div style="padding: 40px; text-align: center; background-color: #F4F6F8; color: #777;">
+                            デザイン4<br>（現在準備中）
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px;">
+                    <button class="btn-cancel" onclick="goBackToStep1()">◀ 戻る</button>
+                </div>
+            </div>
+
+            <div id="step-3-editor" class="card hidden">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 class="page-title" id="editor-subtitle" style="margin: 0;">🎨 編集画面</h2>
+                    <button class="btn-cancel" onclick="goBackToStep2()">◀ デザイン選択に戻る</button>
+                </div>
+                
+                <div class="zumen-d1">
+                    
+                    <div class="zumen-d1-header">
+                        <div class="z-box" style="width: 250px; height: 100%; font-size: 16px;" onclick="alert('店舗写真を変更します')">
+                            店舗写真
+                        </div>
+                        <div style="flex-grow: 1; text-align: center; font-size: 36px; font-style: italic; font-weight: bold; cursor: pointer;" onclick="openModal('titleModal')">
+                            <span id="display-title">タイトル</span>
+                        </div>
+                        <div style="width: 150px; text-align: right; cursor: pointer;" onclick="openModal('infoModal')">
+                            <span style="font-size: 14px; display: inline-block; vertical-align: top; margin-top: 8px;">販売<br>価格</span>
+                            <span id="display-price" style="font-size: 32px; font-weight: bold; margin: 0 5px;">5,000</span>
+                            <span style="font-size: 20px; font-weight: bold;">万円</span>
+                        </div>
+                    </div>
+
+                    <div class="zumen-d1-body">
+                        
+                        <div class="zumen-d1-left">
+                            <div style="display: flex; gap: 20px; height: 280px;">
+                                <div class="z-box" style="flex: 1;" onclick="openModal('imageModal')">画像1</div>
+                                <div class="z-box" style="flex: 1;" onclick="alert('間取り図をアップロード')">間取り図</div>
+                            </div>
+                            <div style="display: flex; gap: 20px; height: 180px;">
+                                <div class="z-box" style="flex: 1;" onclick="alert('サブ画像2')">画像2</div>
+                                <div class="z-box" style="flex: 1;" onclick="alert('サブ画像3')">画像3</div>
+                                <div class="z-box" style="flex: 1;" onclick="alert('サブ画像4')">画像4</div>
+                            </div>
+                        </div>
+
+                        <div class="zumen-d1-right">
+                            <div style="text-align: center; border-bottom: 1px solid #777; padding-bottom: 15px; margin-bottom: 15px;">
+                                <span style="font-size: 18px;">交通</span><br>
+                                <span style="font-size: 24px; font-weight: bold;">「最寄駅」</span> 
+                                <span style="font-size: 16px;">徒歩 〇 分</span>
+                            </div>
+                            <div class="z-box" style="flex-grow: 1; font-size: 16px; background-color: #F4F6F8; flex-direction: column; align-items: flex-start; padding: 20px; line-height: 2;" onclick="alert('物件概要の入力画面を開きます')">
+                                ■ 物件住所 / <span id="display-address">東京都国分寺市...</span><br>
+                                ■ 間取り / <br>
+                                ■ 建築年数 / <br>
+                                ■ 土地権利 / <br>
+                                ■ 土地面積 / <br>
+                                （クリックしてリストを編集）
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="zumen-d1-equipment">
+                        <div style="font-size: 12px; line-height: 1.2; font-weight: bold;">物件<br>設備</div>
+                        <div class="z-box" style="flex-grow: 1; height: 50px; font-size: 18px; background-color: #F8E8F8;" onclick="alert('設備アイコンを設定します')">
+                            設備アイコン枠
+                        </div>
+                    </div>
+
+                    <div class="zumen-d1-footer">
+                        <div>
+                            <h3 style="margin: 0 0 5px 0; color: #1A3668; font-size: 22px;">🏢 TOHO HOUSE 国分寺</h3>
+                            <p style="margin: 0; font-size: 11px; color: #555;">「住まい」のもっと先へ。<br>東宝ハウス ライフソリューションズ グループ</p>
+                        </div>
+                        <div style="font-size: 13px; color: #333; line-height: 1.6;">
+                            <span style="font-size: 10px;">免許番号</span><br>
+                            <strong style="font-size: 18px;">📞 会社電話番号</strong><br>
+                            会社名 / 住所 / FAX:
+                        </div>
+                        <div style="font-size: 13px; color: #333; line-height: 1.6;">
+                            <span style="font-size: 12px;">担当</span> <strong style="font-size: 18px;">担当者名</strong><br>
+                            📱 携帯番号<br>
+                            ✉️ メールアドレス
+                        </div>
+                    </div>
+
+                </div>
+                <div style="text-align: center; margin-top: 40px;">
+                    <button class="btn-next" style="padding: 16px 40px;" onclick="downloadPptx()">✨ この内容でパワポを作成して保存</button>
+                </div>
+            </div>
+
+            </div>
+
+        </div> </main>
+</div> <div id="titleModal" class="modal"><div class="modal-content"><h3>✏️ タイトルの編集</h3><input type="text" id="input-title" value="【東宝太郎】東宝マンション"><div style="text-align: right;"><button class="btn-cancel" onclick="closeModal('titleModal')">キャンセル</button><button style="background-color: #FA8A76; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: bold;" onclick="saveTitle()">保存して送信</button></div></div></div>
+<div id="imageModal" class="modal"><div class="modal-content"><h3>🖼️ メイン画像のアップロード</h3><input type="file" id="input-image" accept="image/png, image/jpeg"><div style="text-align: right;"><button class="btn-cancel" onclick="closeModal('imageModal')">キャンセル</button><button style="background-color: #FA8A76; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: bold;" onclick="saveImage()">画像を反映して送信</button></div></div></div>
+<div id="infoModal" class="modal"><div class="modal-content"><h3>💰 物件概要の編集</h3><label>販売価格（万円）</label><input type="text" id="input-price" value="5,000"><label>物件住所</label><input type="text" id="input-address" value="東京都国分寺市南町3-23-11"><div style="text-align: right;"><button class="btn-cancel" onclick="closeModal('infoModal')">キャンセル</button><button style="background-color: #FA8A76; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: bold;" onclick="saveInfo()">保存して反映</button></div></div></div>
+
+<script src="/static/main.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>APB（パンフレット自動作成）</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header class="main-header" style="height: 70px; background: white; padding: 0 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+        <div class="company-name" style="font-size: 18px; font-weight: bold; color: #1E2D3D;">株式会社東宝ハウス国分寺</div>
+        <div>
+            <button class="btn-cancel" onclick="window.location.href='/menu'">◀ 総合メニューに戻る</button>
+        </div>
+    </header>
+
+    <div style="padding: 40px; max-width: 900px; margin: 0 auto;">
+        <h2 class="page-title" style="border-left: 6px solid #00C2A0; padding-left: 15px; font-size: 26px;">🏡 APB（パンフレット自動作成）</h2>
+        
+        <div class="card">
+            <p style="color: #555; margin-bottom: 30px;">用意したテンプレート画像とAIのテキスト解析を組み合わせ、全6〜8ページのパワポ資料を安定して自動生成します。</p>
+            
+            <h3 class="apb-section-title">📂 ファイルアップロード</h3>
+            <div class="file-upload-row">
+                <div class="file-upload-box">
+                    <label>📄 販売図面（PDF/画像）</label>
+                    <input type="file" id="apb-zumen" accept=".pdf, .png, .jpg, .jpeg">
+                </div>
+                <div class="file-upload-box">
+                    <label>📐 間取り図（画像 / P.5用）</label>
+                    <input type="file" id="apb-madori" accept=".png, .jpg, .jpeg">
+                </div>
+            </div>
+            <div class="file-upload-row">
+                <div class="file-upload-box">
+                    <label>🪑 空室写真（画像 / P.6 バーチャルステージング用）</label>
+                    <input type="file" id="apb-empty" accept=".png, .jpg, .jpeg">
+                </div>
+                <div class="file-upload-box">
+                    <label>🗺️ 地図用マップ（画像 / P.3 用）</label>
+                    <input type="file" id="apb-map" accept=".png, .jpg, .jpeg">
+                </div>
+            </div>
+
+            <h3 class="apb-section-title">📏 スライドの向きを選択</h3>
+            <div class="radio-group" style="margin-bottom: 30px;">
+                <label><input type="radio" name="apb_orientation" value="landscape"> 横向き (Landscape)</label>
+                <label><input type="radio" name="apb_orientation" value="portrait" checked> 縦向き (Portrait)</label>
+            </div>
+
+            <h3 class="apb-section-title">🛠️ 生成ページ設定</h3>
+            <p style="font-size: 13px; color: #777; margin-bottom: 15px;">必要なページだけをチェックすると、時間とAPIコストを節約できます。</p>
+            <div class="checkbox-group">
+                <label><input type="checkbox" checked> P.1-2 表紙</label>
+                <label><input type="checkbox" checked> P.3 コンセプト</label>
+                <label><input type="checkbox" checked> P.4 地図</label>
+                <label><input type="checkbox" checked> P.5 間取り</label>
+                <label><input type="checkbox" checked> P.6 内観生成</label>
+                <label><input type="checkbox" checked> P.7 ギャラリー</label>
+                <label><input type="checkbox" checked> P.8 会社案内</label>
+            </div>
+
+            <div style="margin-top: 50px; text-align: center;">
+                <button class="btn-apb-generate" onclick="startApbGeneration()">🚀 パンフレットを生成する</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/main.js"></script>
+    
+</body>
+</html>
