@@ -13,32 +13,29 @@
         </div>
     </header>
 
-    <div style="padding: 40px; max-width: 900px; margin: 0 auto;">
-        <h2 class="page-title" style="border-left: 6px solid #00C2A0; padding-left: 15px; font-size: 26px;">🏡 APB（パンフレット自動作成）</h2>
+    <div style="padding: 40px; max-width: 1200px; width: 95%; margin: 0 auto;">
+        <h2 class="page-title" style="border-left: 6px solid #00C2A0; padding-left: 15px; font-size: 26px; margin-bottom: 24px;">🏡 APB（パンフレット自動作成）</h2>
         
-        <div class="card">
+        <div class="card apb-card" style="max-width: 100% !important; width: 100% !important; margin: 0 !important; box-sizing: border-box;">
             <p style="color: #555; margin-bottom: 30px;">用意したテンプレート画像とAIのテキスト解析を組み合わせ、全6〜8ページのパワポ資料を安定して自動生成します。</p>
             
             <h3 class="apb-section-title">📂 ファイルアップロード</h3>
-            <div class="file-upload-row">
-                <div class="file-upload-box">
-                    <label>📄 販売図面（PDF/画像）</label>
+            
+            <div class="file-upload-grid">
+                <label class="file-upload-card" for="apb-zumen">
+                    <span class="upload-title">📄 販売図面（PDF / 画像）</span>
                     <input type="file" id="apb-zumen" accept=".pdf, .png, .jpg, .jpeg">
-                </div>
-                <div class="file-upload-box">
-                    <label>📐 間取り図（画像 / P.5用）</label>
+                </label>
+                
+                <label class="file-upload-card" for="apb-madori">
+                    <span class="upload-title">📐 間取り図（画像 / P.5用）</span>
                     <input type="file" id="apb-madori" accept=".png, .jpg, .jpeg">
-                </div>
-            </div>
-            <div class="file-upload-row">
-                <div class="file-upload-box">
-                    <label>🪑 空室写真（画像 / P.6 バーチャルステージング用）</label>
+                </label>
+                
+                <label class="file-upload-card" for="apb-empty">
+                    <span class="upload-title">🪑 空室写真（画像 / P.6 バーチャルステージング用）</span>
                     <input type="file" id="apb-empty" accept=".png, .jpg, .jpeg">
-                </div>
-                <div class="file-upload-box">
-                    <label>🗺️ 地図用マップ（画像 / P.3 用）</label>
-                    <input type="file" id="apb-map" accept=".png, .jpg, .jpeg">
-                </div>
+                </label>
             </div>
 
             <h3 class="apb-section-title">📏 スライドの向きを選択</h3>
@@ -61,11 +58,17 @@
 
             <div style="margin-top: 50px; text-align: center;">
                 <button class="btn-apb-generate" onclick="startApbGeneration()">🚀 パンフレットを生成する</button>
+                <div id="progress-status" style="margin-top: 15px; font-size: 15px; font-weight: bold; color: #00A88B; min-height: 24px;"></div>
+                
+                <div id="apb-preview-section" class="hidden" style="margin-top: 40px; text-align: center;">
+                    <h3 style="font-size: 20px; color: #1E2D3D; margin-bottom: 20px; font-weight: bold; border-bottom: 2px solid #D3B582; padding-bottom: 8px; display: inline-block;">🎉 生成されたパンフレット（プレビュー）</h3>
+                    <div id="apb-preview-images" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-bottom: 30px; background-color: #F4F6F8; padding: 20px; border-radius: 8px; border: 1px solid #CFD8DC;"></div>
+                    <button id="btn-apb-download" class="btn-apb-generate" style="background-color: #3B597B; box-shadow: 0 4px 14px rgba(59, 89, 123, 0.2);" onclick="downloadGeneratedPamphlet()">📥 完成したパンフレット（PowerPoint）を保存する</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script src="/static/main.js"></script>
-    
 </body>
 </html>

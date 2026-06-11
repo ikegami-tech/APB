@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>自動生成システム 総合メニュー</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body { background-color: #F4F6F8; }
+        .menu-container { max-width: 800px; margin: 60px auto; padding: 0 20px; }
+        .menu-card { background: white; border: 1px solid #CFD8DC; border-radius: 12px; padding: 30px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); transition: 0.3s; }
+        .menu-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        .menu-title { font-size: 22px; color: #1E2D3D; margin-top: 0; font-weight: bold; border-left: 6px solid #00C2A0; padding-left: 12px; }
+        .menu-title.zumen-color { border-left-color: #3B597B; }
+        .btn-portal { display: block; text-align: center; background-color: #00C2A0; color: white; padding: 14px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px; margin-top: 20px; transition: 0.2s; box-shadow: 0 4px 12px rgba(0,194,160,0.2); }
+        .btn-portal:hover { background-color: #00A88B; }
+        .btn-portal.zumen-btn { background-color: #3B597B; box-shadow: 0 4px 12px rgba(59,89,123,0.2); }
+        .btn-portal.zumen-btn:hover { background-color: #2A4360; }
+    </style>
+</head>
+<body>
+    <header class="main-header" style="height: 70px; background: white; padding: 0 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+        <div class="company-name" style="font-size: 18px; font-weight: bold;">株式会社東宝ハウス国分寺</div>
+        <div>
+            <a href="/" style="color: #E74C3C; text-decoration: none; font-weight: bold; font-size: 14px;">🚪 ログアウト</a>
+        </div>
+    </header>
+
+    <div class="menu-container">
+        <h1 style="font-size: 28px; font-weight: bold; color: #1E2D3D; margin-bottom: 10px;">🎛️ 自動生成システム 総合メニュー</h1>
+        <p style="color: #666; margin-bottom: 40px;">実行したい自動生成アプリケーションを選択してください。</p>
+
+        <div class="menu-card">
+            <h3 class="menu-title">🏡 パンフレット自動作成 (APB)</h3>
+            <p style="color: #555; line-height: 1.6;">販売図面からAIが物件情報を自動抽出し、高級感のある全8ページのPowerPointパンフレットを一括生成します。</p>
+            <a href="/apb" class="btn-portal">パンフレット生成を起動 🚀</a>
+        </div>
+
+        <div class="menu-card">
+            <h3 class="menu-title zumen-color">📄 販売図面自動作成 (新規機能)</h3>
+            <p style="color: #555; line-height: 1.6;">物件の特徴や間取り・地図を入力し、レインズ等にそのまま登録できる高クオリティな販売図面（マイソク）を自動作成します。</p>
+            <a href="/zumen" class="btn-portal zumen-btn">販売図面生成を起動 📝</a>
+        </div>
+    </div>
+</body>
+</html>
