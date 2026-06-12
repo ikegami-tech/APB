@@ -1,6 +1,9 @@
-streamlit
+fastapi
+uvicorn
+python-multipart
+jinja2
+pymupdf
+pillow
 python-pptx
-PyMuPDF
-Pillow
 google-genai
 python-dotenv
