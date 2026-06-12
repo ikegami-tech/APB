@@ -116,76 +116,89 @@ input[type="text"], input[type="file"] { width: 90%; padding: 12px; margin-top: 
 .zumen-d1 {
     background-color: white;
     width: 100%;
-    max-width: 1050px;
+    max-width: 1100px;
+    aspect-ratio: 297 / 210; /* 🌟 A4横サイズの比率に完全に固定！絶対に潰れません */
     margin: 0 auto;
-    font-family: "游明朝", "Yu Mincho", serif; /* 高級感のある明朝体ベース */
+    font-family: "游明朝", "Yu Mincho", serif;
     color: #333;
     border: 1px solid #CFD8DC;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 /* 編集用の画像・間取り図ブロック（肌色） */
 .z-box {
-    background-color: #FDE8D7; /* サンプルの肌色を完全再現 */
+    background-color: #FDE8D7;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
+    font-size: 24px;
     cursor: pointer;
     transition: 0.2s;
-    border: 2px dashed transparent;
     position: relative;
+    box-sizing: border-box;
 }
 .z-box:hover {
-    border-color: #FA8A76;
     background-color: #F8D8BC;
+    outline: 2px dashed #FA8A76;
 }
 
-/* ヘッダーエリア（店舗写真・タイトル・価格） */
+/* ヘッダーエリア */
 .zumen-d1-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    border-bottom: 2px solid #777;
-    padding: 15px 20px;
-    height: 100px;
+    align-items: flex-end;
+    border-bottom: 4px solid #888; /* 実物のような太い線 */
+    height: 18%; /* 高さをパーセントで固定 */
+    box-sizing: border-box;
 }
 
 /* メインエリア（左右分割） */
 .zumen-d1-body {
     display: flex;
-    padding: 20px;
-    gap: 20px;
+    height: 60%; /* 高さをパーセントで固定 */
+    border-bottom: 1px solid #888;
+    box-sizing: border-box;
 }
+
 .zumen-d1-left {
-    width: 65%;
+    width: 68%;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 15px;
+    padding: 15px;
+    box-sizing: border-box;
 }
+
 .zumen-d1-right {
-    width: 35%;
-    border-left: 2px solid #777;
-    padding-left: 20px;
+    width: 32%;
+    border-left: 4px solid #888; /* 実物のような太い線 */
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
 }
 
 /* 設備・フッターエリア */
 .zumen-d1-equipment {
-    border-top: 1px solid #777;
+    height: 8%;
     border-bottom: 4px solid #1E2D3D;
-    padding: 15px 20px;
     display: flex;
     align-items: center;
-    gap: 20px;
+    padding: 0 20px;
+    box-sizing: border-box;
 }
+
 .zumen-d1-footer {
-    padding: 15px 20px;
+    height: 14%;
+    padding: 0 20px;
     display: flex;
     justify-content: space-between;
     font-family: "游ゴシックMedium", "Noto Sans JP", sans-serif;
-    align-items: flex-end;
+    align-items: center;
+    box-sizing: border-box;
 }
 /* =========================================
    APB（パンフレット生成）専用のスタイル
