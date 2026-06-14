@@ -32,7 +32,7 @@ function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
 async function sendDataToPython(formData) {
     try {
-        const response = await fetch("http://127.0.0.1:8000/generate_zumen", { method: "POST", body: formData });
+        const response = await fetch("/generate_zumen", { method: "POST", body: formData });
         const result = await response.json();
         console.log("Pythonからの返事:", result.message);
     } catch (error) { console.error("通信エラー", error); }
@@ -83,7 +83,7 @@ async function downloadPptx() {
         const file = document.getElementById('input-image').files[0];
         if (file) formData.append("main_image", file);
 
-        const response = await fetch("http://127.0.0.1:8000/generate_zumen_file", { method: "POST", body: formData });
+        const response = await fetch("/generate_zumen_file", { method: "POST", body: formData });
         if (!response.ok) throw new Error("サーバーエラー");
 
         const blob = await response.blob();
@@ -101,18 +101,23 @@ async function downloadPptx() {
     }
 }
 // ==========================================
-// APB（パンフレット自動作成）用の処理
+// APB（パンフレット自動作成）用の処理（詳細ログ＆エラー表示版）
 // ==========================================
 async function startApbGeneration() {
-    const btn = document.querySelector('.btn-apb-generate');
+    const btn = document.querySelector('.btn-apb-generate') || document.querySelector('button[onclick="startApbGeneration()"]');
     const statusDiv = document.getElementById('progress-status');
+    const subStatusDiv = document.getElementById('progress-sub-status'); // 新設枠
+    const errorBox = document.getElementById('error-log-box');           // 新設枠
+    const errorText = document.getElementById('error-log-text');         // 新設枠
     const previewSection = document.getElementById('apb-preview-section');
     const previewContainer = document.getElementById('apb-preview-images');
     const originalText = btn.innerText;
 
-    // 前回のプレビューや状態をリセット
+    // 前回の表示をすべてリセット
     previewSection.classList.add('hidden');
     previewContainer.innerHTML = "";
+    if (errorBox) errorBox.classList.add('hidden'); // エラー枠を隠す
+    if (subStatusDiv) subStatusDiv.style.display = 'block'; // サブ枠を表示
     window.generatedPptxBase64 = null;
 
     btn.innerText = "⏳ パンフレットを作成中...";
@@ -123,65 +128,83 @@ async function startApbGeneration() {
     const zumen = document.getElementById('apb-zumen').files[0];
     const madori = document.getElementById('apb-madori').files[0];
     const empty = document.getElementById('apb-empty').files[0];
-    
-    // 🌟 修正：地図枠が削除されていてもエラーを出さずにスキップする安全処理
     const mapElement = document.getElementById('apb-map');
     const map = mapElement ? mapElement.files[0] : null;
-    
+
     if(zumen) formData.append("zumen_file", zumen);
     if(madori) formData.append("madori_file", madori);
     if(empty) formData.append("empty_file", empty);
     if(map) formData.append("map_file", map);
 
-    const orientation = document.querySelector('input[name="apb_orientation"]:checked').value;
+    const orientationElement = document.querySelector('input[name="apb_orientation"]:checked');
+    const orientation = orientationElement ? orientationElement.value : 'portrait';
     formData.append("orientation", orientation);
 
     const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
     const pageOptions = ["cover", "aerial_map", "access", "floor_plan", "interior_hq", "interior", "company"];
     checkboxes.forEach((chk, index) => {
-        if (chk.checked) {
+        if (chk && chk.checked) {
             formData.append("selected_pages", pageOptions[index]);
         }
     });
 
-    const progressMessages = [
-        "🔍 販売図面をAI（OCR）で読み取り中...\nしばらくお待ちください。",
-        "🧠 AIが物件情報、地域名、デザインテーマを詳細分析中...",
-        "📸 表紙のデザイン案を3パターン同時にImagenで生成中...\n（これには約15〜30秒かかります）",
-        "🗺️ 地図画像をネイビー＆ゴールドの高級仕様に変換中...",
-        "🎨 内観完成予想イメージをAI家具合成で生成中...",
-        "📊 高級感のあるPowerPointスライドを1枚ずつ緻密に組み立て中..."
+    // 🌟 ユーザーを退屈させないためのステップ進捗メッセージ
+    const progressSteps = [
+        { main: "🔍 販売図面をAI（OCR）で読み取り中...", sub: "💡 画像から物件の文字情報をスキャンしています（約15秒）" },
+        { main: "🧠 AIが物件情報、地域名、デザインテーマを詳細分析中...", sub: "💡 キャッチコピーや、物件に最適なカラーを選定しています" },
+        { main: "📸 表紙のデザイン案を3パターン同時にImagenで生成中...", sub: "💡 高級ホテルのようなリビング・外観イメージをAIが描いています（約30秒）" },
+        { main: "🗺️ 地図画像をネイビー＆ゴールドの高級仕様に変換中...", sub: "💡 案内地図をおしゃれなパンフレット用デザインに自動加工しています" },
+        { main: "🎨 内観完成予想イメージをAI家具合成で生成中...", sub: "💡 空室写真にバーチャルステージングを施し、家具を配置しています" },
+        { main: "🏛️ 会社案内と周辺環境データのドキュメントを結合中...", sub: "💡 東宝ハウスの紹介ページと、地域の統計データをまとめています" },
+        { main: "📊 高級感のあるPowerPointスライドを1枚ずつ緻密に組み立て中...", sub: "💡 仕上げ段階です。文字と画像をパワポ形式に高精度で合成しています" }
     ];
+
+    let currentStep = 0;
+    statusDiv.innerText = progressSteps[currentStep].main;
+    if (subStatusDiv) subStatusDiv.innerText = progressSteps[currentStep].sub;
     
-    let msgIndex = 0;
-    statusDiv.innerText = progressMessages[msgIndex];
-    
-    const progressTimer = setInterval(() => {
-        if (msgIndex < progressMessages.length - 1) {
-            msgIndex++;
-            statusDiv.innerText = progressMessages[msgIndex];
+// 💡 より確実な非同期処理によるメッセージの切り替え
+    let isGenerating = true; // 生成処理中かどうかのフラグ
+
+    const updateProgress = async () => {
+        for (let i = 0; i < progressSteps.length; i++) {
+            if (!isGenerating) break; // 生成処理が終わっていたらループを抜ける
+            
+            statusDiv.innerText = progressSteps[i].main;
+            if (subStatusDiv) subStatusDiv.innerText = progressSteps[i].sub;
+            
+            // 次のメッセージに切り替わるまで10秒待機 (最後のメッセージは待機しない)
+            if (i < progressSteps.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 10000));
+            }
         }
-    }, 12000);
+    };
+
+    // メッセージの切り替えを開始 (非同期で実行)
+    updateProgress();
 
     try {
-        const response = await fetch("http://127.0.0.1:8000/generate_apb", { 
-            method: "POST", 
-            body: formData 
-        });
+        const response = await fetch("/generate_apb", { method: "POST", body: formData });
         
-        if (!response.ok) throw new Error("サーバーエラーが発生しました");
+        isGenerating = false; // 生成処理が終わったのでフラグをオフにする
         
-        clearInterval(progressTimer);
+        if (!response.ok) {
+            // ステータスコードが504（Gateway Timeout）の場合は専用のメッセージにする
+            if (response.status === 504) {
+                throw new Error("AWSの通信制限時間（タイムアウト）を超過しました。設定を見直してください。");
+            }
+            
+            const errData = await response.json().catch(() => ({ detail: `サーバーエラーが発生しました (ステータスコード: ${response.status})` }));
+            throw new Error(errData.detail || JSON.stringify(errData));
+        }
+        
         statusDiv.innerText = "✨ パワポファイルの組み立てが完了しました！";
+        if (subStatusDiv) subStatusDiv.style.display = 'none'; // 成功したらサブは消す
         
-        // 🌟 バイナリではなくJSONデータ（画像リストとパワポデータ）として受け取る
         const result = await response.json();
-        
-        // パワポのデータとファイル名をメモリ（ブラウザ）に一時保存
         window.generatedPptxBase64 = result.pptx_base64;
         window.generatedPamphletFileName = zumen ? `パンフレット_${zumen.name.split('.')[0]}.pptx` : 'パンフレット_自動生成.pptx';
-
-        // 🌟 画面上にプレビュー画像をずらりと並べる（Streamlitの挙動を完全再現）
+        
         result.preview_images.forEach(item => {
             const card = document.createElement('div');
             card.style = "background: white; border: 1px solid #CFD8DC; border-radius: 6px; padding: 12px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05); width: 190px;";
@@ -191,7 +214,6 @@ async function startApbGeneration() {
             label.innerText = item.type;
             
             const img = document.createElement('img');
-            // 🌟 png から jpeg に変更して、軽量化された画像と同期させます
             img.src = "data:image/jpeg;base64," + item.image;
             img.style = "width: 100%; height: auto; border: 1px solid #E4E7EB; border-radius: 4px;";
             
@@ -200,15 +222,20 @@ async function startApbGeneration() {
             previewContainer.appendChild(card);
         });
 
-        // プレビューエリアをスッと表示
         previewSection.classList.remove('hidden');
         alert("🎉 パンフレットの生成が完了しました！下部のプレビューを確認して保存してください。");
         statusDiv.innerText = "";
-        
     } catch (error) {
-        clearInterval(progressTimer);
+        isGenerating = false; // ⬅️ ここを新しくします！
         alert("⚠️ 生成中にエラーが発生しました。");
         statusDiv.innerText = "❌ エラーが発生したため処理を中断しました。";
+        if (subStatusDiv) subStatusDiv.innerText = "下部のアラートログをご確認ください。";
+        
+        // 🌟【新設】画面上に生のログを吐き出して見える化する
+        if (errorBox && errorText) {
+            errorText.innerText = error.message;
+            errorBox.classList.remove('hidden');
+        }
         console.error(error);
     } finally {
         btn.innerText = originalText;
@@ -238,3 +265,51 @@ function downloadGeneratedPamphlet() {
     a.click();
     window.URL.revokeObjectURL(a.href);
 }
+// ==========================================
+// 📥 ドラッグ＆ドロップ機能の復活処理（強化版）
+// ==========================================
+function setupDragAndDrop(inputId) {
+    const fileInput = document.getElementById(inputId);
+    if (!fileInput) return;
+    
+    // 親要素、または周囲のアップロードエリアを柔軟に探す
+    const dropZone = fileInput.closest('.upload-zone') || fileInput.closest('.file-upload-box') || fileInput.parentNode;
+    if (!dropZone) return;
+
+    // マウスがエリアの上に乗った時の処理
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = '#0056b3';      // 枠線の色を濃い青に変える
+        dropZone.style.backgroundColor = '#f0f4f8';  // 背景を少し青っぽくする
+    });
+
+    // マウスがエリアから離れた時の処理
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.style.borderColor = '#CFD8DC';      // 元の枠線色に戻す
+        dropZone.style.backgroundColor = 'transparent'; // 背景を透明に戻す
+    });
+
+    // ファイルがドロップされた時の処理
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = '#CFD8DC';
+        dropZone.style.backgroundColor = 'transparent';
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            // ドロップされたファイルをHTMLの入力欄にセットする
+            fileInput.files = files;
+            
+            // ファイル選択された時と同じイベントを強制発生
+            const event = new Event('change', { bubbles: true });
+            fileInput.dispatchEvent(event);
+        }
+    });
+}
+
+// 🌟 画面の読み込みがすべて終わった瞬間に、3つの枠にドラッグ＆ドロップを設定する
+document.addEventListener("DOMContentLoaded", () => {
+    setupDragAndDrop('apb-zumen');  // 販売図面枠
+    setupDragAndDrop('apb-madori'); // 間取り図枠
+    setupDragAndDrop('apb-empty');  // 空室写真枠
+});

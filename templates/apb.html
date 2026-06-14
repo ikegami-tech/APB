@@ -58,9 +58,19 @@
 
             <div style="margin-top: 50px; text-align: center;">
                 <button class="btn-apb-generate" onclick="startApbGeneration()">🚀 パンフレットを生成する</button>
-                <div id="progress-status" style="margin-top: 15px; font-size: 15px; font-weight: bold; color: #00A88B; min-height: 24px;"></div>
-                
-                <div id="apb-preview-section" class="hidden" style="margin-top: 40px; text-align: center;">
+
+                        <div id="progress-status" style="margin-top: 15px; font-size: 15px; font-weight: bold; color: #00796B; min-height: 24px; text-align: center;"></div>
+
+                        <div id="progress-sub-status" style="margin-top: 8px; font-size: 13px; color: #555; text-align: center; font-style: italic; min-height: 20px;">
+                            ※AIが稼働中です。このまましばらくお待ちください...
+                        </div>
+
+                        <div id="error-log-box" class="hidden" style="margin-top: 20px; padding: 15px; background-color: #FFEBEE; border: 1px solid #FFCDD2; border-radius: 6px; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto;">
+                            <h4 style="color: #C62828; margin: 0 0 10px 0; font-size: 14px; font-weight: bold;">🛠️ システムエラーログ（デバッグ用）</h4>
+                            <pre id="error-log-text" style="margin: 0; font-family: monospace; font-size: 12px; color: #37474F; white-space: pre-wrap; word-break: break-all; background: #FFF; padding: 10px; border-radius: 4px; max-height: 200px; overflow-y: auto;"></pre>
+                        </div>
+
+                        <div id="apb-preview-section" class="hidden" style="margin-top: 40px; text-align: center;">
                     <h3 style="font-size: 20px; color: #1E2D3D; margin-bottom: 20px; font-weight: bold; border-bottom: 2px solid #D3B582; padding-bottom: 8px; display: inline-block;">🎉 生成されたパンフレット（プレビュー）</h3>
                     <div id="apb-preview-images" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-bottom: 30px; background-color: #F4F6F8; padding: 20px; border-radius: 8px; border: 1px solid #CFD8DC;"></div>
                     <button id="btn-apb-download" class="btn-apb-generate" style="background-color: #3B597B; box-shadow: 0 4px 14px rgba(59, 89, 123, 0.2);" onclick="downloadGeneratedPamphlet()">📥 完成したパンフレット（PowerPoint）を保存する</button>
