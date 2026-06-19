@@ -7,7 +7,7 @@
 </head>
 <body>
     <header class="main-header" style="height: 70px; background: white; padding: 0 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-        <div class="company-name" style="font-size: 18px; font-weight: bold; color: #1E2D3D;">株式会社東宝ハウス国分寺</div>
+        <div class="company-name" id="header-company-name" style="font-size: 18px; font-weight: bold; color: #1E2D3D;">株式会社東宝ハウス国分寺</div>
         <div>
             <button class="btn-cancel" onclick="window.location.href='/menu'">◀ 総合メニューに戻る</button>
         </div>
@@ -61,7 +61,7 @@
 
                         <div id="progress-status" style="margin-top: 15px; font-size: 15px; font-weight: bold; color: #00796B; min-height: 24px; text-align: center;"></div>
 
-                        <div id="progress-sub-status" style="margin-top: 8px; font-size: 13px; color: #555; text-align: center; font-style: italic; min-height: 20px;">
+                        <div id="progress-sub-status" style="display: none; margin-top: 8px; font-size: 13px; color: #555; text-align: center; font-style: italic; min-height: 20px;">
                             ※AIが稼働中です。このまましばらくお待ちください...
                         </div>
 

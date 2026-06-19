@@ -344,3 +344,164 @@ label.file-upload-card:hover {
     background-color: #F4F6F8;
     border-color: #B0BEC5;
 }
+/* =========================================
+   🌟 物件概要エリアの自動調整クラス（スクロール無し・2列全表示）
+   ========================================= */
+
+/* デザイン1用 */
+.zumen-summary-box {
+    flex: none;
+    box-sizing: border-box;
+    cursor: pointer;
+    overflow: hidden; 
+    
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px 8px; 
+    align-content: start;
+    
+    font-size: 11px; 
+    line-height: 1.3; 
+    padding: 8px 10px; 
+    background-color: transparent;
+
+    /* 👇ここから下を追加（アニメーションと赤枠消去） */
+    transition: all 0.3s ease; /* 動きを滑らかにする魔法 */
+    border: 1px solid transparent !important; /* 赤い点線枠を強制的に無効化 */
+    border-radius: 8px; /* 角を少し丸くして柔らかい印象に */
+}
+
+/* 🌟 マウスが乗ったときの動き（デザイン1）を追加 */
+.zumen-summary-box:hover {
+    transform: translateY(-3px); /* 上に3pxフワッと浮き上がる */
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08); /* メニュー画面と同じ影をつける */
+    background-color: #FFFFFF; /* 背景を白くして「押せる感」を強調 */
+    outline: none !important; /* ★ここを追加！z-boxの赤い点線を完全に消去 */
+}
+
+/* =========================================
+   デザイン2用：物件概要エリア
+   ========================================= */
+.zumen-summary-box-d2 {
+    width: 55%;
+    box-sizing: border-box;
+    cursor: pointer;
+    overflow: hidden;
+    
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 左右2列に分割 */
+    gap: 4px 12px; /* 行と列の隙間を少し広げる */
+    align-content: start;
+    
+    font-size: 10px; /* 枠内に収めるため少しだけ小さく */
+    line-height: 1.4; 
+    padding: 10px 15px; 
+    background-color: transparent;
+
+    transition: all 0.3s ease; 
+    border: 1px solid transparent !important; 
+    border-radius: 8px;
+}
+
+/* --- 追加：各行のデザイン --- */
+.zumen-summary-box-d2 > div {
+    display: flex;
+    align-items: flex-start;
+    border-bottom: 1px solid #ccc; /* 薄いグレーの下線 */
+    padding-bottom: 3px;
+    padding-top: 3px;
+}
+
+/* 「所在」「交通」「取引態様」を1行で全幅表示にする */
+/* （1番目、2番目、一番最後の要素は2列分使う設定） */
+.zumen-summary-box-d2 > div:nth-child(1),
+.zumen-summary-box-d2 > div:nth-child(2),
+.zumen-summary-box-d2 > div:last-child {
+    grid-column: span 2; 
+}
+
+/* 項目名（ラベル）の装飾 */
+.zumen-summary-label-d2 {
+    width: 60px; /* 項目名の幅を固定して縦を揃える */
+    flex-shrink: 0;
+    font-weight: bold;
+    color: #333;
+    border-left: 3px solid #0A3260; /* 紺色の縦線 */
+    padding-left: 6px; /* 縦線と文字の隙間 */
+    margin-right: 8px;
+}
+
+/* 値（入力された内容）の装飾 */
+.zumen-summary-value-d2 {
+    flex-grow: 1;
+    color: #444;
+    word-break: break-all; /* 長いテキストは折り返す */
+}
+
+/* =========================================
+   🌟 デザイン3用 物件概要エリアの自動調整
+   ========================================= */
+.zumen-summary-box-d3 {
+    width: 100%; /* デザインに合わせて幅は調整してください */
+    box-sizing: border-box;
+    cursor: pointer;
+    overflow: hidden;
+    
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 10px;
+    align-content: start;
+    
+    font-size: 10px; 
+    line-height: 1.4; 
+    padding: 10px 15px; 
+    background-color: transparent;
+
+    /* 👇アニメーションと赤枠消去の設定 */
+    transition: all 0.3s ease; 
+    border: 1px solid transparent !important; 
+    border-radius: 8px;
+}
+
+.zumen-summary-box-d3:hover {
+    transform: translateY(-3px); 
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    background-color: #FFFFFF; 
+    outline: none !important; 
+}
+/* フッターの会社ロゴのサイズ調整 */
+.footer-logo-img {
+    height: 45px; /* 状況に合わせて 40px 〜 50px 程度で調整してください */
+    width: auto;  /* 縦横比を維持して自動調整 */
+    object-fit: contain; /* 画像が歪まないように枠内に収める */
+    display: block;
+    margin-top: 5px; /* 上の要素（QRコードなど）との余白 */
+}
+/* =========================================
+   🌟 デザイン2用：物件詳細の各行の美しいデザイン
+   ========================================= */
+.s-row-d2 {
+    display: flex;
+    align-items: flex-start;
+    border-bottom: 1px solid #E4E7EB; /* 薄いグレーの美しい下線 */
+    padding: 3px 0;
+    min-height: 16px;
+}
+
+/* 項目名（ラベル）の装飾 */
+.s-label-d2 {
+    width: 60px; /* 幅を揃える */
+    flex-shrink: 0;
+    color: #1E2D3D;
+    font-weight: bold;
+    border-left: 2px solid #3B597B; /* 左側の紺色アクセントライン */
+    padding-left: 4px; /* 線と文字の隙間 */
+    margin-right: 6px; /* 文字と値の隙間 */
+}
+
+/* 値（入力テキスト）の設定 */
+.s-value-d2 {
+    flex-grow: 1;
+    color: #333;
+    word-break: break-all; /* 長い場合は枠内で綺麗に改行 */
+}

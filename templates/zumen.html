@@ -23,8 +23,8 @@
 
     <main class="main-area">
         <header class="main-header">
-            <div class="company-name">株式会社東宝ハウス国分寺</div>
-            <div class="header-actions">
+                <div class="company-name" id="header-company-name">株式会社東宝ハウス国分寺</div>
+                <div class="header-actions">
                 <div class="settings-icon">⚙️</div>
                 <div class="dropdown-content">
                     <a href="#">📋 会社情報の変更</a>
@@ -63,11 +63,11 @@
                         <img src="/static/sample3.png" alt="デザイン1" onerror="this.style.display='none'; this.parentNode.innerHTML='<div style=\'padding:40px;text-align:center;\'>デザイン1<br>(sample3.pngがありません)</div>';">
                     </div>
                     
-                    <div class="design-image-card" onclick="alert('デザイン2のレイアウトは後ほど作成します！\nまずはデザイン1をご確認ください。')">
+                    <div class="design-image-card" onclick="goToEditor(2)">
                         <img src="/static/sample2.png" alt="デザイン2" onerror="this.style.display='none'; this.parentNode.innerHTML='<div style=\'padding:40px;text-align:center;\'>デザイン2<br>(sample2.pngがありません)</div>';">
                     </div>
                     
-                    <div class="design-image-card" onclick="alert('デザイン3のレイアウトは後ほど作成します！')">
+                    <div class="design-image-card" onclick="goToEditor(3)">
                         <img src="/static/sample.png" alt="デザイン3" onerror="this.style.display='none'; this.parentNode.innerHTML='<div style=\'padding:40px;text-align:center;\'>デザイン3<br>(sample.pngがありません)</div>';">
                     </div>
                     
@@ -83,100 +83,419 @@
                 </div>
             </div>
 
-            <div id="step-3-editor" class="card hidden">
+           <div id="step-3-editor" class="card hidden" style="max-width: 1200px; width: 100%;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h2 class="page-title" id="editor-subtitle" style="margin: 0;">🎨 編集画面</h2>
                     <button class="btn-cancel" onclick="goBackToStep2()">◀ デザイン選択に戻る</button>
                 </div>
                 
-                <div class="zumen-d1">
-                    
+                <div class="zumen-d1" id="zumen-layout-1">
                     <div class="zumen-d1-header">
-                        <div class="z-box" style="width: 30%; height: 100%; background-color: #E8E8E8;" onclick="alert('店舗写真を変更します')">
+                        <div class="z-box" style="position: relative; width: 30%; flex-shrink: 0; height: 100%; background-color: #E8E8E8; background-image: url('/static/tenpo.png'); background-size: cover; background-position: center; background-repeat: no-repeat; color: transparent;" data-image-target="tenpo">
                             店舗写真（左上）
+                            <div id="tenpo-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #FFFFFF; font-size: 1.4rem; font-weight: bold; font-family: '游ゴシック', sans-serif; white-space: nowrap; text-shadow: 0 0 5px #FFFFFF, 0 0 10px #FFFFFF, 0 0 15px #FFFFFF; letter-spacing: 0.05em; z-index: 10;">
+                                「住まい」のもっと先へ。
+                            </div>
                         </div>
-                        <div style="flex-grow: 1; text-align: center; font-size: 3vw; font-style: italic; font-weight: bold; cursor: pointer; padding-bottom: 10px;" onclick="openModal('titleModal')">
+                        <div style="width: 45%; flex-shrink: 1; text-align: center; font-size: 32px; font-style: italic; font-weight: bold; cursor: pointer; align-self: center; display: flex; align-items: center; justify-content: center; word-break: break-all; line-height: 1.2; padding: 0 10px; box-sizing: border-box;" onclick="openModal('titleModal')">
                             <span id="display-title">タイトル</span>
                         </div>
-                        <div style="width: 25%; text-align: right; cursor: pointer; padding-bottom: 10px; padding-right: 20px;" onclick="openModal('infoModal')">
+                        <div style="width: 25%; flex-shrink: 0; text-align: right; cursor: pointer; padding-bottom: 10px; padding-right: 20px;" onclick="openModal('infoModal')">
                             <span style="font-size: 14px; display: inline-block; vertical-align: bottom; margin-bottom: 8px; margin-right: 10px;">販売<br>価格</span>
                             <span id="display-price" style="font-size: 46px; font-weight: bold; margin: 0 5px;">5,000</span>
                             <span style="font-size: 20px; font-weight: bold;">万円</span>
                         </div>
                     </div>
-
                     <div class="zumen-d1-body">
-                        
-                        <div class="zumen-d1-left">
-                            <div style="display: flex; gap: 15px; height: 55%;">
+                        <div class="zumen-d1-left" style="width: 72%;">
+                            <div style="display: flex; gap: 15px; height: 55%; margin-bottom: 10px;">
                                 <div class="z-box" style="flex: 1;" onclick="openModal('imageModal')">画像1</div>
-                                <div class="z-box" style="flex: 1.2;" onclick="alert('間取り図をアップロード')">間取り図</div>
+                                <div class="z-box" style="flex: 1; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold;" onclick="alert('間取り図をアップロード')">間取り図</div>
                             </div>
-                            <div style="display: flex; gap: 15px; height: 45%;">
+                            <div style="display: flex; gap: 15px; height: calc(45% - 10px);">
                                 <div class="z-box" style="flex: 1;" onclick="alert('サブ画像2')">画像2</div>
                                 <div class="z-box" style="flex: 1;" onclick="alert('サブ画像3')">画像3</div>
                                 <div class="z-box" style="flex: 1;" onclick="alert('サブ画像4')">画像4</div>
                             </div>
                         </div>
-
-                        <div class="zumen-d1-right">
-                            <div style="text-align: center; border-bottom: 1px solid #777; padding: 15px 0;">
-                                <span style="font-size: 18px;">交通</span><br>
-                                <span style="font-size: 28px; font-weight: bold;">「最寄駅」</span> 
-                                <span style="font-size: 16px;">徒歩 〇 分</span>
+                        <div class="zumen-d1-right" style="width: 26%; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; justify-content: space-between;">
+                            <div style="text-align: center; border-bottom: 1px solid #777; padding: 5px 0; height: 75px; box-sizing: border-box; flex-shrink: 0; cursor: pointer;" onclick="openModal('accessModal')">
+                                <span style="font-size: 16px;" id="display-line">交通</span><br>
+                                <span style="font-size: 24px; font-weight: bold;" id="display-station">「最寄駅」</span> 
+                                <span style="font-size: 14px;">徒歩 <span id="display-walk">〇</span> 分</span>
                             </div>
-                            <div class="z-box" style="flex-grow: 1; font-size: 15px; background-color: transparent; flex-direction: column; align-items: flex-start; padding: 15px 25px; line-height: 1.8; justify-content: flex-start;" onclick="alert('物件概要の入力画面を開きます')">
-                                ■ 物件住所 / <span id="display-address">東京都国分寺市...</span><br>
-                                ■ 間取り / <br>
-                                ■ 建築年数 / <br>
-                                ■ 土地権利 / <br>
-                                ■ 土地面積 / <br>
-                                ■ 建物面積 / <br>
-                                ■ 都市計画 / <br>
-                                （クリックしてリストを編集）
+                            <div class="z-box zumen-summary-box" style="flex-grow: 1; padding: 8px; cursor: pointer; display: flex; flex-direction: column; gap: 5px; overflow: hidden; background-color: transparent;" onclick="openModal('summaryModal')">
+                                <div style="font-size: 11px; font-weight: bold; border-bottom: 1px solid #777; padding-bottom: 2px; margin-bottom: 3px;">■ 物件詳細情報</div>
+                                <div style="display: flex; width: 100%; gap: 6px; flex-grow: 1;">
+                                    <div style="flex: 1; display: flex; flex-direction: column; gap: 3px; font-size: 11px; line-height: 1.2; min-width: 0;">
+                                        <div>■ 物件住所 / <span id="display-address">東京都国分寺市...</span></div>
+                                        <div>■ 土地権利 / <span id="display-land-right"></span></div>
+                                        <div>■ 専有面積 / <span id="display-exclusive-area"></span></div>
+                                        <div>■ ﾊﾞﾙｺﾆｰ面積 / <span id="display-balcony-area"></span></div>
+                                        <div>■ 所在階 / <span id="display-floor"></span></div>
+                                        <div>■ 総戸数 / <span id="display-total-units"></span></div>
+                                        <div>■ 建物構造 / <span id="display-structure"></span></div>
+                                        <div>■ 建築年月 / <span id="display-build-date"></span></div>
+                                        <div>■ 間取り / <span id="display-layout"></span></div>
+                                        <div>■ 水道 / <span id="display-water"></span></div>
+                                        <div>■ 汚水 / <span id="display-sewage"></span></div>
+                                        <div>■ ガス / <span id="display-gas"></span></div>
+                                        <div>■ 現況 / <span id="display-status"></span></div>
+                                    </div>
+                                    <div style="flex: 1; display: flex; flex-direction: column; gap: 3px; font-size: 11px; line-height: 1.2; min-width: 0;">
+                                        <div>■ 引渡し時期 / <span id="display-delivery"></span></div>
+                                        <div>■ 駐車場 / <span id="display-parking"></span></div>
+                                        <div>■ ﾊﾞｲｸ置き場 / <span id="display-bike"></span></div>
+                                        <div>■ 駐輪場 / <span id="display-bicycle"></span></div>
+                                        <div>■ 分譲会社 / <span id="display-developer"></span></div>
+                                        <div>■ 施工会社 / <span id="display-builder"></span></div>
+                                        <div>■ 管理会社 / <span id="display-management"></span></div>
+                                        <div>■ 用途地域 / <span id="display-zoning"></span></div>
+                                        <div>■ 管理費 / <span id="display-admin-fee"></span></div>
+                                        <div>■ 修繕積立金 / <span id="display-repair-fund"></span></div>
+                                        <div>■ その他費用 / <span id="display-other-fee"></span></div>
+                                        <div>■ ペット飼育 / <span id="display-pet"></span></div>
+                                        <div>■ ｴﾚﾍﾞｰﾀｰ / <span id="display-elevator"></span></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-
                     </div>
-
-                    <div class="zumen-d1-equipment">
-                        <div style="font-size: 13px; line-height: 1.2; font-weight: bold; width: 60px; text-align: center;">物件<br>設備</div>
-                        <div class="z-box" style="flex-grow: 1; height: 60%; font-size: 18px; background-color: #F8E8F8;" onclick="alert('設備アイコンを設定します')">
-                            設備アイコン枠
-                        </div>
-                    </div>
-
-                    <div class="zumen-d1-footer">
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <h3 style="margin: 0; color: #1A3668; font-size: 22px;">🏢 TOHO HOUSE 国分寺</h3>
-                            <p style="margin: 0; font-size: 11px; color: #555;">「住まい」のもっと先へ。<br>東宝ハウス ライフソリューションズ グループ</p>
-                        </div>
-                        <div style="font-size: 12px; color: #333; line-height: 1.6; text-align: center;">
-                            <span style="font-size: 10px;">免許番号</span><br>
-                            <strong style="font-size: 16px;">📞 会社電話番号</strong><br>
-                            会社名 / 住所 / FAX:
-                        </div>
-                        <div style="font-size: 12px; color: #333; line-height: 1.6;">
-                            <span style="font-size: 11px;">担当</span> <strong style="font-size: 18px;">担当者名</strong><br>
-                            📱 携帯番号<br>
-                            ✉️ メールアドレス
+                    <div class="zumen-d1-equipment" style="display: flex; align-items: center; gap: 15px;">
+                        <div style="font-size: 13px; line-height: 1.2; font-weight: bold; width: 60px; text-align: center; flex-shrink: 0;">物件<br>設備</div>
+                        <div style="flex-grow: 1; display: flex; justify-content: space-between; height: 60%;">
+                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #F8E8F8; border-radius: 4px;" onclick="alert('設備アイコン1を設定します')">アイコン</div>
+                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #F8E8F8; border-radius: 4px;" onclick="alert('設備アイコン2を設定します')">アイコン</div>
+                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #F8E8F8; border-radius: 4px;" onclick="alert('設備アイコン3を設定します')">アイコン</div>
+                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #F8E8F8; border-radius: 4px;" onclick="alert('設備アイコン4を設定します')">アイコン</div>
+                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #F8E8F8; border-radius: 4px;" onclick="alert('設備アイコン5を設定します')">アイコン</div>
+                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #F8E8F8; border-radius: 4px;" onclick="alert('設備アイコン6を設定します')">アイコン</div>
                         </div>
                     </div>
-
+                    <div class="zumen-d1-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; flex-grow: 1; background-color: #FFF;">
+                        <div style="display: flex; align-items: center; height: 100%;">
+                            <img class="footer-logo-img" src="/static/logo.png" style="height: 100%; width: auto;" alt="店舗ロゴ">
+                        </div>
+                        <div style="font-size: 11px; color: #333; line-height: 1.3;">
+                            <div class="foot-license" style="font-size: 9px; color: #555;">免許番号</div>
+                            <div class="foot-tel" style="font-size: 18px; font-weight: bold; margin: 2px 0;">📞 会社電話番号</div>
+                            <div>
+                                <div class="foot-company" style="font-weight: bold;">会社名</div>
+                                <div class="foot-address" style="font-size: 10px; color: #666;">住所</div>
+                            </div>
+                        </div>
+                        <div style="font-size: 11px; color: #333; line-height: 1.5;">
+                            <div style="margin-bottom: 2px;"><span style="font-size: 11px; color: #555;">担当</span> <strong style="font-size: 16px;">担当者名</strong></div>
+                            <div><span style="font-size: 12px; font-weight: bold;">℡</span> 携帯番号</div>
+                            <div>✉ メールアドレス</div>
+                        </div>
+                        <div style="border: 1px solid #777; width: 140px; font-size: 11px;">
+                            <div style="display: flex; background-color: #888; color: #FFF; text-align: center; border-bottom: 1px solid #777;">
+                                <div style="flex: 1; border-right: 1px solid #FFF; padding: 2px 0;">取引態様</div>
+                                <div style="flex: 1; padding: 2px 0;">手数料</div>
+                            </div>
+                            <div style="display: flex; height: 35px; background-color: #FFF;">
+                                <div style="flex: 1; border-right: 1px solid #777;"></div>
+                                <div style="flex: 1;"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <div class="zumen-d2 hidden" id="zumen-layout-2" style="width: 100%; max-width: 960px; height: 680px; border: 2px solid #1E2D3D; background-color: #FFF; margin: 0 auto; display: flex; flex-direction: column; box-sizing: border-box; font-family: '游ゴシック', sans-serif; position: relative;">
+                    <div style="display: flex; height: 60%; border-bottom: 2px solid #1E2D3D;">
+                        <div class="z-box" style="width: 45%; height: 100%; border-right: 2px solid #1E2D3D; background-color: #FFF6EE; font-size: 24px; font-weight: bold; display: flex; align-items: center; justify-content: center;" onclick="openModal('imageModal')">画像1</div>
+                        <div style="width: 55%; display: flex; flex-direction: column;">
+                            <div style="display: flex; height: 40%; border-bottom: 2px solid #1E2D3D;">
+                                <div class="z-box" style="flex: 1; border-right: 1px solid #777; display: flex; align-items: center; justify-content: center;" onclick="alert('サブ画像2')">画像2</div>
+                                <div class="z-box" style="flex: 1; border-right: 1px solid #777; display: flex; align-items: center; justify-content: center;" onclick="alert('サブ画像3')">画像3</div>
+                                <div class="z-box" style="flex: 1; display: flex; align-items: center; justify-content: center;" onclick="alert('サブ画像4')">画像4</div>
+                            </div>
+                            <div style="height: 20%; border-bottom: 2px solid #1E2D3D; display: flex; align-items: center; justify-content: center; background-color: #FFF; gap: 10px; cursor: pointer;" onclick="openModal('accessModal')">
+                                <span style="font-size: 16px; color: #555;" id="display-line-d2">交通</span>
+                                <span style="font-size: 24px; font-weight: bold; color: #1E2D3D;" id="display-station-d2">「最寄駅」</span>
+                                <span style="font-size: 15px;">徒歩 <span id="display-walk-d2">〇</span> 分</span>
+                            </div>
+                            <div class="z-box" style="height: 40%; background-color: #FFF6EE; font-size: 20px; font-weight: bold; display: flex; align-items: center; justify-content: center;" onclick="alert('間取り図をアップロード')">間取り図</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; height: 26%; border-bottom: 2px solid #1E2D3D;">
+                        <div style="width: 45%; display: flex; flex-direction: column; border-right: 2px solid #1E2D3D; padding: 10px; box-sizing: border-box; justify-content: space-between;">
+                            <div style="font-size: 28px; font-weight: bold; text-align: center; cursor: pointer; word-break: break-all; line-height: 1.2; padding: 5px 10px;" onclick="openModal('titleModal')">
+                                <span id="display-title-d2">タイトル</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; background-color: #F4F6F8; padding: 4px 10px; border-radius: 4px;">
+                                <span style="font-size: 11px; color: #666;">販売価格</span>
+                                <span style="cursor: pointer;" onclick="openModal('infoModal')"><strong style="font-size: 26px; color: #E74C3C;" id="display-price-d2">5,000</strong> <small style="font-size: 12px;">万円</small></span>
+                            </div>
+                            <div class="z-box" style="height: 30px; font-size: 13px; background-color: #F8E8F8; display: flex; align-items: center; justify-content: center;" onclick="alert('設備アイコンを設定します')">設備アイコン</div>
+                        </div>
+                        <div class="zumen-summary-box-d2" onclick="openModal('summaryModal')">
+                            <div class="s-row-d2"><span class="s-label-d2">■ 物件住所</span><span id="display-address-d2" class="s-value-d2">東京都国分寺市...</span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ 土地権利</span><span id="display-land-right-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ 専有面積</span><span id="display-exclusive-area-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ バルコニー</span><span id="display-balcony-area-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ 所在階</span><span id="display-floor-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ 総戸数</span><span id="display-total-units-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ 建物構造</span><span id="display-structure-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ 建築年月</span><span id="display-build-date-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ 間取り</span><span id="display-layout-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ 水道</span><span id="display-water-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ 汚水</span><span id="display-sewage-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ ガス</span><span id="display-gas-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ 現況</span><span id="display-status-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ 引渡時期</span><span id="display-delivery-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ 駐車場</span><span id="display-parking-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ バイク</span><span id="display-bike-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ 駐輪場</span><span id="display-bicycle-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ 分譲会社</span><span id="display-developer-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ 施工会社</span><span id="display-builder-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ 管理会社</span><span id="display-management-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ 用途地域</span><span id="display-zoning-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ 管理費</span><span id="display-admin-fee-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ 修繕積立</span><span id="display-repair-fund-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ その他</span><span id="display-other-fee-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ ペット</span><span id="display-pet-d2" class="s-value-d2"></span></div>
+                            <div class="s-row-d2"><span class="s-label-d2">■ ｴﾚﾍﾞｰﾀｰ</span><span id="display-elevator-d2" class="s-value-d2"></span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="zumen-d1-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; flex-grow: 1; background-color: #FFF;">
+                        <div style="display: flex; align-items: center; height: 100%;">
+                            <img class="footer-logo-img" src="/static/logo.png" style="height: 100%; width: auto;" alt="店舗ロゴ">
+                        </div>
+                        <div style="font-size: 11px; color: #333; line-height: 1.3;">
+                            <div class="foot-license" style="font-size: 9px; color: #555;">免許番号</div>
+                            <div class="foot-tel" style="font-size: 18px; font-weight: bold; margin: 2px 0;">📞 会社電話番号</div>
+                            <div>
+                                <div class="foot-company" style="font-weight: bold;">会社名</div>
+                                <div class="foot-address" style="font-size: 10px; color: #666;">住所</div>
+                            </div>
+                        </div>
+                        <div style="font-size: 11px; color: #333; line-height: 1.5;">
+                            <div style="margin-bottom: 2px;"><span style="font-size: 11px; color: #555;">担当</span> <strong style="font-size: 16px;">担当者名</strong></div>
+                            <div><span style="font-size: 12px; font-weight: bold;">℡</span> 携帯番号</div>
+                            <div>✉ メールアドレス</div>
+                        </div>
+                        <div style="border: 1px solid #777; width: 140px; font-size: 11px;">
+                            <div style="display: flex; background-color: #888; color: #FFF; text-align: center; border-bottom: 1px solid #777;">
+                                <div style="flex: 1; border-right: 1px solid #FFF; padding: 2px 0;">取引態様</div>
+                                <div style="flex: 1; padding: 2px 0;">手数料</div>
+                            </div>
+                            <div style="display: flex; height: 35px; background-color: #FFF;">
+                                <div style="flex: 1; border-right: 1px solid #777;"></div>
+                                <div style="flex: 1;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="zumen-d3 hidden" id="zumen-layout-3" style="width: 100%; max-width: 960px; height: 680px; border: 1px solid #CFD8DC; background-color: #FFF; margin: 0 auto; display: flex; flex-direction: column; box-sizing: border-box; font-family: '游ゴシック', sans-serif; position: relative;">
+                    <div style="display: flex; flex-grow: 1; height: 85%;">
+                        <div style="width: 68%; display: flex; flex-direction: column; padding: 10px; gap: 10px; box-sizing: border-box;">
+                            <div style="display: flex; height: 22%; gap: 10px;">
+                                <div class="z-box" style="flex: 1;" onclick="alert('サブ画像2')">画像2</div>
+                                <div class="z-box" style="flex: 1;" onclick="alert('サブ画像3')">画像3</div>
+                                <div class="z-box" style="flex: 1;" onclick="alert('サブ画像4')">画像4</div>
+                            </div>
+                            <div style="display: flex; height: 16%; background-color: #56B4CB; color: #FFF;">
+                                <div style="flex: 1; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: bold; cursor: pointer; padding: 5px 10px; word-break: break-all; line-height: 1.2;" onclick="openModal('titleModal')">
+                                    <span id="display-title-d3">タイトル</span>
+                                </div>
+                                <div style="width: 45%; display: flex; border-left: 1px solid #FFF; cursor: pointer;" onclick="openModal('accessModal')">
+                                    <div style="writing-mode: vertical-rl; text-orientation: upright; padding: 5px; font-size: 11px; letter-spacing: 2px; display: flex; align-items: center; justify-content: center;">ACCESS</div>
+                                    <div style="flex: 1; display: flex; align-items: center; justify-content: center; font-size: 15px;">
+                                        交通 <span id="display-station-d3" style="font-size: 20px; font-weight: bold; margin: 0 8px;">「最寄駅」</span> 徒歩<span id="display-walk-d3">〇</span>分
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-grow: 1; gap: 10px;">
+                                <div class="z-box" style="flex: 1; font-size: 26px;" onclick="openModal('imageModal')">画像1</div>
+                                <div class="z-box" style="flex: 1; font-size: 26px;" onclick="alert('間取り図をアップロード')">間取り図</div>
+                            </div>
+                            <div style="display: flex; height: 35px; align-items: center; gap: 10px;">
+                                <div style="font-size: 10px; line-height: 1.1; width: 40px; text-align: center;">物件<br>設備</div>
+                                <div class="z-box" style="flex-grow: 1; height: 100%; font-size: 16px; background-color: #F8E8F8; justify-content: flex-start; padding-left: 20px;" onclick="alert('設備アイコンを設定します')">設備アイコン</div>
+                            </div>
+                        </div>
+                        
+                        <div style="width: 32%; background-color: #56B4CB; color: #FFF; padding: 15px 20px; display: flex; flex-direction: column; box-sizing: border-box;">
+                            <div style="border-bottom: 1px solid #FFF; padding-bottom: 10px; margin-bottom: 15px; cursor: pointer;" onclick="openModal('infoModal')">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                                    <span style="font-size: 12px; line-height: 1.2;">販売<br>価格</span>
+                                    <div><strong style="font-size: 36px;" id="display-price-d3">5,000</strong> <span style="font-size: 16px;">万円</span></div>
+                                </div>
+                            </div>
+                            <div class="zumen-summary-box-d3" style="display: flex !important; flex-direction: column !important; gap: 4.5px !important; font-size: 10.5px; color: #FFF; padding: 0 !important; overflow: hidden; cursor: pointer; flex-grow: 1;" onclick="openModal('summaryModal')">
+                                <div>■ 物件住所 / <span id="display-address-d3">東京都国分寺市...</span></div>
+                                <div>■ 土地権利 / <span id="display-land-right-d3"></span></div>
+                                <div>■ 専有面積 / <span id="display-exclusive-area-d3"></span></div>
+                                <div>■ バルコニー / <span id="display-balcony-area-d3"></span></div>
+                                <div>■ 所在階 / <span id="display-floor-d3"></span></div>
+                                <div>■ 総戸数 / <span id="display-total-units-d3"></span></div>
+                                <div>■ 建物構造 / <span id="display-structure-d3"></span></div>
+                                <div>■ 建築年月 / <span id="display-build-date-d3"></span></div>
+                                <div>■ 間取り / <span id="display-layout-d3"></span></div>
+                                <div>■ 水道 / <span id="display-water-d3"></span></div>
+                                <div>■ 汚水 / <span id="display-sewage-d3"></span></div>
+                                <div>■ ガス / <span id="display-gas-d3"></span></div>
+                                <div>■ 現況 / <span id="display-status-d3"></span></div>
+                                <div>■ 引渡時期 / <span id="display-delivery-d3"></span></div>
+                                <div>■ 駐車場 / <span id="display-parking-d3"></span></div>
+                                <div>■ バイク置場 / <span id="display-bike-d3"></span></div>
+                                <div>■ 駐輪場 / <span id="display-bicycle-d3"></span></div>
+                                <div>■ 分譲会社 / <span id="display-developer-d3"></span></div>
+                                <div>■ 施工会社 / <span id="display-builder-d3"></span></div>
+                                <div>■ 管理会社 / <span id="display-management-d3"></span></div>
+                                <div>■ 用途地域 / <span id="display-zoning-d3"></span></div>
+                                <div>■ 管理費 / <span id="display-admin-fee-d3"></span></div>
+                                <div>■ 修繕積立金 / <span id="display-repair-fund-d3"></span></div>
+                                <div>■ その他費用 / <span id="display-other-fee-d3"></span></div>
+                                <div>■ ペット飼育 / <span id="display-pet-d3"></span></div>
+                                <div>■ エレベーター / <span id="display-elevator-d3"></span></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="zumen-d1-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; height: 15%; background-color: #FFF; border-top: 2px solid #333; box-sizing: border-box;">
+                        <div style="display: flex; align-items: center; height: 100%;">
+                            <img class="footer-logo-img" src="/static/logo.png" style="height: 100%; width: auto;" alt="店舗ロゴ">
+                        </div>
+                        <div style="font-size: 11px; color: #333; line-height: 1.3;">
+                            <div class="foot-license" style="font-size: 9px; color: #555;">免許番号</div>
+                            <div class="foot-tel" style="font-size: 18px; font-weight: bold; margin: 2px 0;">📞 会社電話番号</div>
+                            <div>
+                                <div class="foot-company" style="font-weight: bold;">会社名</div>
+                                <div class="foot-address" style="font-size: 10px; color: #666;">住所</div>
+                            </div>
+                        </div>
+                        <div style="font-size: 11px; color: #333; line-height: 1.5;">
+                            <div style="margin-bottom: 2px;"><span style="font-size: 11px; color: #555;">担当</span> <strong style="font-size: 16px;">担当者名</strong></div>
+                            <div><span style="font-size: 12px; font-weight: bold;">℡</span> 携帯番号</div>
+                            <div>✉ メールアドレス</div>
+                        </div>
+                        <div style="border: 1px solid #777; width: 140px; font-size: 11px;">
+                            <div style="display: flex; background-color: #888; color: #FFF; text-align: center; border-bottom: 1px solid #777;">
+                                <div style="flex: 1; border-right: 1px solid #FFF; padding: 2px 0;">取引態様</div>
+                                <div style="flex: 1; padding: 2px 0;">手数料</div>
+                            </div>
+                            <div style="display: flex; height: 35px; background-color: #FFF;">
+                                <div style="flex: 1; border-right: 1px solid #777;"></div>
+                                <div style="flex: 1;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div style="text-align: center; margin-top: 40px;">
                     <button class="btn-next" style="padding: 16px 40px;" onclick="downloadPptx()">✨ この内容でパワポを作成して保存</button>
                 </div>
+
             </div>
 
             </div>
 
         </div> </main>
-</div> <div id="titleModal" class="modal"><div class="modal-content"><h3>✏️ タイトルの編集</h3><input type="text" id="input-title" value="【東宝太郎】東宝マンション"><div style="text-align: right;"><button class="btn-cancel" onclick="closeModal('titleModal')">キャンセル</button><button style="background-color: #FA8A76; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: bold;" onclick="saveTitle()">保存して送信</button></div></div></div>
-<div id="imageModal" class="modal"><div class="modal-content"><h3>🖼️ メイン画像のアップロード</h3><input type="file" id="input-image" accept="image/png, image/jpeg"><div style="text-align: right;"><button class="btn-cancel" onclick="closeModal('imageModal')">キャンセル</button><button style="background-color: #FA8A76; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: bold;" onclick="saveImage()">画像を反映して送信</button></div></div></div>
-<div id="infoModal" class="modal"><div class="modal-content"><h3>💰 物件概要の編集</h3><label>販売価格（万円）</label><input type="text" id="input-price" value="5,000"><label>物件住所</label><input type="text" id="input-address" value="東京都国分寺市南町3-23-11"><div style="text-align: right;"><button class="btn-cancel" onclick="closeModal('infoModal')">キャンセル</button><button style="background-color: #FA8A76; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: bold;" onclick="saveInfo()">保存して反映</button></div></div></div>
+<div id="titleModal" class="modal">
+    <div class="modal-content">
+        <h3>✏️ タイトルの編集</h3>
+        <input type="text" id="input-title" value="" placeholder="例）新築分譲住宅" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button style="background-color: #FA8A76; color: white; border: none; padding: 10px 30px; border-radius: 6px; cursor: pointer; font-weight: bold;" onclick="saveTitle()">保存して送信</button>
+            <button class="btn-cancel" style="margin: 0; padding: 10px 20px;" onclick="closeModal('titleModal')">キャンセル</button>
+        </div>
+    </div>
+</div>
 
+<div id="imageModal" class="modal">
+    <div class="modal-content">
+        <h3>🖼️ 画像のアップロード</h3>
+        <input type="file" id="input-image" accept="image/png, image/jpeg">
+        
+        <div id="modal-text-input-wrapper" style="margin-top: 20px; display: none; text-align: left;">
+            <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #1E2D3D;">✍️ 写真の上に表示する文字</label>
+            <input type="text" id="modal-image-text" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+            <button style="background-color: #FA8A76; color: white; border: none; padding: 10px 30px; border-radius: 6px; cursor: pointer; font-weight: bold;" onclick="saveImage()">送信</button>
+            <button class="btn-cancel" style="margin: 0; padding: 10px 20px;" onclick="closeModal('imageModal')">キャンセル</button>
+        </div>
+    </div>
+</div>
+<div id="infoModal" class="modal">
+    <div class="modal-content">
+        <h3>💰 販売価格の編集</h3>
+        <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #1E2D3D;">販売価格（万円）</label>
+        <input type="text" id="input-price" value="5,000" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 20px;">
+        
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button style="background-color: #FA8A76; color: white; border: none; padding: 10px 30px; border-radius: 6px; cursor: pointer; font-weight: bold;" onclick="saveInfo()">保存して反映</button>
+            <button class="btn-cancel" style="margin: 0; padding: 10px 20px;" onclick="closeModal('infoModal')">キャンセル</button>
+        </div>
+    </div>
+</div>
+<div id="accessModal" class="modal">
+    <div class="modal-content">
+        <h3>🚆 交通アクセスの編集</h3>
+        
+        <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #1E2D3D;">路線（例：JR中央線）</label>
+        <input type="text" id="input-line" value="" placeholder="例）JR中央線" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 15px;">
+        
+        <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #1E2D3D;">最寄駅（例：国分寺駅）</label>
+        <input type="text" id="input-station" value="" placeholder="例）国分寺駅" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 15px;">
+        
+        <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #1E2D3D;">駅距離 / 徒歩（分）</label>
+        <input type="text" id="input-walk" value="" placeholder="例）5" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 20px;">
+        
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button style="background-color: #FA8A76; color: white; border: none; padding: 10px 30px; border-radius: 6px; cursor: pointer; font-weight: bold;" onclick="saveAccess()">保存して反映</button>
+            <button class="btn-cancel" style="margin: 0; padding: 10px 20px;" onclick="closeModal('accessModal')">キャンセル</button>
+        </div>
+    </div>
+</div>
+<div id="summaryModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+    <div class="modal-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #fefefe; border: 1px solid #888; border-radius: 8px; max-width: 600px; width: 90%; height: 85vh; display: flex; flex-direction: column; padding: 0; margin: 0;">
+        <div style="padding: 20px 20px 15px 20px; border-bottom: 1px solid #eee;">
+            <h3 style="margin: 0;">📋 物件概要の編集</h3>
+        </div>
+        <div style="flex-grow: 1; overflow-y: auto; padding: 20px; min-height: 0;">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">物件住所</label><input type="text" id="input-address" placeholder="例）東京都国分寺市南町..." style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">土地権利</label><input type="text" id="input-land-right" placeholder="例）所有権" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">専有面積</label><input type="text" id="input-exclusive-area" placeholder="例）〇㎡" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">バルコニー面積</label><input type="text" id="input-balcony-area" placeholder="例）〇㎡" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">所在階</label><input type="text" id="input-floor" placeholder="例）〇階建〇階部分" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">総戸数</label><input type="text" id="input-total-units" placeholder="例）〇戸" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">建物構造</label><input type="text" id="input-structure" placeholder="例）RC構造・鉄筋コンクリート造等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">建築年月</label><input type="text" id="input-build-date" placeholder="例）平成〇年〇月・20〇〇年〇月" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">間取り</label><input type="text" id="input-layout" placeholder="例）〇LDK" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">水道</label><input type="text" id="input-water" placeholder="例）公道" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">汚水</label><input type="text" id="input-sewage" placeholder="例）公共下水" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">ガス</label><input type="text" id="input-gas" placeholder="例）都市ガス" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">現況</label><input type="text" id="input-status" placeholder="例）空家・居住中等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">引渡し時期</label><input type="text" id="input-delivery" placeholder="例）即・相談等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">駐車場</label><input type="text" id="input-parking" placeholder="例）月々〇円〜〇円・空きなし等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">バイク置き場</label><input type="text" id="input-bike" placeholder="例）年間〇円〜〇円・空きなし等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">駐輪場</label><input type="text" id="input-bicycle" placeholder="例）年間〇円〜〇円・空きなし等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">分譲会社</label><input type="text" id="input-developer" placeholder="例）株式会社〇〇" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">施工会社</label><input type="text" id="input-builder" placeholder="例）株式会社〇〇" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">管理会社</label><input type="text" id="input-management" placeholder="例）株式会社〇〇" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">用途地域</label><input type="text" id="input-zoning" placeholder="例）第一低層住居専用地域" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">管理費</label><input type="text" id="input-admin-fee" placeholder="例）月額〇円" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">修繕積立金</label><input type="text" id="input-repair-fund" placeholder="例）月額〇円" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">その他費用</label><input type="text" id="input-other-fee" placeholder="例）CATV使用料〇円等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">ペット飼育</label><input type="text" id="input-pet" placeholder="例）可(小鳥・小魚)" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">エレベーター</label><input type="text" id="input-elevator" placeholder="例）あり・なし" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+            </div>
+        </div>
+        <div style="padding: 15px 20px; border-top: 1px solid #eee; background: #fff; display: flex; justify-content: flex-end; gap: 10px; border-radius: 0 0 8px 8px;">
+            <button style="background-color: #FA8A76; color: white; border: none; padding: 10px 30px; border-radius: 6px; cursor: pointer; font-weight: bold;" onclick="window.saveSummary()">保存して反映</button>
+            <button class="btn-cancel" style="margin: 0; padding: 10px 20px;" onclick="closeModal('summaryModal')">キャンセル</button>
+        </div>
+    </div>
+</div>
 <script src="/static/main.js"></script>
-
 </body>
 </html>

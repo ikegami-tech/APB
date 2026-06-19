@@ -23,10 +23,10 @@
         <h2 class="login-title">らくらく販売図面 APB</h2>
         <p style="color: #707070; font-size: 13px; margin-bottom: 30px;">会社限定・パンフレット自動生成システム</p>
         
-        <form onsubmit="event.preventDefault(); window.location.href='/menu';">
+        <form onsubmit="handleLogin(event)">
             <div class="login-input-group">
                 <label>👤 ログインID</label>
-                <input type="text" class="login-input" placeholder="th-kokubunji" required>
+                <input type="text" id="login-id" class="login-input" placeholder="th-kokubunji" required>
             </div>
             <div class="login-input-group">
                 <label>🔒 パスワード</label>
@@ -35,5 +35,7 @@
             <button type="submit" class="btn-login">ログイン</button>
         </form>
     </div>
+
+<script src="/static/main.js"></script>
 </body>
 </html>
