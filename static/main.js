@@ -125,7 +125,6 @@ function handleLogin(event) {
 // 📄 3. 販売図面作成画面用（zumen.html）の処理
 // ==========================================
 
-// --- 画面遷移の処理 ---
 function goToStep2() {
     const propTypeInput = document.getElementById('property-type');
     if (!propTypeInput) return;
@@ -134,10 +133,33 @@ function goToStep2() {
         alert('🚨 物件種別（マンションか戸建て）を選択してください！');
         return;
     }
+
+// 🌟 追加：マンションと戸建てで項目を自動で切り替える魔法（空欄非表示対応版）
+    const isMansion = (propType === "マンション");
+
+    document.querySelectorAll('.only-mansion').forEach(el => {
+        if (!isMansion) {
+            el.style.display = 'none';
+        } else {
+            const span = el.querySelector('span');
+            // プレビュー枠(spanがある)かつ空欄なら隠す。入力枠(spanがない)は表示。
+            el.style.display = (span && span.innerText.trim() === '') ? 'none' : '';
+        }
+    });
+
+    document.querySelectorAll('.only-kodate').forEach(el => {
+        if (isMansion) {
+            el.style.display = 'none';
+        } else {
+            const span = el.querySelector('span');
+            el.style.display = (span && span.innerText.trim() === '') ? 'none' : '';
+        }
+    });
+
+    // 👇この2行は画面を切り替えるための大事な処理なので残します！
     document.getElementById('step-1-property').classList.add('hidden');
     document.getElementById('step-2-design').classList.remove('hidden');
 }
-
 function goBackToStep1() {
     document.getElementById('step-2-design').classList.add('hidden');
     document.getElementById('step-1-property').classList.remove('hidden');
@@ -257,12 +279,10 @@ window.syncDisplays = function() {
                 }
             });
             
-// どれか1つでも入力があれば、案内を隠して項目コンテナを表示
+// 🌟 どれか1つでも入力があれば項目を表示（見出しは消さない！）
             if (hasInput) {
-                hintD2.style.display = 'none';
                 containerD2.classList.remove('hidden');
             } else {
-                hintD2.style.display = 'block';
                 containerD2.classList.add('hidden');
             }
         }
@@ -313,7 +333,9 @@ window.saveSummary = function() {
         'layout', 'water', 'sewage', 'gas', 'status',
         'delivery', 'parking', 'bike', 'bicycle',
         'developer', 'builder', 'management', 'zoning',
-        'admin-fee', 'repair-fund', 'other-fee', 'pet', 'elevator'
+        'admin-fee', 'repair-fund', 'other-fee', 'pet', 'elevator',
+        // ▼追加：戸建て用の項目▼
+        'land-area', 'building-area', 'city-planning', 'road', 'coverage', 'floor-ratio'
     ];
     summaryItems.forEach(function(item) {
         const dispEl = document.getElementById('display-' + item);
@@ -380,7 +402,6 @@ window.openImageModal = function(targetId, title) {
     openModal('imageModal');
 };
 
-// 🌟 画像の保存処理
 window.saveImage = function() {
     const fileInput = document.getElementById('input-image');
     if (!fileInput) return;
@@ -390,10 +411,26 @@ window.saveImage = function() {
         const targets = document.querySelectorAll(`[data-image-target="${window.currentImageTargetId}"]`);
         targets.forEach(target => {
             target.style.backgroundImage = `url(${imageUrl})`;
-            target.style.backgroundSize = 'cover';
             target.style.backgroundPosition = 'center';
             target.style.backgroundRepeat = 'no-repeat';
-            target.style.color = 'transparent';
+            target.style.color = 'transparent'; // 文字を透明にして消す
+            
+            // 🌟 アイコンと写真で設定を分ける
+            if (window.currentImageTargetId.startsWith('icon')) {
+                // アイコンの場合：見切れないように全体を表示（contain）
+                target.style.backgroundSize = 'contain';
+                
+                // 🌟 追加：背景色や影を【確実に】透明にして消し去る
+                target.style.setProperty('background-color', 'transparent', 'important');
+                target.style.border = 'none';
+                target.style.boxShadow = 'none';
+                
+                // 🌟 追加：枠内の余白をゼロにして、画像を最大まで大きく表示する！
+                target.style.padding = '0';
+            } else {
+                // 写真の場合：枠に合わせて切り抜いて埋める
+                target.style.backgroundSize = 'cover';
+            }
         });
         if (!window.uploadedImages) window.uploadedImages = {};
         window.uploadedImages[window.currentImageTargetId] = file;
@@ -453,12 +490,26 @@ async function downloadPptx() {
         formData.append("building_area", balconyAreaText);
         formData.append("plan", zoningText);
 
-        // 🌟 ログイン中の店舗名を裏側に送る
+// 🌟 ログイン中の店舗名を裏側に送る
         const branchKey = localStorage.getItem("branch_key") || "国分寺";
         formData.append("branch_name", branchKey);
 
-        const file = document.getElementById('input-image').files[0];
-        if (file) formData.append("main_image", file);
+        // 各種画像データ（画像1〜4、間取り、店舗写真）の送信
+        if (window.uploadedImages) {
+            if (window.uploadedImages['image1']) formData.append("main_image", window.uploadedImages['image1']);
+            if (window.uploadedImages['image2']) formData.append("sub_image1", window.uploadedImages['image2']);
+            if (window.uploadedImages['image3']) formData.append("sub_image2", window.uploadedImages['image3']);
+            if (window.uploadedImages['image4']) formData.append("sub_image3", window.uploadedImages['image4']);
+            if (window.uploadedImages['madori']) formData.append("madori_image", window.uploadedImages['madori']);
+            if (window.uploadedImages['tenpo']) formData.append("tenpo_image", window.uploadedImages['tenpo']);
+            
+            // 🌟 追加：設備アイコン画像（1〜6）の送信
+            for (let i = 1; i <= 6; i++) {
+                if (window.uploadedImages[`icon${i}`]) {
+                    formData.append(`icon_image${i}`, window.uploadedImages[`icon${i}`]);
+                }
+            }
+        }
 
         const response = await fetch("/generate_zumen_file", { method: "POST", body: formData });
         if (!response.ok) throw new Error("サーバーエラー");

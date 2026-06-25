@@ -128,48 +128,65 @@
                                 <div style="font-size: 11px; font-weight: bold; border-bottom: 1px solid #777; padding-bottom: 2px; margin-bottom: 3px;">■ 物件詳細情報</div>
                                 <div style="display: flex; width: 100%; gap: 6px; flex-grow: 1;">
                                     <div style="flex: 1; display: flex; flex-direction: column; gap: 3px; font-size: 11px; line-height: 1.2; min-width: 0;">
-                                        <div>■ 物件住所 / <span id="display-address">東京都国分寺市...</span></div>
+                                        <div>■ 物件住所 / <span id="display-address"></span></div>
                                         <div>■ 土地権利 / <span id="display-land-right"></span></div>
-                                        <div>■ 専有面積 / <span id="display-exclusive-area"></span></div>
-                                        <div>■ ﾊﾞﾙｺﾆｰ面積 / <span id="display-balcony-area"></span></div>
-                                        <div>■ 所在階 / <span id="display-floor"></span></div>
-                                        <div>■ 総戸数 / <span id="display-total-units"></span></div>
+
+                                        <div class="only-kodate">■ 土地面積 / <span id="display-land-area"></span></div>
+                                        <div class="only-kodate">■ 建物面積 / <span id="display-building-area"></span></div>
+
+                                        <div class="only-mansion">■ 専有面積 / <span id="display-exclusive-area"></span></div>
+                                        <div class="only-mansion">■ バルコニー / <span id="display-balcony-area"></span></div>
+                                        <div class="only-mansion">■ 所在階 / <span id="display-floor"></span></div>
+                                        <div class="only-mansion">■ 総戸数 / <span id="display-total-units"></span></div>
+
                                         <div>■ 建物構造 / <span id="display-structure"></span></div>
                                         <div>■ 建築年月 / <span id="display-build-date"></span></div>
                                         <div>■ 間取り / <span id="display-layout"></span></div>
+
+                                        <div class="only-kodate">■ 都市計画 / <span id="display-city-planning"></span></div>
+                                        <div class="only-kodate">■ 接道 / <span id="display-road"></span></div>
+
                                         <div>■ 水道 / <span id="display-water"></span></div>
                                         <div>■ 汚水 / <span id="display-sewage"></span></div>
                                         <div>■ ガス / <span id="display-gas"></span></div>
                                         <div>■ 現況 / <span id="display-status"></span></div>
                                     </div>
                                     <div style="flex: 1; display: flex; flex-direction: column; gap: 3px; font-size: 11px; line-height: 1.2; min-width: 0;">
-                                        <div>■ 引渡し時期 / <span id="display-delivery"></span></div>
+                                        <div>■ 引渡時期 / <span id="display-delivery"></span></div>
                                         <div>■ 駐車場 / <span id="display-parking"></span></div>
-                                        <div>■ ﾊﾞｲｸ置き場 / <span id="display-bike"></span></div>
-                                        <div>■ 駐輪場 / <span id="display-bicycle"></span></div>
-                                        <div>■ 分譲会社 / <span id="display-developer"></span></div>
+
+                                        <div class="only-mansion">■ バイク置場 / <span id="display-bike"></span></div>
+                                        <div class="only-mansion">■ 駐輪場 / <span id="display-bicycle"></span></div>
+                                        <div class="only-mansion">■ 分譲会社 / <span id="display-developer"></span></div>
+
                                         <div>■ 施工会社 / <span id="display-builder"></span></div>
-                                        <div>■ 管理会社 / <span id="display-management"></span></div>
+
+                                        <div class="only-mansion">■ 管理会社 / <span id="display-management"></span></div>
+
                                         <div>■ 用途地域 / <span id="display-zoning"></span></div>
-                                        <div>■ 管理費 / <span id="display-admin-fee"></span></div>
-                                        <div>■ 修繕積立金 / <span id="display-repair-fund"></span></div>
-                                        <div>■ その他費用 / <span id="display-other-fee"></span></div>
-                                        <div>■ ペット飼育 / <span id="display-pet"></span></div>
-                                        <div>■ ｴﾚﾍﾞｰﾀｰ / <span id="display-elevator"></span></div>
+
+                                        <div class="only-mansion">■ 管理費 / <span id="display-admin-fee"></span></div>
+                                        <div class="only-mansion">■ 修繕積立金 / <span id="display-repair-fund"></span></div>
+                                        <div class="only-mansion">■ その他費用 / <span id="display-other-fee"></span></div>
+                                        <div class="only-mansion">■ ペット飼育 / <span id="display-pet"></span></div>
+                                        <div class="only-mansion">■ エレベーター / <span id="display-elevator"></span></div>
+
+                                        <div class="only-kodate">■ 建蔽率 / <span id="display-coverage"></span></div>
+                                        <div class="only-kodate">■ 容積率 / <span id="display-floor-ratio"></span></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="zumen-d1-equipment" style="display: flex; align-items: center; gap: 15px;">
+                    <div class="zumen-d1-equipment" style="display: flex; align-items: center; gap: 15px; height: 45px; margin: 3px 0;">
                         <div style="font-size: 13px; line-height: 1.2; font-weight: bold; width: 60px; text-align: center; flex-shrink: 0;">物件<br>設備</div>
-                        <div style="flex-grow: 1; display: flex; justify-content: space-between; height: 60%;">
-                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #F8E8F8; border-radius: 4px;" onclick="alert('設備アイコン1を設定します')">アイコン</div>
-                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #F8E8F8; border-radius: 4px;" onclick="alert('設備アイコン2を設定します')">アイコン</div>
-                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #F8E8F8; border-radius: 4px;" onclick="alert('設備アイコン3を設定します')">アイコン</div>
-                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #F8E8F8; border-radius: 4px;" onclick="alert('設備アイコン4を設定します')">アイコン</div>
-                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #F8E8F8; border-radius: 4px;" onclick="alert('設備アイコン5を設定します')">アイコン</div>
-                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #F8E8F8; border-radius: 4px;" onclick="alert('設備アイコン6を設定します')">アイコン</div>
+                        <div style="flex-grow: 1; display: flex; justify-content: space-between; height: 100%;">
+                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #F8E8F8; border-radius: 4px;" onclick="openImageModal('icon1', '設備アイコン1')" data-image-target="icon1">アイコン</div>
+                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #F8E8F8; border-radius: 4px;" onclick="openImageModal('icon2', '設備アイコン2')" data-image-target="icon2">アイコン</div>
+                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #F8E8F8; border-radius: 4px;" onclick="openImageModal('icon3', '設備アイコン3')" data-image-target="icon3">アイコン</div>
+                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #F8E8F8; border-radius: 4px;" onclick="openImageModal('icon4', '設備アイコン4')" data-image-target="icon4">アイコン</div>
+                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #F8E8F8; border-radius: 4px;" onclick="openImageModal('icon5', '設備アイコン5')" data-image-target="icon5">アイコン</div>
+                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #F8E8F8; border-radius: 4px;" onclick="openImageModal('icon6', '設備アイコン6')" data-image-target="icon6">アイコン</div>
                         </div>
                     </div>
                     <div class="zumen-d1-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; flex-grow: 1; background-color: #FFF;">
@@ -222,13 +239,13 @@
                             
                             <div style="display: flex; align-items: center; gap: 10px; padding-bottom: 5px;">
                                 <div style="font-size: 10px; line-height: 1.2; width: 30px;">物件<br>設備</div>
-                                <div style="display: flex; flex-grow: 1; justify-content: space-between; gap: 5px;" onclick="alert('設備アイコンを設定します')">
-                                    <div class="z-box" style="flex: 1; aspect-ratio: 1; background-color: #F5E1FD; font-size: 12px; font-weight: normal; padding: 0;">設備</div>
-                                    <div class="z-box" style="flex: 1; aspect-ratio: 1; background-color: #F5E1FD; font-size: 12px; font-weight: normal; padding: 0;">アイコン</div>
-                                    <div class="z-box" style="flex: 1; aspect-ratio: 1; background-color: #F5E1FD;"></div>
-                                    <div class="z-box" style="flex: 1; aspect-ratio: 1; background-color: #F5E1FD;"></div>
-                                    <div class="z-box" style="flex: 1; aspect-ratio: 1; background-color: #F5E1FD;"></div>
-                                    <div class="z-box" style="flex: 1; aspect-ratio: 1; background-color: #F5E1FD;"></div>
+                                <div style="display: flex; flex-grow: 1; justify-content: space-between; gap: 5px;">
+                                    <div class="z-box" style="flex: 1; aspect-ratio: 1; background-color: #F5E1FD; font-size: 12px; font-weight: normal; padding: 0;" onclick="openImageModal('icon1', '設備アイコン1')" data-image-target="icon1">設備</div>
+                                    <div class="z-box" style="flex: 1; aspect-ratio: 1; background-color: #F5E1FD; font-size: 12px; font-weight: normal; padding: 0;" onclick="openImageModal('icon2', '設備アイコン2')" data-image-target="icon2">アイコン</div>
+                                    <div class="z-box" style="flex: 1; aspect-ratio: 1; background-color: #F5E1FD;" onclick="openImageModal('icon3', '設備アイコン3')" data-image-target="icon3"></div>
+                                    <div class="z-box" style="flex: 1; aspect-ratio: 1; background-color: #F5E1FD;" onclick="openImageModal('icon4', '設備アイコン4')" data-image-target="icon4"></div>
+                                    <div class="z-box" style="flex: 1; aspect-ratio: 1; background-color: #F5E1FD;" onclick="openImageModal('icon5', '設備アイコン5')" data-image-target="icon5"></div>
+                                    <div class="z-box" style="flex: 1; aspect-ratio: 1; background-color: #F5E1FD;" onclick="openImageModal('icon6', '設備アイコン6')" data-image-target="icon6"></div>
                                 </div>
                             </div>
                         </div>
@@ -251,38 +268,56 @@
                         </div>
                     </div>
 
-                    <div style="background-color: #DDF0F8; padding: 12px 20px; box-sizing: border-box; cursor: pointer; height: 110px; flex-shrink: 0; display: flex; align-items: center;" onclick="openModal('summaryModal')">
-                        <div id="display-empty-hint-d2" style="width: 100%; text-align: center; color: #5499C7; font-size: 14px; font-weight: bold; font-family: '游ゴシック', sans-serif;">
-                            💡 ここをクリックして物件詳細情報を入力してください
+                    <div style="background-color: #DDF0F8; padding: 12px 20px; box-sizing: border-box; cursor: pointer; height: 110px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center;" onclick="openModal('summaryModal')">
+                        
+                        <div id="display-empty-hint-d2" style="width: 100%; color: #5499C7; font-size: 12px; font-weight: bold; font-family: '游ゴシック', sans-serif; margin-bottom: 6px; border-bottom: 1px solid #5499C7; padding-bottom: 2px;">
+                            ■ 物件詳細情報
                         </div>
 
                         <div id="display-summary-container-d2" class="hidden" style="column-count: 5; column-gap: 15px; width: 100%; font-size: 8.5px; line-height: 1.5; color: #555;">
                             <div style="break-inside: avoid;">■物件住所 / <span id="display-address-d2" style="color: #333;"></span></div>
                             <div style="break-inside: avoid;">■土地権利 / <span id="display-land-right-d2" style="color: #333;"></span></div>
-                            <div style="break-inside: avoid;">■専有面積 / <span id="display-exclusive-area-d2" style="color: #333;"></span></div>
-                            <div style="break-inside: avoid;">■ﾊﾞﾙｺﾆｰ / <span id="display-balcony-area-d2" style="color: #333;"></span></div>
-                            <div style="break-inside: avoid;">■所在階 / <span id="display-floor-d2" style="color: #333;"></span></div>
-                            <div style="break-inside: avoid;">■総戸数 / <span id="display-total-units-d2" style="color: #333;"></span></div>
+
+                            <div class="only-kodate" style="break-inside: avoid;">■土地面積 / <span id="display-land-area-d2" style="color: #333;"></span></div>
+                            <div class="only-kodate" style="break-inside: avoid;">■建物面積 / <span id="display-building-area-d2" style="color: #333;"></span></div>
+
+                            <div class="only-mansion" style="break-inside: avoid;">■専有面積 / <span id="display-exclusive-area-d2" style="color: #333;"></span></div>
+                            <div class="only-mansion" style="break-inside: avoid;">■バルコニー / <span id="display-balcony-area-d2" style="color: #333;"></span></div>
+                            <div class="only-mansion" style="break-inside: avoid;">■所在階 / <span id="display-floor-d2" style="color: #333;"></span></div>
+                            <div class="only-mansion" style="break-inside: avoid;">■総戸数 / <span id="display-total-units-d2" style="color: #333;"></span></div>
+
                             <div style="break-inside: avoid;">■建物構造 / <span id="display-structure-d2" style="color: #333;"></span></div>
                             <div style="break-inside: avoid;">■建築年月 / <span id="display-build-date-d2" style="color: #333;"></span></div>
                             <div style="break-inside: avoid;">■間取り / <span id="display-layout-d2" style="color: #333;"></span></div>
+
+                            <div class="only-kodate" style="break-inside: avoid;">■都市計画 / <span id="display-city-planning-d2" style="color: #333;"></span></div>
+                            <div class="only-kodate" style="break-inside: avoid;">■接道 / <span id="display-road-d2" style="color: #333;"></span></div>
+
                             <div style="break-inside: avoid;">■水道 / <span id="display-water-d2" style="color: #333;"></span></div>
                             <div style="break-inside: avoid;">■汚水 / <span id="display-sewage-d2" style="color: #333;"></span></div>
                             <div style="break-inside: avoid;">■ガス / <span id="display-gas-d2" style="color: #333;"></span></div>
                             <div style="break-inside: avoid;">■現況 / <span id="display-status-d2" style="color: #333;"></span></div>
                             <div style="break-inside: avoid;">■引渡時期 / <span id="display-delivery-d2" style="color: #333;"></span></div>
                             <div style="break-inside: avoid;">■駐車場 / <span id="display-parking-d2" style="color: #333;"></span></div>
-                            <div style="break-inside: avoid;">■ﾊﾞｲｸ置場 / <span id="display-bike-d2" style="color: #333;"></span></div>
-                            <div style="break-inside: avoid;">■駐輪場 / <span id="display-bicycle-d2" style="color: #333;"></span></div>
-                            <div style="break-inside: avoid;">■分譲会社 / <span id="display-developer-d2" style="color: #333;"></span></div>
+
+                            <div class="only-mansion" style="break-inside: avoid;">■バイク置場 / <span id="display-bike-d2" style="color: #333;"></span></div>
+                            <div class="only-mansion" style="break-inside: avoid;">■駐輪場 / <span id="display-bicycle-d2" style="color: #333;"></span></div>
+                            <div class="only-mansion" style="break-inside: avoid;">■分譲会社 / <span id="display-developer-d2" style="color: #333;"></span></div>
+
                             <div style="break-inside: avoid;">■施工会社 / <span id="display-builder-d2" style="color: #333;"></span></div>
-                            <div style="break-inside: avoid;">■管理会社 / <span id="display-management-d2" style="color: #333;"></span></div>
+
+                            <div class="only-mansion" style="break-inside: avoid;">■管理会社 / <span id="display-management-d2" style="color: #333;"></span></div>
+
                             <div style="break-inside: avoid;">■用途地域 / <span id="display-zoning-d2" style="color: #333;"></span></div>
-                            <div style="break-inside: avoid;">■管理費 / <span id="display-admin-fee-d2" style="color: #333;"></span></div>
-                            <div style="break-inside: avoid;">■修繕積立 / <span id="display-repair-fund-d2" style="color: #333;"></span></div>
-                            <div style="break-inside: avoid;">■その他 / <span id="display-other-fee-d2" style="color: #333;"></span></div>
-                            <div style="break-inside: avoid;">■ペット / <span id="display-pet-d2" style="color: #333;"></span></div>
-                            <div style="break-inside: avoid;">■ｴﾚﾍﾞｰﾀｰ / <span id="display-elevator-d2" style="color: #333;"></span></div>
+
+                            <div class="only-mansion" style="break-inside: avoid;">■管理費 / <span id="display-admin-fee-d2" style="color: #333;"></span></div>
+                            <div class="only-mansion" style="break-inside: avoid;">■修繕積立 / <span id="display-repair-fund-d2" style="color: #333;"></span></div>
+                            <div class="only-mansion" style="break-inside: avoid;">■その他 / <span id="display-other-fee-d2" style="color: #333;"></span></div>
+                            <div class="only-mansion" style="break-inside: avoid;">■ペット / <span id="display-pet-d2" style="color: #333;"></span></div>
+                            <div class="only-mansion" style="break-inside: avoid;">■ｴﾚﾍﾞｰﾀｰ / <span id="display-elevator-d2" style="color: #333;"></span></div>
+
+                            <div class="only-kodate" style="break-inside: avoid;">■建蔽率 / <span id="display-coverage-d2" style="color: #333;"></span></div>
+                            <div class="only-kodate" style="break-inside: avoid;">■容積率 / <span id="display-floor-ratio-d2" style="color: #333;"></span></div>
                         </div>
                     </div>
 
@@ -341,7 +376,14 @@
                             </div>
                             <div style="display: flex; height: 35px; align-items: center; gap: 10px;">
                                 <div style="font-size: 10px; line-height: 1.1; width: 40px; text-align: center;">物件<br>設備</div>
-                                <div class="z-box" style="flex-grow: 1; height: 100%; font-size: 16px; background-color: #F8E8F8; justify-content: flex-start; padding-left: 20px;" onclick="alert('設備アイコンを設定します')">設備アイコン</div>
+                                <div style="flex-grow: 1; display: flex; justify-content: space-between; height: 100%; gap: 5px;">
+                                    <div class="z-box" style="flex: 1; background-color: #F8E8F8; border-radius: 4px; font-size: 10px;" onclick="openImageModal('icon1', '設備アイコン1')" data-image-target="icon1"></div>
+                                    <div class="z-box" style="flex: 1; background-color: #F8E8F8; border-radius: 4px; font-size: 10px;" onclick="openImageModal('icon2', '設備アイコン2')" data-image-target="icon2"></div>
+                                    <div class="z-box" style="flex: 1; background-color: #F8E8F8; border-radius: 4px; font-size: 10px;" onclick="openImageModal('icon3', '設備アイコン3')" data-image-target="icon3"></div>
+                                    <div class="z-box" style="flex: 1; background-color: #F8E8F8; border-radius: 4px; font-size: 10px;" onclick="openImageModal('icon4', '設備アイコン4')" data-image-target="icon4"></div>
+                                    <div class="z-box" style="flex: 1; background-color: #F8E8F8; border-radius: 4px; font-size: 10px;" onclick="openImageModal('icon5', '設備アイコン5')" data-image-target="icon5"></div>
+                                    <div class="z-box" style="flex: 1; background-color: #F8E8F8; border-radius: 4px; font-size: 10px;" onclick="openImageModal('icon6', '設備アイコン6')" data-image-target="icon6"></div>
+                                </div>
                             </div>
                         </div>
                         
@@ -361,30 +403,47 @@
                                 <div id="display-summary-container-d3" class="hidden" style="display: flex; flex-direction: column; gap: 4.5px;">
                                     <div>■ 物件住所 / <span id="display-address-d3"></span></div>
                                     <div>■ 土地権利 / <span id="display-land-right-d3"></span></div>
-                                    <div>■ 専有面積 / <span id="display-exclusive-area-d3"></span></div>
-                                    <div>■ バルコニー / <span id="display-balcony-area-d3"></span></div>
-                                    <div>■ 所在階 / <span id="display-floor-d3"></span></div>
-                                    <div>■ 総戸数 / <span id="display-total-units-d3"></span></div>
+
+                                    <div class="only-kodate">■ 土地面積 / <span id="display-land-area-d3"></span></div>
+                                    <div class="only-kodate">■ 建物面積 / <span id="display-building-area-d3"></span></div>
+
+                                    <div class="only-mansion">■ 専有面積 / <span id="display-exclusive-area-d3"></span></div>
+                                    <div class="only-mansion">■ バルコニー / <span id="display-balcony-area-d3"></span></div>
+                                    <div class="only-mansion">■ 所在階 / <span id="display-floor-d3"></span></div>
+                                    <div class="only-mansion">■ 総戸数 / <span id="display-total-units-d3"></span></div>
+
                                     <div>■ 建物構造 / <span id="display-structure-d3"></span></div>
                                     <div>■ 建築年月 / <span id="display-build-date-d3"></span></div>
                                     <div>■ 間取り / <span id="display-layout-d3"></span></div>
+
+                                    <div class="only-kodate">■ 都市計画 / <span id="display-city-planning-d3"></span></div>
+                                    <div class="only-kodate">■ 接道 / <span id="display-road-d3"></span></div>
+
                                     <div>■ 水道 / <span id="display-water-d3"></span></div>
                                     <div>■ 汚水 / <span id="display-sewage-d3"></span></div>
                                     <div>■ ガス / <span id="display-gas-d3"></span></div>
                                     <div>■ 現況 / <span id="display-status-d3"></span></div>
                                     <div>■ 引渡時期 / <span id="display-delivery-d3"></span></div>
                                     <div>■ 駐車場 / <span id="display-parking-d3"></span></div>
-                                    <div>■ バイク置場 / <span id="display-bike-d3"></span></div>
-                                    <div>■ 駐輪場 / <span id="display-bicycle-d3"></span></div>
-                                    <div>■ 分譲会社 / <span id="display-developer-d3"></span></div>
+
+                                    <div class="only-mansion">■ バイク置場 / <span id="display-bike-d3"></span></div>
+                                    <div class="only-mansion">■ 駐輪場 / <span id="display-bicycle-d3"></span></div>
+                                    <div class="only-mansion">■ 分譲会社 / <span id="display-developer-d3"></span></div>
+
                                     <div>■ 施工会社 / <span id="display-builder-d3"></span></div>
-                                    <div>■ 管理会社 / <span id="display-management-d3"></span></div>
+
+                                    <div class="only-mansion">■ 管理会社 / <span id="display-management-d3"></span></div>
+
                                     <div>■ 用途地域 / <span id="display-zoning-d3"></span></div>
-                                    <div>■ 管理費 / <span id="display-admin-fee-d3"></span></div>
-                                    <div>■ 修繕積立金 / <span id="display-repair-fund-d3"></span></div>
-                                    <div>■ その他費用 / <span id="display-other-fee-d3"></span></div>
-                                    <div>■ ペット飼育 / <span id="display-pet-d3"></span></div>
-                                    <div>■ エレベーター / <span id="display-elevator-d3"></span></div>
+
+                                    <div class="only-mansion">■ 管理費 / <span id="display-admin-fee-d3"></span></div>
+                                    <div class="only-mansion">■ 修繕積立金 / <span id="display-repair-fund-d3"></span></div>
+                                    <div class="only-mansion">■ その他費用 / <span id="display-other-fee-d3"></span></div>
+                                    <div class="only-mansion">■ ペット飼育 / <span id="display-pet-d3"></span></div>
+                                    <div class="only-mansion">■ エレベーター / <span id="display-elevator-d3"></span></div>
+
+                                    <div class="only-kodate">■ 建蔽率 / <span id="display-coverage-d3"></span></div>
+                                    <div class="only-kodate">■ 容積率 / <span id="display-floor-ratio-d3"></span></div>
                                 </div>
                             </div>
                         </div>
@@ -493,33 +552,50 @@
             <h3 style="margin: 0;">📋 物件概要の編集</h3>
         </div>
         <div style="flex-grow: 1; overflow-y: auto; padding: 20px; min-height: 0;">
-            <div style="display: flex; flex-direction: column; gap: 8px;">
+<div style="display: flex; flex-direction: column; gap: 8px;">
                 <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">物件住所</label><input type="text" id="input-address" placeholder="例）東京都国分寺市南町..." style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
                 <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">土地権利</label><input type="text" id="input-land-right" placeholder="例）所有権" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">専有面積</label><input type="text" id="input-exclusive-area" placeholder="例）〇㎡" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">バルコニー面積</label><input type="text" id="input-balcony-area" placeholder="例）〇㎡" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">所在階</label><input type="text" id="input-floor" placeholder="例）〇階建〇階部分" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">総戸数</label><input type="text" id="input-total-units" placeholder="例）〇戸" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">建物構造</label><input type="text" id="input-structure" placeholder="例）RC構造・鉄筋コンクリート造等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">建築年月</label><input type="text" id="input-build-date" placeholder="例）平成〇年〇月・20〇〇年〇月" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                
+                <div class="only-kodate"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">土地面積</label><input type="text" id="input-land-area" placeholder="例）〇㎡" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div class="only-kodate"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">建物面積</label><input type="text" id="input-building-area" placeholder="例）〇㎡" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+
+                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">専有面積</label><input type="text" id="input-exclusive-area" placeholder="例）〇㎡" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">バルコニー面積</label><input type="text" id="input-balcony-area" placeholder="例）〇㎡" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">所在階</label><input type="text" id="input-floor" placeholder="例）〇階建〇階部分" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">総戸数</label><input type="text" id="input-total-units" placeholder="例）〇戸" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">建物構造</label><input type="text" id="input-structure" placeholder="例）木造在来軸組工法 / RC構造等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
                 <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">間取り</label><input type="text" id="input-layout" placeholder="例）〇LDK" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">水道</label><input type="text" id="input-water" placeholder="例）公道" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">建築年月</label><input type="text" id="input-build-date" placeholder="例）平成〇年〇月・20〇〇年〇月" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+
+                <div class="only-kodate"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">都市計画</label><input type="text" id="input-city-planning" placeholder="例）市街化区域" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div class="only-kodate"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">接道</label><input type="text" id="input-road" placeholder="例）東側〇m私道／中央側〇m私道" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">水道</label><input type="text" id="input-water" placeholder="例）公営水道 / 公道等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
                 <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">汚水</label><input type="text" id="input-sewage" placeholder="例）公共下水" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
                 <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">ガス</label><input type="text" id="input-gas" placeholder="例）都市ガス" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
                 <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">現況</label><input type="text" id="input-status" placeholder="例）空家・居住中等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
                 <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">引渡し時期</label><input type="text" id="input-delivery" placeholder="例）即・相談等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
                 <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">駐車場</label><input type="text" id="input-parking" placeholder="例）月々〇円〜〇円・空きなし等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">バイク置き場</label><input type="text" id="input-bike" placeholder="例）年間〇円〜〇円・空きなし等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">駐輪場</label><input type="text" id="input-bicycle" placeholder="例）年間〇円〜〇円・空きなし等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">分譲会社</label><input type="text" id="input-developer" placeholder="例）株式会社〇〇" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">施工会社</label><input type="text" id="input-builder" placeholder="例）株式会社〇〇" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">管理会社</label><input type="text" id="input-management" placeholder="例）株式会社〇〇" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">用途地域</label><input type="text" id="input-zoning" placeholder="例）第一低層住居専用地域" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">管理費</label><input type="text" id="input-admin-fee" placeholder="例）月額〇円" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">修繕積立金</label><input type="text" id="input-repair-fund" placeholder="例）月額〇円" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">その他費用</label><input type="text" id="input-other-fee" placeholder="例）CATV使用料〇円等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">ペット飼育</label><input type="text" id="input-pet" placeholder="例）可(小鳥・小魚)" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">エレベーター</label><input type="text" id="input-elevator" placeholder="例）あり・なし" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+
+                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">バイク置き場</label><input type="text" id="input-bike" placeholder="例）年間〇円〜〇円等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">駐輪場</label><input type="text" id="input-bicycle" placeholder="例）年間〇円〜〇円等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">分譲会社</label><input type="text" id="input-developer" placeholder="例）株式会社〇〇" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">施工会社</label><input type="text" id="input-builder" placeholder="例）株式会社〇〇建設" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                
+                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">管理会社</label><input type="text" id="input-management" placeholder="例）株式会社〇〇" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">用途地域</label><input type="text" id="input-zoning" placeholder="例）第一種低層住居専用地域" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+
+                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">管理費</label><input type="text" id="input-admin-fee" placeholder="例）月額〇円" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">修繕積立金</label><input type="text" id="input-repair-fund" placeholder="例）月額〇円" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">その他費用</label><input type="text" id="input-other-fee" placeholder="例）CATV使用料〇円等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">ペット飼育</label><input type="text" id="input-pet" placeholder="例）可(小鳥・小魚)" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">エレベーター</label><input type="text" id="input-elevator" placeholder="例）あり・なし" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+
+                <div class="only-kodate"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">建蔽率</label><input type="text" id="input-coverage" placeholder="例）〇%" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div class="only-kodate"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">容積率</label><input type="text" id="input-floor-ratio" placeholder="例）〇%" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
             </div>
         </div>
         <div style="padding: 15px 20px; border-top: 1px solid #eee; background: #fff; display: flex; justify-content: flex-end; gap: 10px; border-radius: 0 0 8px 8px;">

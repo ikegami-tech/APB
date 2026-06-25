@@ -1024,7 +1024,15 @@ def generate_zumen(
     building_area: str = Form(""),
     plan: str = Form(""),
     branch_name: str = Form("国分寺"),
-    design_num: str = Form("1") # 🌟 JSから送られたデザイン番号を受け取る
+    design_num: str = Form("1"), # 🌟 末尾にカンマを忘れずに！
+    
+    # 🌟 追加：フロントから送られてくるアイコン画像を受け取る
+    icon_image1: UploadFile = File(None),
+    icon_image2: UploadFile = File(None),
+    icon_image3: UploadFile = File(None),
+    icon_image4: UploadFile = File(None),
+    icon_image5: UploadFile = File(None),
+    icon_image6: UploadFile = File(None)
 ):
     try:
         import os
@@ -1116,8 +1124,37 @@ def generate_zumen(
             tb_eq.text_frame.paragraphs[0].font.size = Pt(10)
             tb_eq.text_frame.paragraphs[0].font.name = "游明朝"
             
+            # 🌟 変更：アイコン画像があれば貼り付ける処理（デザイン2）
+            icons = [icon_image1, icon_image2, icon_image3, icon_image4, icon_image5, icon_image6]
+            import tempfile
+            from PIL import Image
+
             for i in range(6):
-                add_color_box(Inches(1.0 + i*0.6), Inches(5.1), Inches(0.5), Inches(0.5), "設備", pink_color, 9)
+                current_left = Inches(1.0 + i*0.6)
+                current_top = Inches(5.1)
+                icon_file = icons[i]
+                
+                if icon_file and icon_file.filename:
+                    suffix = os.path.splitext(icon_file.filename)[1]
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                        tmp.write(icon_file.file.read())
+                        tmp_path = tmp.name
+                    
+                    with Image.open(tmp_path) as img:
+                        img_w, img_h = img.size
+                    
+                    # 高さを枠の高さ(0.5インチ)に合わせる
+                    target_h_inches = 0.5
+                    target_w_inches = target_h_inches * (img_w / img_h)
+                    
+                    # 枠の横幅(0.5インチ)との差分から、中央寄せするためのX座標を計算
+                    offset_x_inches = (0.5 - target_w_inches) / 2
+                    centered_left = current_left + Inches(offset_x_inches)
+                    
+                    slide.shapes.add_picture(tmp_path, centered_left, current_top, height=Inches(target_h_inches))
+                    os.remove(tmp_path)
+                else:
+                    add_color_box(current_left, current_top, Inches(0.5), Inches(0.5), "設備", pink_color, 9)
 
             # 右側：画像2,3,4
             add_color_box(Inches(4.8), Inches(0.3), Inches(1.5), Inches(1.4), "画像2", box_color, 14)
@@ -1141,7 +1178,7 @@ def generate_zumen(
             p_acc_label.font.name = "Arial"
             p_acc_label.font.color.rgb = RGBColor(84, 153, 199)
 
-            # 交通テキスト（こちらもサイズに強弱をつける）
+# 交通テキスト（こちらもサイズに強弱をつける）
             tb_acc = slide.shapes.add_textbox(Inches(4.8), Inches(2.0), Inches(4.7), Inches(0.5))
             p_acc = tb_acc.text_frame.paragraphs[0]
             p_acc.alignment = PP_ALIGN.CENTER
@@ -1151,9 +1188,11 @@ def generate_zumen(
             r_acc1.font.size = Pt(13)
             r_acc1.font.name = "游明朝"
             
+            # 🌟 カッコが二重になるのを防ぐ（「」を消してから付け直す）
+            clean_station = transport_station.replace("「", "").replace("」", "")
             r_acc2 = p_acc.add_run()
-            r_acc2.text = f"「{transport_station}」"
-            r_acc2.font.size = Pt(20) # 🌟駅名だけ大きく
+            r_acc2.text = f"「{clean_station}」"
+            r_acc2.font.size = Pt(20)
             r_acc2.font.name = "游明朝"
             r_acc2.font.bold = True
             
@@ -1306,8 +1345,37 @@ def generate_zumen(
             p_eq.font.color.rgb = RGBColor(80, 80, 80)
             p_eq.font.name = "游明朝"
             
+            # 🌟 変更：アイコン画像があれば貼り付ける処理（デザイン3）
+            icons = [icon_image1, icon_image2, icon_image3, icon_image4, icon_image5, icon_image6]
+            import tempfile
+            from PIL import Image
+
             for i in range(6):
-                add_color_box(Inches(1.0 + i*0.95), Inches(6.0), Inches(0.85), Inches(0.5), "設備", pink_color, 10)
+                current_left = Inches(1.0 + i*0.95)
+                current_top = Inches(6.0)
+                icon_file = icons[i]
+                
+                if icon_file and icon_file.filename:
+                    suffix = os.path.splitext(icon_file.filename)[1]
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                        tmp.write(icon_file.file.read())
+                        tmp_path = tmp.name
+                    
+                    with Image.open(tmp_path) as img:
+                        img_w, img_h = img.size
+                    
+                    # 高さを枠の高さ(0.5インチ)に合わせる
+                    target_h_inches = 0.5
+                    target_w_inches = target_h_inches * (img_w / img_h)
+                    
+                    # 枠の横幅(0.85インチ)との差分から、中央寄せするためのX座標を計算
+                    offset_x_inches = (0.85 - target_w_inches) / 2
+                    centered_left = current_left + Inches(offset_x_inches)
+                    
+                    slide.shapes.add_picture(tmp_path, centered_left, current_top, height=Inches(target_h_inches))
+                    os.remove(tmp_path)
+                else:
+                    add_color_box(current_left, current_top, Inches(0.85), Inches(0.5), "設備", pink_color, 10)
 
             # --- ▼ 右側エリア（水色背景の物件詳細・価格） ▼ ---
             cyan_band_right = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(6.8), Inches(0.2), Inches(3.0), Inches(6.3))
@@ -1446,14 +1514,22 @@ def generate_zumen(
             tf_info = tb_info.text_frame
             tf_info.word_wrap = True
             
-            info_items = [
-                f"■ 住所 / {address}",
-                f"■ 間取り / {madori}",
-                f"■ 建築年 / {age}",
-                f"■ 権利 / {right}",
-                f"■ 面積 / {land_area}",
-                f"■ 計画 / {plan}"
-            ]
+            # 🌟 入力がある項目だけをリストにまとめる処理（空欄の誤判定防止）
+            info_items = []
+            if address.strip() and address.strip() != "東京都国分寺市...":
+                info_items.append(f"■ 住所 / {address.strip()}")
+            if madori.strip():
+                info_items.append(f"■ 間取り / {madori.strip()}")
+            if age.strip():
+                info_items.append(f"■ 建築年 / {age.strip()}")
+            if right.strip():
+                info_items.append(f"■ 権利 / {right.strip()}")
+            if land_area.strip():
+                info_items.append(f"■ 面積 / {land_area.strip()}")
+            if plan.strip():
+                info_items.append(f"■ 計画 / {plan.strip()}")
+
+            # リストに追加された項目だけを出力する
             for item in info_items:
                 p = tf_info.add_paragraph()
                 p.text = item
@@ -1471,8 +1547,44 @@ def generate_zumen(
             p_eq.font.size = Pt(11)
             p_eq.font.bold = True
 
+            # 🌟 ここから変更：アイコン画像があれば貼り付ける処理
+            icons = [icon_image1, icon_image2, icon_image3, icon_image4, icon_image5, icon_image6]
+            import tempfile
+            
             for i in range(6):
-                add_color_box(Inches(1.2 + i*1.4), Inches(6.05), Inches(1.2), Inches(0.4), "アイコン", pink_color, 11)
+                current_left = Inches(1.2 + i * 1.4)
+                current_top = Inches(6.05)
+                icon_file = icons[i]
+                
+                # 画像がアップロードされているかチェック
+                if icon_file and icon_file.filename:
+                    suffix = os.path.splitext(icon_file.filename)[1]
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                        tmp.write(icon_file.file.read()) # 画像データを書き込む
+                        tmp_path = tmp.name
+                    
+                    # 🌟 変更：サイズを大きくし、縦横比を保ったまま中央に配置する
+                    from PIL import Image
+                    with Image.open(tmp_path) as img:
+                        img_w, img_h = img.size
+                    
+                    # 🌟 アイコンの高さを0.6インチ（元の枠0.4インチの1.5倍）に拡大！
+                    target_h_inches = 0.6
+                    target_w_inches = target_h_inches * (img_w / img_h)
+                    
+                    # 枠の横幅(1.2インチ)と高さ(0.4インチ)との差分から、中央寄せするためのXY座標を計算
+                    offset_x_inches = (1.2 - target_w_inches) / 2
+                    offset_y_inches = (0.4 - target_h_inches) / 2
+                    
+                    centered_left = current_left + Inches(offset_x_inches)
+                    centered_top = current_top + Inches(offset_y_inches)
+                    
+                    # 計算した中央の座標に、大きくなった画像を配置
+                    slide.shapes.add_picture(tmp_path, centered_left, centered_top, height=Inches(target_h_inches))
+                    os.remove(tmp_path)
+                else:
+                    # 画像がない場合は今まで通りのピンク枠を出す
+                    add_color_box(current_left, current_top, Inches(1.2), Inches(0.4), "アイコン", pink_color, 11)
 
             line_eq2 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, Inches(6.6), Inches(10), Pt(2))
             line_eq2.fill.solid()
