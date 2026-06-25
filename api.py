@@ -1023,11 +1023,16 @@ def generate_zumen(
     land_area: str = Form(""),
     building_area: str = Form(""),
     plan: str = Form(""),
-    branch_name: str = Form("国分寺") # デフォルトは国分寺
+    branch_name: str = Form("国分寺"),
+    design_num: str = Form("1") # 🌟 JSから送られたデザイン番号を受け取る
 ):
     try:
         import os
-        print("🚀 【販売図面】パワポ生成プログラムを起動しました...")
+        from pptx.util import Inches, Pt
+        from pptx.dml.color import RGBColor
+        from pptx.enum.shapes import MSO_SHAPE
+        from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+        print(f"🚀 【販売図面】デザイン{design_num}のパワポ生成を開始します...")
 
         # 1. パワポの土台を作成（横長スライド）
         prs = Presentation()
@@ -1036,17 +1041,13 @@ def generate_zumen(
 
         # 2. 店舗データの取得
         branch = BRANCH_DATA.get(branch_name, BRANCH_DATA["国分寺"])
-        
-        box_color = RGBColor(253, 232, 215) # 画像・間取り枠の肌色
-        pink_color = RGBColor(248, 232, 248) # 設備アイコン枠のピンク
-        gray_line = RGBColor(120, 120, 120) # 区切り線
 
+        # 共通の描画ヘルパー関数
         def add_color_box(left, top, width, height, text, bg_color, font_size=14):
             shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, left, top, width, height)
             shape.fill.solid()
             shape.fill.fore_color.rgb = bg_color
             shape.line.fill.background()
-            
             tf = shape.text_frame
             tf.word_wrap = True
             p = tf.paragraphs[0]
@@ -1057,131 +1058,429 @@ def generate_zumen(
             p.alignment = PP_ALIGN.CENTER
 
         # ==========================================
-        # 🎨 1. ヘッダーエリア
+        # 🎨 レイアウト分岐処理
         # ==========================================
-        base_dir = os.path.dirname(__file__) # プログラムの現在地を取得
-        tenpo_img_path = os.path.join(base_dir, "static", "tenpo.png")
-        
-        if os.path.exists(tenpo_img_path):
-            slide.shapes.add_picture(tenpo_img_path, Inches(0.2), Inches(0.2), width=Inches(2.8), height=Inches(1.1))
-            tb_tenpo = slide.shapes.add_textbox(Inches(0.2), Inches(0.2), Inches(2.8), Inches(1.1))
-            tf_tenpo = tb_tenpo.text_frame
-            tf_tenpo.word_wrap = True
-            tf_tenpo.vertical_anchor = MSO_ANCHOR.MIDDLE
-            p_tenpo = tf_tenpo.paragraphs[0]
-            p_tenpo.text = "「住まい」のもっと先へ。"
-            p_tenpo.font.size = Pt(14)
-            p_tenpo.font.bold = True
-            p_tenpo.font.name = "游ゴシック"
-            p_tenpo.font.color.rgb = RGBColor(255, 255, 255)
-            p_tenpo.alignment = PP_ALIGN.CENTER
+        box_color = RGBColor(253, 232, 215) # 肌色
+        pink_color = RGBColor(248, 232, 248) # ピンク
+        gray_line = RGBColor(120, 120, 120)
+        footer_y = Inches(6.65) # フッターの基本Y座標
+
+        if design_num == "2":
+            # ----------------------------------------------------
+            # 🟦 デザイン2（白×水色 スッキリレイアウト）
+            # ----------------------------------------------------
+            # 全体の白枠
+            bg_frame = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.1), Inches(0.1), Inches(9.8), Inches(7.3))
+            bg_frame.fill.solid()
+            bg_frame.fill.fore_color.rgb = RGBColor(255, 255, 255)
+            bg_frame.line.color.rgb = RGBColor(207, 216, 220)
+            
+            # 左側：画像1
+            add_color_box(Inches(0.3), Inches(0.3), Inches(4.2), Inches(3.8), "画像1", box_color, 24)
+            
+            # タイトル
+            tb_title = slide.shapes.add_textbox(Inches(0.3), Inches(4.2), Inches(2.6), Inches(0.8))
+            p_title = tb_title.text_frame.paragraphs[0]
+            p_title.text = title if title else "タイトルを入力"
+            p_title.font.size = Pt(28)
+            p_title.font.name = "游明朝" # 🌟明朝体に指定
+            p_title.font.bold = True
+            
+            # 価格（Runを使って文字ごとにサイズを変える魔法）
+            tb_price = slide.shapes.add_textbox(Inches(2.5), Inches(4.25), Inches(2.0), Inches(0.8))
+            tf_price = tb_price.text_frame
+            tf_price.margin_bottom = tf_price.margin_top = 0
+            p_price = tf_price.paragraphs[0]
+            p_price.alignment = PP_ALIGN.RIGHT
+            
+            r_label = p_price.add_run()
+            r_label.text = "販売価格 "
+            r_label.font.size = Pt(10)
+            r_label.font.name = "游明朝"
+            r_label.font.color.rgb = RGBColor(100, 100, 100)
+            
+            r_val = p_price.add_run()
+            r_val.text = price
+            r_val.font.size = Pt(32) # 🌟金額だけ特大に
+            r_val.font.name = "游明朝"
+            r_val.font.bold = True
+            
+            r_unit = p_price.add_run()
+            r_unit.text = " 万円"
+            r_unit.font.size = Pt(14)
+            r_unit.font.name = "游明朝"
+
+            # 設備アイコン
+            tb_eq = slide.shapes.add_textbox(Inches(0.3), Inches(5.1), Inches(0.6), Inches(0.5))
+            tb_eq.text_frame.paragraphs[0].text = "物件\n設備"
+            tb_eq.text_frame.paragraphs[0].font.size = Pt(10)
+            tb_eq.text_frame.paragraphs[0].font.name = "游明朝"
+            
+            for i in range(6):
+                add_color_box(Inches(1.0 + i*0.6), Inches(5.1), Inches(0.5), Inches(0.5), "設備", pink_color, 9)
+
+            # 右側：画像2,3,4
+            add_color_box(Inches(4.8), Inches(0.3), Inches(1.5), Inches(1.4), "画像2", box_color, 14)
+            add_color_box(Inches(6.4), Inches(0.3), Inches(1.5), Inches(1.4), "画像3", box_color, 14)
+            add_color_box(Inches(8.0), Inches(0.3), Inches(1.5), Inches(1.4), "画像4", box_color, 14)
+
+            # 交通アクセス (上の水色線)
+            blue_line1 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(4.8), Inches(1.9), Inches(4.7), Pt(1))
+            blue_line1.fill.solid()
+            blue_line1.fill.fore_color.rgb = RGBColor(127, 179, 213)
+            blue_line1.line.fill.background()
+            
+            # 🌟 「A c c e s s」の文字（白背景にして線の上に重ねる）
+            tb_acc_label = slide.shapes.add_textbox(Inches(4.9), Inches(1.78), Inches(1.0), Inches(0.25))
+            tb_acc_label.fill.solid()
+            tb_acc_label.fill.fore_color.rgb = RGBColor(255, 255, 255) # 背景を白くして線を隠す
+            tb_acc_label.line.fill.background()
+            p_acc_label = tb_acc_label.text_frame.paragraphs[0]
+            p_acc_label.text = "A c c e s s"
+            p_acc_label.font.size = Pt(9)
+            p_acc_label.font.name = "Arial"
+            p_acc_label.font.color.rgb = RGBColor(84, 153, 199)
+
+            # 交通テキスト（こちらもサイズに強弱をつける）
+            tb_acc = slide.shapes.add_textbox(Inches(4.8), Inches(2.0), Inches(4.7), Inches(0.5))
+            p_acc = tb_acc.text_frame.paragraphs[0]
+            p_acc.alignment = PP_ALIGN.CENTER
+            
+            r_acc1 = p_acc.add_run()
+            r_acc1.text = "交通 "
+            r_acc1.font.size = Pt(13)
+            r_acc1.font.name = "游明朝"
+            
+            r_acc2 = p_acc.add_run()
+            r_acc2.text = f"「{transport_station}」"
+            r_acc2.font.size = Pt(20) # 🌟駅名だけ大きく
+            r_acc2.font.name = "游明朝"
+            r_acc2.font.bold = True
+            
+            r_acc3 = p_acc.add_run()
+            r_acc3.text = f" 徒歩 {transport_walk} 分"
+            r_acc3.font.size = Pt(13)
+            r_acc3.font.name = "游明朝"
+            
+            # 交通アクセス (下の水色線)
+            blue_line2 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(4.8), Inches(2.6), Inches(4.7), Pt(1))
+            blue_line2.fill.solid()
+            blue_line2.fill.fore_color.rgb = RGBColor(127, 179, 213)
+            blue_line2.line.fill.background()
+
+            # 間取り図
+            add_color_box(Inches(4.8), Inches(2.8), Inches(4.7), Inches(2.8), "間取り図", box_color, 20)
+
+            # 水色帯（物件詳細）
+            blue_band = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.11), Inches(5.7), Inches(9.78), Inches(0.9))
+            blue_band.fill.solid()
+            blue_band.fill.fore_color.rgb = RGBColor(221, 240, 248) # #DDF0F8
+            blue_band.line.fill.background()
+
+            # 🌟 入力がある項目だけをリストにまとめる処理（空欄・空白の誤判定を防止！）
+            info_parts = []
+            
+            # .strip() をつけることで、スペースだけの空欄を確実に無視します
+            if address.strip() and address.strip() != "東京都国分寺市...":
+                info_parts.append(f"■ 住所: {address.strip()}")
+            if madori.strip():
+                info_parts.append(f"■ 間取り: {madori.strip()}")
+            if age.strip():
+                info_parts.append(f"■ 建築年: {age.strip()}")
+            if right.strip():
+                info_parts.append(f"■ 権利: {right.strip()}")
+            if land_area.strip():
+                info_parts.append(f"■ 面積: {land_area.strip()}")
+                
+            # ※デザイン3用にバルコニー面積を取得している場合はここも追加
+            if building_area.strip():
+                info_parts.append(f"■ バルコニー: {building_area.strip()}")
+                
+            if plan.strip():
+                info_parts.append(f"■ 都市計画: {plan.strip()}")
+
+            # 集めた項目をスペース3つ（   ）で繋いで1つの文章にする
+            final_info_text = "   ".join(info_parts)
+
+            tb_info = slide.shapes.add_textbox(Inches(0.2), Inches(5.7), Inches(9.6), Inches(0.9))
+            tf_info = tb_info.text_frame
+            tf_info.word_wrap = True
+            p_info = tf_info.paragraphs[0]
+            p_info.text = final_info_text
+            p_info.font.size = Pt(10)
+            
+            # フッター位置は少し下げる
+            footer_y = Inches(6.7)
+            # フッターの上の濃い線を引く
+            f_line = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.1), footer_y, Inches(9.8), Pt(2))
+            f_line.fill.solid()
+            f_line.fill.fore_color.rgb = RGBColor(30, 45, 61)
+            f_line.line.fill.background()
+
+        elif design_num == "3":
+            # ----------------------------------------------------
+            # 🟦 デザイン3（シアンブルーの縦割りグリッドレイアウト）
+            # ----------------------------------------------------
+            cyan_color = RGBColor(86, 180, 203) # 鮮やかな水色
+            
+            # --- ▼ 左側エリア ▼ ---
+            # 上段：画像2, 3, 4
+            add_color_box(Inches(0.2), Inches(0.2), Inches(2.1), Inches(1.3), "画像2", box_color, 14)
+            add_color_box(Inches(2.4), Inches(0.2), Inches(2.1), Inches(1.3), "画像3", box_color, 14)
+            add_color_box(Inches(4.6), Inches(0.2), Inches(2.1), Inches(1.3), "画像4", box_color, 14)
+            
+            # 中段：タイトル＆交通アクセスの水色帯
+            cyan_band_left = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.2), Inches(1.6), Inches(6.5), Inches(1.0))
+            cyan_band_left.fill.solid()
+            cyan_band_left.fill.fore_color.rgb = cyan_color
+            cyan_band_left.line.fill.background()
+            
+            # タイトル
+            tb_title = slide.shapes.add_textbox(Inches(0.2), Inches(1.6), Inches(3.7), Inches(1.0))
+            tf_title = tb_title.text_frame
+            tf_title.vertical_anchor = MSO_ANCHOR.MIDDLE
+            p_title = tf_title.paragraphs[0]
+            p_title.text = title if title else "タイトルを入力"
+            p_title.font.size = Pt(22)
+            p_title.font.bold = True
+            p_title.font.color.rgb = RGBColor(255, 255, 255)
+            p_title.font.name = "游明朝"
+            p_title.alignment = PP_ALIGN.CENTER
+            
+# 縦の白線（タイトルと交通の区切り）
+            v_line = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(3.9), Inches(1.7), Pt(1), Inches(0.8))
+            v_line.fill.solid()
+            v_line.fill.fore_color.rgb = RGBColor(255, 255, 255)
+            v_line.line.fill.background()
+            
+            # ACCESS 縦文字（白線に被らないよう余白をゼロにし、少し右に配置）
+            tb_acc_v = slide.shapes.add_textbox(Inches(3.95), Inches(1.65), Inches(0.2), Inches(0.9))
+            tf_acc_v = tb_acc_v.text_frame
+            tf_acc_v.margin_left = tf_acc_v.margin_right = 0 # 🌟余白をゼロに
+            p_acc_v = tf_acc_v.paragraphs[0]
+            p_acc_v.text = "A\nC\nC\nE\nS\nS"
+            p_acc_v.font.size = Pt(7)
+            p_acc_v.font.color.rgb = RGBColor(255, 255, 255)
+            p_acc_v.alignment = PP_ALIGN.CENTER
+            p_acc_v.line_spacing = 0.9
+            
+            # 交通情報（はみ出さないよう幅を広げ、余白をゼロに）
+            tb_acc = slide.shapes.add_textbox(Inches(4.15), Inches(1.6), Inches(2.55), Inches(1.0))
+            tf_acc = tb_acc.text_frame
+            tf_acc.margin_left = tf_acc.margin_right = 0 # 🌟余白をゼロに
+            tf_acc.vertical_anchor = MSO_ANCHOR.MIDDLE
+            p_acc = tf_acc.paragraphs[0]
+            p_acc.alignment = PP_ALIGN.CENTER
+            
+            # フォントサイズを微調整して1行に綺麗に収める
+            r_acc1 = p_acc.add_run()
+            r_acc1.text = "交通  "
+            r_acc1.font.size = Pt(10)
+            r_acc1.font.color.rgb = RGBColor(255, 255, 255)
+            r_acc1.font.name = "游明朝"
+            
+            # 🌟 カッコが二重になるのを防ぐ（「」を消してから付け直す）
+            clean_station = transport_station.replace("「", "").replace("」", "")
+            r_acc2 = p_acc.add_run()
+            r_acc2.text = f"「{clean_station}」"
+            r_acc2.font.size = Pt(14)
+            r_acc2.font.bold = True
+            r_acc2.font.color.rgb = RGBColor(255, 255, 255)
+            r_acc2.font.name = "游明朝"
+            
+            r_acc3 = p_acc.add_run()
+            r_acc3.text = f"  徒歩 {transport_walk} 分"
+            r_acc3.font.size = Pt(10)
+            r_acc3.font.color.rgb = RGBColor(255, 255, 255)
+            r_acc3.font.name = "游明朝"
+
+            # 下段：メイン画像＆間取り図
+            add_color_box(Inches(0.2), Inches(2.7), Inches(3.2), Inches(3.2), "画像1", box_color, 24)
+            add_color_box(Inches(3.5), Inches(2.7), Inches(3.2), Inches(3.2), "間取り図", box_color, 24)
+            
+            # 設備アイコン
+            tb_eq = slide.shapes.add_textbox(Inches(0.2), Inches(6.0), Inches(0.8), Inches(0.5))
+            p_eq = tb_eq.text_frame.paragraphs[0]
+            p_eq.text = "物件\n設備"
+            p_eq.font.size = Pt(10)
+            p_eq.font.color.rgb = RGBColor(80, 80, 80)
+            p_eq.font.name = "游明朝"
+            
+            for i in range(6):
+                add_color_box(Inches(1.0 + i*0.95), Inches(6.0), Inches(0.85), Inches(0.5), "設備", pink_color, 10)
+
+            # --- ▼ 右側エリア（水色背景の物件詳細・価格） ▼ ---
+            cyan_band_right = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(6.8), Inches(0.2), Inches(3.0), Inches(6.3))
+            cyan_band_right.fill.solid()
+            cyan_band_right.fill.fore_color.rgb = cyan_color
+            cyan_band_right.line.fill.background()
+            
+            # 価格エリア
+            tb_price_label = slide.shapes.add_textbox(Inches(6.9), Inches(0.6), Inches(0.6), Inches(0.6))
+            p_pr_l = tb_price_label.text_frame.paragraphs[0]
+            p_pr_l.text = "販売\n価格"
+            p_pr_l.font.size = Pt(10)
+            p_pr_l.font.color.rgb = RGBColor(255, 255, 255)
+            p_pr_l.font.name = "游明朝"
+            
+            tb_price = slide.shapes.add_textbox(Inches(7.5), Inches(0.4), Inches(2.2), Inches(0.8))
+            p_price = tb_price.text_frame.paragraphs[0]
+            p_price.alignment = PP_ALIGN.RIGHT
+            
+            r_val = p_price.add_run()
+            r_val.text = price
+            r_val.font.size = Pt(36)
+            r_val.font.bold = True
+            r_val.font.color.rgb = RGBColor(255, 255, 255)
+            r_val.font.name = "游明朝"
+            
+            r_unit = p_price.add_run()
+            r_unit.text = " 万円"
+            r_unit.font.size = Pt(14)
+            r_unit.font.color.rgb = RGBColor(255, 255, 255)
+            r_unit.font.name = "游明朝"
+
+            # 価格下の白線
+            white_line = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(7.0), Inches(1.3), Inches(2.6), Pt(1))
+            white_line.fill.solid()
+            white_line.fill.fore_color.rgb = RGBColor(255, 255, 255)
+            white_line.line.fill.background()
+            
+            # 🌟 入力がある項目だけをリストにまとめる処理（空欄の誤判定防止版）
+            info_parts = []
+            if address.strip() and address.strip() != "東京都国分寺市...":
+                info_parts.append(f"■ 住所: {address.strip()}")
+            if madori.strip():
+                info_parts.append(f"■ 間取り: {madori.strip()}")
+            if age.strip():
+                info_parts.append(f"■ 建築年: {age.strip()}")
+            if right.strip():
+                info_parts.append(f"■ 権利: {right.strip()}")
+            if land_area.strip():
+                info_parts.append(f"■ 面積: {land_area.strip()}")
+            if building_area.strip():
+                info_parts.append(f"■ バルコニー: {building_area.strip()}")
+            if plan.strip():
+                info_parts.append(f"■ 都市計画: {plan.strip()}")
+
+            tb_info = slide.shapes.add_textbox(Inches(6.9), Inches(1.5), Inches(2.8), Inches(4.8))
+            tf_info = tb_info.text_frame
+            tf_info.word_wrap = True
+            
+            for item in info_parts:
+                p = tf_info.add_paragraph()
+                p.text = item
+                p.font.size = Pt(10)
+                p.font.color.rgb = RGBColor(255, 255, 255)
+                p.font.name = "游明朝"
+                p.space_before = Pt(4)
+                
+            # フッターの線の開始位置
+            footer_y = Inches(6.65)
+            # フッターの上の線を引く
+            f_line = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.2), footer_y - Inches(0.05), Inches(9.6), Pt(1.5))
+            f_line.fill.solid()
+            f_line.fill.fore_color.rgb = RGBColor(120, 120, 120)
+            f_line.line.fill.background()
+
         else:
-            add_color_box(Inches(0.2), Inches(0.2), Inches(2.8), Inches(1.1), "店舗写真", RGBColor(235, 235, 235), 12)
-        
-        # タイトル
-        tb_title = slide.shapes.add_textbox(Inches(3.2), Inches(0.3), Inches(4.0), Inches(1.0))
-        p_title = tb_title.text_frame.paragraphs[0]
-        p_title.text = title if title else "タイトルを入力してください"
-        p_title.font.size = Pt(24)
-        p_title.font.bold = True
-        p_title.font.name = "游明朝"
-        p_title.alignment = PP_ALIGN.CENTER
-        
-        # 販売価格
-        tb_price = slide.shapes.add_textbox(Inches(7.3), Inches(0.4), Inches(2.5), Inches(0.8))
-        p_price = tb_price.text_frame.paragraphs[0]
-        p_price.text = f"販売価格 {price} 万円"
-        p_price.font.size = Pt(18)
-        p_price.font.bold = True
-        p_price.alignment = PP_ALIGN.RIGHT
+            # ----------------------------------------------------
+            # 🟦 デザイン1（従来のもの）
+            # ----------------------------------------------------
+            base_dir = os.path.dirname(__file__)
+            tenpo_img_path = os.path.join(base_dir, "static", "tenpo.png")
+            
+            if os.path.exists(tenpo_img_path):
+                slide.shapes.add_picture(tenpo_img_path, Inches(0.2), Inches(0.2), width=Inches(2.8), height=Inches(1.1))
+            else:
+                add_color_box(Inches(0.2), Inches(0.2), Inches(2.8), Inches(1.1), "店舗写真", RGBColor(235, 235, 235), 12)
+            
+            tb_title = slide.shapes.add_textbox(Inches(3.2), Inches(0.3), Inches(4.0), Inches(1.0))
+            p_title = tb_title.text_frame.paragraphs[0]
+            p_title.text = title if title else "タイトルを入力してください"
+            p_title.font.size = Pt(24)
+            p_title.font.bold = True
+            p_title.alignment = PP_ALIGN.CENTER
+            
+            tb_price = slide.shapes.add_textbox(Inches(7.3), Inches(0.4), Inches(2.5), Inches(0.8))
+            p_price = tb_price.text_frame.paragraphs[0]
+            p_price.text = f"販売価格 {price} 万円"
+            p_price.font.size = Pt(18)
+            p_price.font.bold = True
+            p_price.alignment = PP_ALIGN.RIGHT
 
-        # ヘッダー下の太線
-        line_h = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, Inches(1.4), Inches(10), Pt(2))
-        line_h.fill.solid()
-        line_h.fill.fore_color.rgb = gray_line
-        line_h.line.fill.background()
+            line_h = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, Inches(1.4), Inches(10), Pt(2))
+            line_h.fill.solid()
+            line_h.fill.fore_color.rgb = gray_line
+            line_h.line.fill.background()
+
+            add_color_box(Inches(0.2), Inches(1.5), Inches(3.4), Inches(2.8), "画像1", box_color, 18)
+            add_color_box(Inches(3.7), Inches(1.5), Inches(3.4), Inches(2.8), "間取り図", box_color, 18)
+            add_color_box(Inches(0.2), Inches(4.4), Inches(2.2), Inches(1.4), "画像2", box_color, 16)
+            add_color_box(Inches(2.5), Inches(4.4), Inches(2.2), Inches(1.4), "画像3", box_color, 16)
+            add_color_box(Inches(4.8), Inches(4.4), Inches(2.2), Inches(1.4), "画像4", box_color, 16)
+
+            line_v = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(7.2), Inches(1.4), Pt(1), Inches(4.5))
+            line_v.fill.solid()
+            line_v.fill.fore_color.rgb = gray_line
+            line_v.line.fill.background()
+
+            tb_acc = slide.shapes.add_textbox(Inches(7.3), Inches(1.5), Inches(2.5), Inches(0.6))
+            p_acc = tb_acc.text_frame.paragraphs[0]
+            p_acc.text = f"交通: {transport_station} 徒歩 {transport_walk} 分"
+            p_acc.font.size = Pt(12)
+            p_acc.alignment = PP_ALIGN.CENTER
+            
+            line_acc = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(7.3), Inches(2.1), Inches(2.5), Pt(1))
+            line_acc.fill.solid()
+            line_acc.fill.fore_color.rgb = gray_line
+            line_acc.line.fill.background()
+
+            tb_summ_t = slide.shapes.add_textbox(Inches(7.3), Inches(2.2), Inches(2.5), Inches(0.4))
+            p_summ_t = tb_summ_t.text_frame.paragraphs[0]
+            p_summ_t.text = "■ 物件詳細情報"
+            p_summ_t.font.size = Pt(10)
+            p_summ_t.font.bold = True
+
+            tb_info = slide.shapes.add_textbox(Inches(7.3), Inches(2.5), Inches(2.5), Inches(3.3))
+            tf_info = tb_info.text_frame
+            tf_info.word_wrap = True
+            
+            info_items = [
+                f"■ 住所 / {address}",
+                f"■ 間取り / {madori}",
+                f"■ 建築年 / {age}",
+                f"■ 権利 / {right}",
+                f"■ 面積 / {land_area}",
+                f"■ 計画 / {plan}"
+            ]
+            for item in info_items:
+                p = tf_info.add_paragraph()
+                p.text = item
+                p.font.size = Pt(9)
+                p.space_before = Pt(3)
+
+            line_eq1 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, Inches(5.9), Inches(10), Pt(1))
+            line_eq1.fill.solid()
+            line_eq1.fill.fore_color.rgb = gray_line
+            line_eq1.line.fill.background()
+
+            tb_eq = slide.shapes.add_textbox(Inches(0.2), Inches(6.05), Inches(1.0), Inches(0.4))
+            p_eq = tb_eq.text_frame.paragraphs[0]
+            p_eq.text = "物件設備"
+            p_eq.font.size = Pt(11)
+            p_eq.font.bold = True
+
+            for i in range(6):
+                add_color_box(Inches(1.2 + i*1.4), Inches(6.05), Inches(1.2), Inches(0.4), "アイコン", pink_color, 11)
+
+            line_eq2 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, Inches(6.6), Inches(10), Pt(2))
+            line_eq2.fill.solid()
+            line_eq2.fill.fore_color.rgb = RGBColor(30, 45, 61)
+            line_eq2.line.fill.background()
 
         # ==========================================
-        # 🎨 2. 左側エリア（メイン画像・間取り・サブ画像）
-        # ==========================================
-        add_color_box(Inches(0.2), Inches(1.5), Inches(3.4), Inches(2.8), "画像1", box_color, 18)
-        add_color_box(Inches(3.7), Inches(1.5), Inches(3.4), Inches(2.8), "間取り図", box_color, 18)
-        
-        add_color_box(Inches(0.2), Inches(4.4), Inches(2.2), Inches(1.4), "画像2", box_color, 16)
-        add_color_box(Inches(2.5), Inches(4.4), Inches(2.2), Inches(1.4), "画像3", box_color, 16)
-        add_color_box(Inches(4.8), Inches(4.4), Inches(2.2), Inches(1.4), "画像4", box_color, 16)
-
-        # 縦の区切り線
-        line_v = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(7.2), Inches(1.4), Pt(1), Inches(4.5))
-        line_v.fill.solid()
-        line_v.fill.fore_color.rgb = gray_line
-        line_v.line.fill.background()
-
-        # ==========================================
-        # 🎨 3. 右側エリア（交通・物件概要）
-        # ==========================================
-        tb_acc = slide.shapes.add_textbox(Inches(7.3), Inches(1.5), Inches(2.5), Inches(0.6))
-        p_acc = tb_acc.text_frame.paragraphs[0]
-        p_acc.text = f"交通: {transport_station} 徒歩 {transport_walk} 分"
-        p_acc.font.size = Pt(12)
-        p_acc.alignment = PP_ALIGN.CENTER
-        
-        line_acc = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(7.3), Inches(2.1), Inches(2.5), Pt(1))
-        line_acc.fill.solid()
-        line_acc.fill.fore_color.rgb = gray_line
-        line_acc.line.fill.background()
-
-        tb_summ_t = slide.shapes.add_textbox(Inches(7.3), Inches(2.2), Inches(2.5), Inches(0.4))
-        p_summ_t = tb_summ_t.text_frame.paragraphs[0]
-        p_summ_t.text = "■ 物件詳細情報"
-        p_summ_t.font.size = Pt(10)
-        p_summ_t.font.bold = True
-
-        tb_info = slide.shapes.add_textbox(Inches(7.3), Inches(2.5), Inches(2.5), Inches(3.3))
-        tf_info = tb_info.text_frame
-        tf_info.word_wrap = True
-        tf_info.clear()
-
-        info_items = [
-            f"■ 住所 / {address}",
-            f"■ 間取り / {madori}",
-            f"■ 建築年 / {age}",
-            f"■ 権利 / {right}",
-            f"■ 面積 / {land_area}",
-            f"■ 計画 / {plan}"
-        ]
-        for item in info_items:
-            p = tf_info.add_paragraph()
-            p.text = item
-            p.font.size = Pt(9)
-            p.font.name = "游ゴシック"
-            p.space_before = Pt(3)
-
-        # ==========================================
-        # 🎨 4. 設備アイコンエリア
-        # ==========================================
-        line_eq1 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, Inches(5.9), Inches(10), Pt(1))
-        line_eq1.fill.solid()
-        line_eq1.fill.fore_color.rgb = gray_line
-        line_eq1.line.fill.background()
-
-        tb_eq = slide.shapes.add_textbox(Inches(0.2), Inches(6.05), Inches(1.0), Inches(0.4))
-        p_eq = tb_eq.text_frame.paragraphs[0]
-        p_eq.text = "物件設備"
-        p_eq.font.size = Pt(11)
-        p_eq.font.bold = True
-
-        # 6つのピンク枠
-        for i in range(6):
-            add_color_box(Inches(1.2 + i*1.4), Inches(6.05), Inches(1.2), Inches(0.4), "アイコン", pink_color, 11)
-
-        line_eq2 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, Inches(6.6), Inches(10), Pt(2))
-        line_eq2.fill.solid()
-        line_eq2.fill.fore_color.rgb = RGBColor(30, 45, 61)
-        line_eq2.line.fill.background()
-
-       # ==========================================
-        # 🎨 5. フッターエリア
+        # 🎨 共通フッターエリア（どのデザインでも表示）
         # ==========================================
         base_dir = os.path.dirname(__file__)
         logo_path = os.path.join(base_dir, "static", "logo.png")
@@ -1190,18 +1489,17 @@ def generate_zumen(
         elif branch_name == "武蔵野":
             logo_path = os.path.join(base_dir, "static", "logo_musashino.jpg")
 
-        # 🌟修正：ロゴの開始位置（Y座標）を 6.8 -> 6.65 に引き上げ、会社情報と高さを揃えてはみ出しを解消！
         if os.path.exists(logo_path):
-            slide.shapes.add_picture(logo_path, Inches(0.3), Inches(6.65), width=Inches(2.2))
+            # 🌟 上下の線にかぶらないよう位置を少し下げ( + Inches(0.1) )、高さを制限する( height=Inches(0.55) )
+            slide.shapes.add_picture(logo_path, Inches(0.3), footer_y + Inches(0.1), height=Inches(0.55))
         else:
-            add_color_box(Inches(0.2), Inches(6.65), Inches(2.0), Inches(0.7), f"{branch_name}ロゴ", RGBColor(235, 235, 235), 12)
+            add_color_box(Inches(0.2), footer_y + Inches(0.1), Inches(2.0), Inches(0.55), f"{branch_name}ロゴ", RGBColor(235, 235, 235), 12)
 
         # 会社情報
-        tb_comp = slide.shapes.add_textbox(Inches(3.3), Inches(6.65), Inches(3.0), Inches(0.85))
+        tb_comp = slide.shapes.add_textbox(Inches(3.3), footer_y, Inches(3.0), Inches(0.85))
         tf_comp = tb_comp.text_frame
         tf_comp.clear()
         tf_comp.margin_top = 0
-        tf_comp.margin_bottom = 0
         
         p1 = tf_comp.paragraphs[0] 
         p1.text = branch.get("license", "免許番号")
@@ -1221,11 +1519,10 @@ def generate_zumen(
         p3.space_before = Pt(2)
 
         # 担当者情報
-        tb_person = slide.shapes.add_textbox(Inches(6.2), Inches(6.65), Inches(1.8), Inches(0.85))
+        tb_person = slide.shapes.add_textbox(Inches(6.2), footer_y, Inches(1.8), Inches(0.85))
         tf_person = tb_person.text_frame
         tf_person.clear()
         tf_person.margin_top = 0
-        tf_person.margin_bottom = 0
         
         p_p1 = tf_person.paragraphs[0] 
         r1 = p_p1.add_run()
@@ -1245,7 +1542,7 @@ def generate_zumen(
 
         # 取引態様・手数料の表
         table_left = Inches(8.1)
-        table_top = Inches(6.75)
+        table_top = footer_y + Inches(0.1)
         col_w = Inches(0.8)
         row_h1 = Inches(0.25)
         row_h2 = Inches(0.35)
@@ -1276,7 +1573,7 @@ def generate_zumen(
         draw_cell(table_left, table_top + row_h1, col_w, row_h2, "", bg_val, tc_val)
         draw_cell(table_left + col_w, table_top + row_h1, col_w, row_h2, "", bg_val, tc_val)
 
-        # 6. 完成したPowerPointファイルをバイナリ化して直接返す
+        # 6. 完成したPowerPointファイルをバイナリ化して返す
         from fastapi.responses import StreamingResponse
         from io import BytesIO
         pptx_io = BytesIO()
@@ -1284,7 +1581,7 @@ def generate_zumen(
         pptx_io.seek(0)
         
         headers = {
-            'Content-Disposition': f'attachment; filename="zumen_design1.pptx"'
+            'Content-Disposition': f'attachment; filename="zumen_design{design_num}.pptx"'
         }
         return StreamingResponse(
             pptx_io, 
@@ -1295,6 +1592,3 @@ def generate_zumen(
     except Exception as e:
         import traceback
         from fastapi.responses import JSONResponse
-        error_details = traceback.format_exc()
-        print(f"🔥 販売図面生成エラー:\n{error_details}")
-        return JSONResponse(status_code=500, content={"detail": f"Pythonエラー詳細:\n{error_details}"})

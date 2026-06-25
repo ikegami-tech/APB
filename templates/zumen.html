@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>販売図面作成システム</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=3">
 </head>
 <body>
 
@@ -83,7 +83,7 @@
                 </div>
             </div>
 
-           <div id="step-3-editor" class="card hidden" style="max-width: 1200px; width: 100%;">
+           <div id="step-3-editor" class="card hidden" style="max-width: 1200px; width: 100%; user-select: none; -webkit-user-select: none;" onselectstart="return false;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h2 class="page-title" id="editor-subtitle" style="margin: 0;">🎨 編集画面</h2>
                     <button class="btn-cancel" onclick="goBackToStep2()">◀ デザイン選択に戻る</button>
@@ -202,66 +202,91 @@
                     </div>
                 </div>
 
-                <div class="zumen-d2 hidden" id="zumen-layout-2" style="width: 100%; max-width: 960px; height: 680px; border: 2px solid #1E2D3D; background-color: #FFF; margin: 0 auto; display: flex; flex-direction: column; box-sizing: border-box; font-family: '游ゴシック', sans-serif; position: relative;">
-                    <div style="display: flex; height: 60%; border-bottom: 2px solid #1E2D3D;">
-                        <div class="z-box" style="width: 45%; height: 100%; border-right: 2px solid #1E2D3D; background-color: #FFF6EE; font-size: 24px; font-weight: bold; display: flex; align-items: center; justify-content: center;" onclick="openModal('imageModal')">画像1</div>
-                        <div style="width: 55%; display: flex; flex-direction: column;">
-                            <div style="display: flex; height: 40%; border-bottom: 2px solid #1E2D3D;">
-                                <div class="z-box" style="flex: 1; border-right: 1px solid #777; display: flex; align-items: center; justify-content: center;" onclick="alert('サブ画像2')">画像2</div>
-                                <div class="z-box" style="flex: 1; border-right: 1px solid #777; display: flex; align-items: center; justify-content: center;" onclick="alert('サブ画像3')">画像3</div>
-                                <div class="z-box" style="flex: 1; display: flex; align-items: center; justify-content: center;" onclick="alert('サブ画像4')">画像4</div>
+<div class="zumen-d2 hidden" id="zumen-layout-2" style="width: 100%; max-width: 960px; height: 680px; background-color: #FFF; margin: 0 auto; display: flex; flex-direction: column; box-sizing: border-box; font-family: '游明朝', 'Yu Mincho', serif; border: 1px solid #CFD8DC;">
+                    
+                    <div style="display: flex; flex-grow: 1; padding: 20px; gap: 25px; box-sizing: border-box;">
+                        
+                        <div style="width: 45%; display: flex; flex-direction: column; gap: 15px;">
+                            <div class="z-box" style="flex-grow: 1; min-height: 0; border-radius: 4px;" onclick="openModal('imageModal')">画像1</div>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-top: 10px;">
+                                <div style="font-size: 32px; font-weight: bold; cursor: pointer; line-height: 1.2; flex-grow: 1;" onclick="openModal('titleModal')">
+                                    <span id="display-title-d2">タイトル</span>
+                                </div>
+                                <div style="display: flex; align-items: flex-end; gap: 5px; cursor: pointer; flex-shrink: 0;" onclick="openModal('infoModal')">
+                                    <div style="font-size: 10px; color: #555; text-align: right; margin-bottom: 6px;"><span>販売</span><br><span>価格</span></div>
+                                    <div style="font-size: 36px; font-weight: bold; color: #333; line-height: 1;" id="display-price-d2">5,000</div>
+                                    <div style="font-size: 16px; margin-bottom: 6px;">万円</div>
+                                </div>
                             </div>
-                            <div style="height: 20%; border-bottom: 2px solid #1E2D3D; display: flex; align-items: center; justify-content: center; background-color: #FFF; gap: 10px; cursor: pointer;" onclick="openModal('accessModal')">
-                                <span style="font-size: 16px; color: #555;" id="display-line-d2">交通</span>
-                                <span style="font-size: 24px; font-weight: bold; color: #1E2D3D;" id="display-station-d2">「最寄駅」</span>
+                            
+                            <div style="display: flex; align-items: center; gap: 10px; padding-bottom: 5px;">
+                                <div style="font-size: 10px; line-height: 1.2; width: 30px;">物件<br>設備</div>
+                                <div style="display: flex; flex-grow: 1; justify-content: space-between; gap: 5px;" onclick="alert('設備アイコンを設定します')">
+                                    <div class="z-box" style="flex: 1; aspect-ratio: 1; background-color: #F5E1FD; font-size: 12px; font-weight: normal; padding: 0;">設備</div>
+                                    <div class="z-box" style="flex: 1; aspect-ratio: 1; background-color: #F5E1FD; font-size: 12px; font-weight: normal; padding: 0;">アイコン</div>
+                                    <div class="z-box" style="flex: 1; aspect-ratio: 1; background-color: #F5E1FD;"></div>
+                                    <div class="z-box" style="flex: 1; aspect-ratio: 1; background-color: #F5E1FD;"></div>
+                                    <div class="z-box" style="flex: 1; aspect-ratio: 1; background-color: #F5E1FD;"></div>
+                                    <div class="z-box" style="flex: 1; aspect-ratio: 1; background-color: #F5E1FD;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="width: 55%; display: flex; flex-direction: column; gap: 15px;">
+                            <div style="display: flex; height: 25%; gap: 15px;">
+                                <div class="z-box" style="flex: 1; border-radius: 4px;" onclick="alert('サブ画像2')">画像2</div>
+                                <div class="z-box" style="flex: 1; border-radius: 4px;" onclick="alert('サブ画像3')">画像3</div>
+                                <div class="z-box" style="flex: 1; border-radius: 4px;" onclick="alert('サブ画像4')">画像4</div>
+                            </div>
+                            
+                            <div style="text-align: center; cursor: pointer; padding: 10px 0; border-top: 1px solid #7FB3D5; border-bottom: 1px solid #7FB3D5; position: relative; margin: 10px 0;" onclick="openModal('accessModal')">
+                                <div style="position: absolute; top: -10px; left: 10px; font-size: 12px; color: #5499C7; background: #FFF; padding: 0 5px; letter-spacing: 2px;">A c c e s s</div>
+                                <span style="font-size: 18px; color: #333;" id="display-line-d2">交通</span>
+                                <span style="font-size: 28px; font-weight: bold; margin: 0 15px; color: #1E2D3D;" id="display-station-d2">「最寄駅」</span>
                                 <span style="font-size: 15px;">徒歩 <span id="display-walk-d2">〇</span> 分</span>
                             </div>
-                            <div class="z-box" style="height: 40%; background-color: #FFF6EE; font-size: 20px; font-weight: bold; display: flex; align-items: center; justify-content: center;" onclick="alert('間取り図をアップロード')">間取り図</div>
+                            
+                            <div class="z-box" style="flex-grow: 1; min-height: 0; border-radius: 4px;" onclick="alert('間取り図をアップロード')">間取り図</div>
                         </div>
                     </div>
-                    
-                    <div style="display: flex; height: 26%; border-bottom: 2px solid #1E2D3D;">
-                        <div style="width: 45%; display: flex; flex-direction: column; border-right: 2px solid #1E2D3D; padding: 10px; box-sizing: border-box; justify-content: space-between;">
-                            <div style="font-size: 28px; font-weight: bold; text-align: center; cursor: pointer; word-break: break-all; line-height: 1.2; padding: 5px 10px;" onclick="openModal('titleModal')">
-                                <span id="display-title-d2">タイトル</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; background-color: #F4F6F8; padding: 4px 10px; border-radius: 4px;">
-                                <span style="font-size: 11px; color: #666;">販売価格</span>
-                                <span style="cursor: pointer;" onclick="openModal('infoModal')"><strong style="font-size: 26px; color: #E74C3C;" id="display-price-d2">5,000</strong> <small style="font-size: 12px;">万円</small></span>
-                            </div>
-                            <div class="z-box" style="height: 30px; font-size: 13px; background-color: #F8E8F8; display: flex; align-items: center; justify-content: center;" onclick="alert('設備アイコンを設定します')">設備アイコン</div>
+
+                    <div style="background-color: #DDF0F8; padding: 12px 20px; box-sizing: border-box; cursor: pointer; height: 110px; flex-shrink: 0; display: flex; align-items: center;" onclick="openModal('summaryModal')">
+                        <div id="display-empty-hint-d2" style="width: 100%; text-align: center; color: #5499C7; font-size: 14px; font-weight: bold; font-family: '游ゴシック', sans-serif;">
+                            💡 ここをクリックして物件詳細情報を入力してください
                         </div>
-                        <div class="zumen-summary-box-d2" onclick="openModal('summaryModal')">
-                            <div class="s-row-d2"><span class="s-label-d2">■ 物件住所</span><span id="display-address-d2" class="s-value-d2">東京都国分寺市...</span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ 土地権利</span><span id="display-land-right-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ 専有面積</span><span id="display-exclusive-area-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ バルコニー</span><span id="display-balcony-area-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ 所在階</span><span id="display-floor-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ 総戸数</span><span id="display-total-units-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ 建物構造</span><span id="display-structure-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ 建築年月</span><span id="display-build-date-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ 間取り</span><span id="display-layout-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ 水道</span><span id="display-water-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ 汚水</span><span id="display-sewage-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ ガス</span><span id="display-gas-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ 現況</span><span id="display-status-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ 引渡時期</span><span id="display-delivery-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ 駐車場</span><span id="display-parking-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ バイク</span><span id="display-bike-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ 駐輪場</span><span id="display-bicycle-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ 分譲会社</span><span id="display-developer-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ 施工会社</span><span id="display-builder-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ 管理会社</span><span id="display-management-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ 用途地域</span><span id="display-zoning-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ 管理費</span><span id="display-admin-fee-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ 修繕積立</span><span id="display-repair-fund-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ その他</span><span id="display-other-fee-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ ペット</span><span id="display-pet-d2" class="s-value-d2"></span></div>
-                            <div class="s-row-d2"><span class="s-label-d2">■ ｴﾚﾍﾞｰﾀｰ</span><span id="display-elevator-d2" class="s-value-d2"></span></div>
+
+                        <div id="display-summary-container-d2" class="hidden" style="column-count: 5; column-gap: 15px; width: 100%; font-size: 8.5px; line-height: 1.5; color: #555;">
+                            <div style="break-inside: avoid;">■物件住所 / <span id="display-address-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■土地権利 / <span id="display-land-right-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■専有面積 / <span id="display-exclusive-area-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■ﾊﾞﾙｺﾆｰ / <span id="display-balcony-area-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■所在階 / <span id="display-floor-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■総戸数 / <span id="display-total-units-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■建物構造 / <span id="display-structure-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■建築年月 / <span id="display-build-date-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■間取り / <span id="display-layout-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■水道 / <span id="display-water-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■汚水 / <span id="display-sewage-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■ガス / <span id="display-gas-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■現況 / <span id="display-status-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■引渡時期 / <span id="display-delivery-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■駐車場 / <span id="display-parking-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■ﾊﾞｲｸ置場 / <span id="display-bike-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■駐輪場 / <span id="display-bicycle-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■分譲会社 / <span id="display-developer-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■施工会社 / <span id="display-builder-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■管理会社 / <span id="display-management-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■用途地域 / <span id="display-zoning-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■管理費 / <span id="display-admin-fee-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■修繕積立 / <span id="display-repair-fund-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■その他 / <span id="display-other-fee-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■ペット / <span id="display-pet-d2" style="color: #333;"></span></div>
+                            <div style="break-inside: avoid;">■ｴﾚﾍﾞｰﾀｰ / <span id="display-elevator-d2" style="color: #333;"></span></div>
                         </div>
                     </div>
-                    
-                    <div class="zumen-d1-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; flex-grow: 1; background-color: #FFF;">
+
+                    <div class="zumen-d1-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; height: 12%; background-color: #FFF; border-top: 3px solid #1E2D3D; box-sizing: border-box;">
                         <div style="display: flex; align-items: center; height: 100%;">
                             <img class="footer-logo-img" src="/static/logo.png" style="height: 100%; width: auto;" alt="店舗ロゴ">
                         </div>
@@ -299,7 +324,7 @@
                                 <div class="z-box" style="flex: 1;" onclick="alert('サブ画像3')">画像3</div>
                                 <div class="z-box" style="flex: 1;" onclick="alert('サブ画像4')">画像4</div>
                             </div>
-                            <div style="display: flex; height: 16%; background-color: #56B4CB; color: #FFF;">
+                            <div style="display: flex; height: 16%; background-color: #56B4CB; color: #FFF; user-select: none; -webkit-user-select: none;">
                                 <div style="flex: 1; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: bold; cursor: pointer; padding: 5px 10px; word-break: break-all; line-height: 1.2;" onclick="openModal('titleModal')">
                                     <span id="display-title-d3">タイトル</span>
                                 </div>
@@ -320,40 +345,47 @@
                             </div>
                         </div>
                         
-                        <div style="width: 32%; background-color: #56B4CB; color: #FFF; padding: 15px 20px; display: flex; flex-direction: column; box-sizing: border-box;">
+                        <div style="width: 32%; background-color: #56B4CB; color: #FFF; padding: 15px 20px; display: flex; flex-direction: column; box-sizing: border-box; user-select: none; -webkit-user-select: none;">
                             <div style="border-bottom: 1px solid #FFF; padding-bottom: 10px; margin-bottom: 15px; cursor: pointer;" onclick="openModal('infoModal')">
                                 <div style="display: flex; justify-content: space-between; align-items: flex-end;">
                                     <span style="font-size: 12px; line-height: 1.2;">販売<br>価格</span>
                                     <div><strong style="font-size: 36px;" id="display-price-d3">5,000</strong> <span style="font-size: 16px;">万円</span></div>
                                 </div>
                             </div>
-                            <div class="zumen-summary-box-d3" style="display: flex !important; flex-direction: column !important; gap: 4.5px !important; font-size: 10.5px; color: #FFF; padding: 0 !important; overflow: hidden; cursor: pointer; flex-grow: 1;" onclick="openModal('summaryModal')">
-                                <div>■ 物件住所 / <span id="display-address-d3">東京都国分寺市...</span></div>
-                                <div>■ 土地権利 / <span id="display-land-right-d3"></span></div>
-                                <div>■ 専有面積 / <span id="display-exclusive-area-d3"></span></div>
-                                <div>■ バルコニー / <span id="display-balcony-area-d3"></span></div>
-                                <div>■ 所在階 / <span id="display-floor-d3"></span></div>
-                                <div>■ 総戸数 / <span id="display-total-units-d3"></span></div>
-                                <div>■ 建物構造 / <span id="display-structure-d3"></span></div>
-                                <div>■ 建築年月 / <span id="display-build-date-d3"></span></div>
-                                <div>■ 間取り / <span id="display-layout-d3"></span></div>
-                                <div>■ 水道 / <span id="display-water-d3"></span></div>
-                                <div>■ 汚水 / <span id="display-sewage-d3"></span></div>
-                                <div>■ ガス / <span id="display-gas-d3"></span></div>
-                                <div>■ 現況 / <span id="display-status-d3"></span></div>
-                                <div>■ 引渡時期 / <span id="display-delivery-d3"></span></div>
-                                <div>■ 駐車場 / <span id="display-parking-d3"></span></div>
-                                <div>■ バイク置場 / <span id="display-bike-d3"></span></div>
-                                <div>■ 駐輪場 / <span id="display-bicycle-d3"></span></div>
-                                <div>■ 分譲会社 / <span id="display-developer-d3"></span></div>
-                                <div>■ 施工会社 / <span id="display-builder-d3"></span></div>
-                                <div>■ 管理会社 / <span id="display-management-d3"></span></div>
-                                <div>■ 用途地域 / <span id="display-zoning-d3"></span></div>
-                                <div>■ 管理費 / <span id="display-admin-fee-d3"></span></div>
-                                <div>■ 修繕積立金 / <span id="display-repair-fund-d3"></span></div>
-                                <div>■ その他費用 / <span id="display-other-fee-d3"></span></div>
-                                <div>■ ペット飼育 / <span id="display-pet-d3"></span></div>
-                                <div>■ エレベーター / <span id="display-elevator-d3"></span></div>
+                            <div class="zumen-summary-box-d3" style="display: flex !important; flex-direction: column !important; gap: 4.5px !important; font-size: 10.5px; color: #FFF; padding: 0 !important; overflow: hidden; cursor: pointer; flex-grow: 1; user-select: none; -webkit-user-select: none; position: relative; background-color: transparent !important; box-shadow: none !important;" onclick="openModal('summaryModal')">
+                                
+                                <div id="display-empty-hint-d3" style="position: absolute; top: 15px; left: 50%; transform: translateX(-50%); color: #FFF; font-size: 12px; font-weight: bold; width: 100%; text-align: center;">
+                                    ■ 物件詳細情報
+                                </div>
+
+                                <div id="display-summary-container-d3" class="hidden" style="display: flex; flex-direction: column; gap: 4.5px;">
+                                    <div>■ 物件住所 / <span id="display-address-d3"></span></div>
+                                    <div>■ 土地権利 / <span id="display-land-right-d3"></span></div>
+                                    <div>■ 専有面積 / <span id="display-exclusive-area-d3"></span></div>
+                                    <div>■ バルコニー / <span id="display-balcony-area-d3"></span></div>
+                                    <div>■ 所在階 / <span id="display-floor-d3"></span></div>
+                                    <div>■ 総戸数 / <span id="display-total-units-d3"></span></div>
+                                    <div>■ 建物構造 / <span id="display-structure-d3"></span></div>
+                                    <div>■ 建築年月 / <span id="display-build-date-d3"></span></div>
+                                    <div>■ 間取り / <span id="display-layout-d3"></span></div>
+                                    <div>■ 水道 / <span id="display-water-d3"></span></div>
+                                    <div>■ 汚水 / <span id="display-sewage-d3"></span></div>
+                                    <div>■ ガス / <span id="display-gas-d3"></span></div>
+                                    <div>■ 現況 / <span id="display-status-d3"></span></div>
+                                    <div>■ 引渡時期 / <span id="display-delivery-d3"></span></div>
+                                    <div>■ 駐車場 / <span id="display-parking-d3"></span></div>
+                                    <div>■ バイク置場 / <span id="display-bike-d3"></span></div>
+                                    <div>■ 駐輪場 / <span id="display-bicycle-d3"></span></div>
+                                    <div>■ 分譲会社 / <span id="display-developer-d3"></span></div>
+                                    <div>■ 施工会社 / <span id="display-builder-d3"></span></div>
+                                    <div>■ 管理会社 / <span id="display-management-d3"></span></div>
+                                    <div>■ 用途地域 / <span id="display-zoning-d3"></span></div>
+                                    <div>■ 管理費 / <span id="display-admin-fee-d3"></span></div>
+                                    <div>■ 修繕積立金 / <span id="display-repair-fund-d3"></span></div>
+                                    <div>■ その他費用 / <span id="display-other-fee-d3"></span></div>
+                                    <div>■ ペット飼育 / <span id="display-pet-d3"></span></div>
+                                    <div>■ エレベーター / <span id="display-elevator-d3"></span></div>
+                                </div>
                             </div>
                         </div>
                     </div>

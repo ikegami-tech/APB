@@ -505,3 +505,34 @@ label.file-upload-card:hover {
     color: #333;
     word-break: break-all; /* 長い場合は枠内で綺麗に改行 */
 }
+/* =========================================
+   🚨 【最重要】すべてのプレビュー画面におけるテキスト選択（ハイライト）の完全無効化
+   ========================================= */
+
+/* 1. マウス操作での文字選択を一切できなくする（全ブラウザ対応） */
+#zumen-layout-1, #zumen-layout-1 *,
+#zumen-layout-2, #zumen-layout-2 *,
+#zumen-layout-3, #zumen-layout-3 * {
+    -webkit-user-select: none !important; /* Safari, Chrome用 */
+    -moz-user-select: none !important;    /* Firefox用 */
+    -ms-user-select: none !important;     /* IE, Edge用 */
+    user-select: none !important;         /* 標準構文 */
+}
+
+/* 2. 【絶対防壁】もし強制ドラッグされても、ハイライトの背景色と文字色を「透明」にして完全に隠す */
+#zumen-layout-1 ::selection, #zumen-layout-1 *::selection,
+#zumen-layout-2 ::selection, #zumen-layout-2 *::selection,
+#zumen-layout-3 ::selection, #zumen-layout-3 *::selection {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: inherit !important;
+}
+
+/* （Mac / iOS Safari向けの念押し） */
+#zumen-layout-1 ::-moz-selection, #zumen-layout-1 *::-moz-selection,
+#zumen-layout-2 ::-moz-selection, #zumen-layout-2 *::-moz-selection,
+#zumen-layout-3 ::-moz-selection, #zumen-layout-3 *::-moz-selection {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: inherit !important;
+}

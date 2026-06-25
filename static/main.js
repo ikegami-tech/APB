@@ -231,7 +231,79 @@ window.syncDisplays = function() {
             }
         });
     } catch (e) { console.error('syncDisplays Error:', e); }
+// 🌟 デザイン2の案内テキストと項目の表示切り替え魔法（全項目チェック版）
+        const hintD2 = document.getElementById('display-empty-hint-d2');
+        const containerD2 = document.getElementById('display-summary-container-d2');
+        
+        if (hintD2 && containerD2) {
+            const summaryItems = [
+                'address', 'land-right', 'exclusive-area', 'balcony-area',
+                'floor', 'total-units', 'structure', 'build-date',
+                'layout', 'water', 'sewage', 'gas', 'status',
+                'delivery', 'parking', 'bike', 'bicycle',
+                'developer', 'builder', 'management', 'zoning',
+                'admin-fee', 'repair-fund', 'other-fee', 'pet', 'elevator'
+            ];
+            
+            // 26個の項目のうち、1つでも中身が入っているか確認する
+            let hasInput = false;
+            summaryItems.forEach(item => {
+                const el = document.getElementById('display-' + item + '-d2');
+                if (el) {
+                    const txt = el.innerText.trim();
+                    if (txt !== "" && txt !== "東京都国分寺市...") {
+                        hasInput = true;
+                    }
+                }
+            });
+            
+// どれか1つでも入力があれば、案内を隠して項目コンテナを表示
+            if (hasInput) {
+                hintD2.style.display = 'none';
+                containerD2.classList.remove('hidden');
+            } else {
+                hintD2.style.display = 'block';
+                containerD2.classList.add('hidden');
+            }
+        }
+
+        // 🌟 追加：デザイン3の案内テキストと項目の表示切り替え魔法
+        const hintD3 = document.getElementById('display-empty-hint-d3');
+        const containerD3 = document.getElementById('display-summary-container-d3');
+        
+        if (hintD3 && containerD3) {
+            let hasInputD3 = false;
+            const summaryItemsD3 = [
+                'address', 'land-right', 'exclusive-area', 'balcony-area',
+                'floor', 'total-units', 'structure', 'build-date',
+                'layout', 'water', 'sewage', 'gas', 'status',
+                'delivery', 'parking', 'bike', 'bicycle',
+                'developer', 'builder', 'management', 'zoning',
+                'admin-fee', 'repair-fund', 'other-fee', 'pet', 'elevator'
+            ];
+            
+            summaryItemsD3.forEach(item => {
+                const el = document.getElementById('display-' + item + '-d3');
+                if (el) {
+                    const txt = el.innerText.trim();
+                    if (txt !== "" && txt !== "東京都国分寺市...") {
+                        hasInputD3 = true;
+                    }
+                }
+            });
+            
+            // どれか1つでも入力があれば、案内ラベルを隠してリストを表示
+            if (hasInputD3) {
+                hintD3.style.display = 'none';
+                containerD3.classList.remove('hidden');
+            } else {
+                hintD3.style.display = 'block';
+                containerD3.classList.add('hidden');
+            }
+        }
 };
+
+// 🌟 物件概要の保存処理（空欄非表示対応版）
 
 // 🌟 物件概要の保存処理（空欄非表示対応版）
 window.saveSummary = function() {
@@ -344,20 +416,44 @@ async function downloadPptx() {
     btn.disabled = true;
     try {
         const formData = new FormData();
-        // 画面のテキストをすべて収集してPythonに送る
-        formData.append("title", document.getElementById('display-title').innerText);
-        formData.append("price", document.getElementById('display-price').innerText);
-        formData.append("address", document.getElementById('display-address').innerText);
-        formData.append("transport_station", document.getElementById('display-station').innerText);
-        formData.append("transport_walk", document.getElementById('display-walk').innerText);
-        formData.append("madori", document.getElementById('display-layout').innerText);
-        formData.append("age", document.getElementById('display-build-date').innerText);
-        formData.append("right", document.getElementById('display-land-right').innerText);
-        formData.append("land_area", document.getElementById('display-exclusive-area').innerText);
-        formData.append("building_area", document.getElementById('display-balcony-area').innerText);
-        formData.append("plan", document.getElementById('display-zoning').innerText);
 
-        // 🌟 一番重要：ログイン中の店舗名を裏側に送る
+        // 🌟【最重要】今どのデザインを表示しているかを判定してPythonに伝える魔法
+        let currentDesign = "1"; // デフォルト
+        if (document.getElementById('zumen-layout-2') && !document.getElementById('zumen-layout-2').classList.contains('hidden')) {
+            currentDesign = "2";
+        } else if (document.getElementById('zumen-layout-3') && !document.getElementById('zumen-layout-3').classList.contains('hidden')) {
+            currentDesign = "3";
+        }
+        formData.append("design_num", currentDesign);
+
+        // 各デザインの画面から現在表示されているテキストを正しく収集する処理
+        let suffix = currentDesign === "1" ? "" : "-d" + currentDesign;
+        
+        const titleText = document.getElementById('display-title' + (currentDesign === "1" ? "" : suffix))?.innerText || "";
+        const priceText = document.getElementById('display-price' + suffix)?.innerText || "";
+        const addressText = document.getElementById('display-address' + suffix)?.innerText || "";
+        const stationText = document.getElementById('display-station' + suffix)?.innerText || "";
+        const walkText = document.getElementById('display-walk' + suffix)?.innerText || "";
+        const layoutText = document.getElementById('display-layout' + suffix)?.innerText || "";
+        const buildDateText = document.getElementById('display-build-date' + suffix)?.innerText || "";
+        const landRightText = document.getElementById('display-land-right' + suffix)?.innerText || "";
+        const exclusiveAreaText = document.getElementById('display-exclusive-area' + suffix)?.innerText || "";
+        const balconyAreaText = document.getElementById('display-balcony-area' + suffix)?.innerText || "";
+        const zoningText = document.getElementById('display-zoning' + suffix)?.innerText || "";
+
+        formData.append("title", titleText);
+        formData.append("price", priceText);
+        formData.append("address", addressText);
+        formData.append("transport_station", stationText);
+        formData.append("transport_walk", walkText);
+        formData.append("madori", layoutText);
+        formData.append("age", buildDateText);
+        formData.append("right", landRightText);
+        formData.append("land_area", exclusiveAreaText);
+        formData.append("building_area", balconyAreaText);
+        formData.append("plan", zoningText);
+
+        // 🌟 ログイン中の店舗名を裏側に送る
         const branchKey = localStorage.getItem("branch_key") || "国分寺";
         formData.append("branch_name", branchKey);
 
@@ -370,11 +466,12 @@ async function downloadPptx() {
         const blob = await response.blob();
         const a = document.createElement('a');
         a.href = window.URL.createObjectURL(blob);
-        a.download = `販売図面_${formData.get("title")}.pptx`;
+        a.download = `販売図面_デザイン${currentDesign}_${titleText}.pptx`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(a.href);
     } catch (error) {
+        console.error(error);
         alert("⚠️ 作成中にエラーが発生しました。");
     } finally {
         btn.innerText = originalText;
