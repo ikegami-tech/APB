@@ -1048,7 +1048,7 @@ def generate_zumen(
         from pptx.util import Inches, Pt
         from pptx.dml.color import RGBColor
         from pptx.enum.shapes import MSO_SHAPE
-        from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+        from pptx.enum.text import PP_ALIGN, MSO_ANCHOR, MSO_AUTO_SIZE # 🌟ここに追加！
         print(f"🚀 【販売図面】デザイン{design_num}のパワポ生成を開始します...")
 
         # 1. パワポの土台を作成（横長スライド）
@@ -1269,18 +1269,26 @@ def generate_zumen(
                 if not col_items: continue
                 
                 # 見出しの分だけ、項目のスタート位置（Y座標）を少し下げる
-                tb_info = slide.shapes.add_textbox(Inches(0.2) + i * box_width, Inches(5.95), box_width, Inches(0.7))
+                tb_info = slide.shapes.add_textbox(Inches(0.2) + i * box_width, Inches(5.95), box_width, Inches(0.65))
                 tf_info = tb_info.text_frame
-                tf_info.word_wrap = True
-                tf_info.margin_top = tf_info.margin_bottom = tf_info.margin_left = tf_info.margin_right = 0
+                
+                # 🌟【案2を採用】枠の幅は固定し、改行を許可（True）した上で自動縮小する！
+                tf_info.word_wrap = True 
+                tf_info.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE 
+                
+                # 右側に少し余白を設けて、隣の列の文字と絶対にくっつかないようにする
+                tf_info.margin_top = tf_info.margin_bottom = tf_info.margin_left = 0
+                tf_info.margin_right = Inches(0.05)
                 
                 for idx, item_text in enumerate(col_items):
                     p = tf_info.paragraphs[0] if idx == 0 else tf_info.add_paragraph()
                     p.text = item_text
-                    p.font.size = Pt(7.5) # 🌟 枠にはみ出さないように少し小さく
+                    
+                    # 🌟 長文が来て改行されても余裕で収まるように、ベースのサイズを少し小さくしておく
+                    p.font.size = Pt(7.0) 
                     p.font.name = "游明朝"
                     p.font.color.rgb = RGBColor(80, 80, 80)
-                    p.line_spacing = Pt(9) # 🌟 行間をキュッと詰めて無駄なスペースをなくす
+                    p.line_spacing = Pt(8.5) # 行間も詰めて無駄なスペースをなくす
             
             # 🌟 フッター位置はスライド内に収まる基本位置（6.65インチ）に戻す
             footer_y = Inches(6.65)
