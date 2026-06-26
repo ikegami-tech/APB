@@ -394,13 +394,14 @@
                                     <div><strong style="font-size: 36px;" id="display-price-d3">5,000</strong> <span style="font-size: 16px;">万円</span></div>
                                 </div>
                             </div>
-                            <div class="zumen-summary-box-d3" style="display: flex !important; flex-direction: column !important; gap: 4.5px !important; font-size: 10.5px; color: #FFF; padding: 0 !important; overflow: hidden; cursor: pointer; flex-grow: 1; user-select: none; -webkit-user-select: none; position: relative; background-color: transparent !important; box-shadow: none !important;" onclick="openModal('summaryModal')">
+                            <div class="zumen-summary-box-d3" style="display: flex !important; flex-direction: column !important; font-size: 8.5px; color: #FFF; padding: 15px 20px !important; overflow: hidden; cursor: pointer; flex-grow: 1; user-select: none; -webkit-user-select: none; position: relative; background-color: transparent !important; box-shadow: none !important; box-sizing: border-box;" onclick="openModal('summaryModal')">
                                 
-                                <div id="display-empty-hint-d3" style="position: absolute; top: 15px; left: 50%; transform: translateX(-50%); color: #FFF; font-size: 12px; font-weight: bold; width: 100%; text-align: center;">
+                                <div style="color: #FFF; font-size: 11px; font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.5); padding-bottom: 4px; text-align: left;">
                                     ■ 物件詳細情報
                                 </div>
+                                <div id="display-empty-hint-d3" style="display: none;"></div>
 
-                                <div id="display-summary-container-d3" class="hidden" style="display: flex; flex-direction: column; gap: 4.5px;">
+                                <div id="display-summary-container-d3" class="hidden" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 25px; width: 100%; word-break: break-all; line-height: 1.3;">
                                     <div>■ 物件住所 / <span id="display-address-d3"></span></div>
                                     <div>■ 土地権利 / <span id="display-land-right-d3"></span></div>
 

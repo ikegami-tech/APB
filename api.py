@@ -1238,7 +1238,6 @@ def generate_zumen(
             blue_line2.line.fill.background()
 
             # 間取り図
-# 間取り図
             add_smart_image(Inches(4.8), Inches(2.8), Inches(4.7), Inches(2.8), madori_image, "間取り図", box_color, 20)
 
             # 水色帯（物件詳細）※高さを0.95インチに固定し、枠が下に伸びないようにする
@@ -1284,11 +1283,11 @@ def generate_zumen(
                     p = tf_info.paragraphs[0] if idx == 0 else tf_info.add_paragraph()
                     p.text = item_text
                     
-                    # 🌟 長文が来て改行されても余裕で収まるように、ベースのサイズを少し小さくしておく
+                    # 🌟 デザイン2用の設定（濃いグレー・枠に収まるサイズ）に戻します！
                     p.font.size = Pt(7.0) 
                     p.font.name = "游明朝"
-                    p.font.color.rgb = RGBColor(80, 80, 80)
-                    p.line_spacing = Pt(8.5) # 行間も詰めて無駄なスペースをなくす
+                    p.font.color.rgb = RGBColor(80, 80, 80) # 濃いグレーに戻す
+                    p.line_spacing = Pt(8.5)
             
             # 🌟 フッター位置はスライド内に収まる基本位置（6.65インチ）に戻す
             footer_y = Inches(6.65)
@@ -1300,16 +1299,12 @@ def generate_zumen(
             f_line.line.fill.background()
 
         elif design_num == "3":
-            # ----------------------------------------------------
-            # 🟦 デザイン3（シアンブルーの縦割りグリッドレイアウト）
-            # ----------------------------------------------------
-            cyan_color = RGBColor(86, 180, 203) # 鮮やかな水色
-            
             # --- ▼ 左側エリア ▼ ---
-            # 上段：画像2, 3, 4
-            add_color_box(Inches(0.2), Inches(0.2), Inches(2.1), Inches(1.3), "画像2", box_color, 14)
-            add_color_box(Inches(2.4), Inches(0.2), Inches(2.1), Inches(1.3), "画像3", box_color, 14)
-            add_color_box(Inches(4.6), Inches(0.2), Inches(2.1), Inches(1.3), "画像4", box_color, 14)
+            cyan_color = RGBColor(86, 180, 203)
+            # 🌟 変更（上段：画像2, 3, 4）
+            add_smart_image(Inches(0.2), Inches(0.2), Inches(2.1), Inches(1.3), sub_image1, "画像2", box_color, 14)
+            add_smart_image(Inches(2.4), Inches(0.2), Inches(2.1), Inches(1.3), sub_image2, "画像3", box_color, 14)
+            add_smart_image(Inches(4.6), Inches(0.2), Inches(2.1), Inches(1.3), sub_image3, "画像4", box_color, 14)
             
             # 中段：タイトル＆交通アクセスの水色帯
             cyan_band_left = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.2), Inches(1.6), Inches(6.5), Inches(1.0))
@@ -1329,39 +1324,39 @@ def generate_zumen(
             p_title.font.name = "游明朝"
             p_title.alignment = PP_ALIGN.CENTER
             
-# 縦の白線（タイトルと交通の区切り）
+            # 縦の白線（タイトルと交通の区切り）
             v_line = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(3.9), Inches(1.7), Pt(1), Inches(0.8))
             v_line.fill.solid()
             v_line.fill.fore_color.rgb = RGBColor(255, 255, 255)
             v_line.line.fill.background()
             
-            # ACCESS 縦文字（白線に被らないよう余白をゼロにし、少し右に配置）
+            # ACCESS 縦文字
             tb_acc_v = slide.shapes.add_textbox(Inches(3.95), Inches(1.65), Inches(0.2), Inches(0.9))
             tf_acc_v = tb_acc_v.text_frame
-            tf_acc_v.margin_left = tf_acc_v.margin_right = 0 # 🌟余白をゼロに
+            # 🌟 0 ではなく Inches(0) と指定する
+            tf_acc_v.margin_left = tf_acc_v.margin_right = Inches(0) 
             p_acc_v = tf_acc_v.paragraphs[0]
             p_acc_v.text = "A\nC\nC\nE\nS\nS"
             p_acc_v.font.size = Pt(7)
             p_acc_v.font.color.rgb = RGBColor(255, 255, 255)
             p_acc_v.alignment = PP_ALIGN.CENTER
-            p_acc_v.line_spacing = 0.9
+            # 🌟 0.9 ではなく Pt(8) などの正規の単位にする
+            p_acc_v.line_spacing = Pt(8)
             
-            # 交通情報（はみ出さないよう幅を広げ、余白をゼロに）
+            # 交通情報
             tb_acc = slide.shapes.add_textbox(Inches(4.15), Inches(1.6), Inches(2.55), Inches(1.0))
             tf_acc = tb_acc.text_frame
-            tf_acc.margin_left = tf_acc.margin_right = 0 # 🌟余白をゼロに
+            tf_acc.margin_left = tf_acc.margin_right = 0
             tf_acc.vertical_anchor = MSO_ANCHOR.MIDDLE
             p_acc = tf_acc.paragraphs[0]
             p_acc.alignment = PP_ALIGN.CENTER
             
-            # フォントサイズを微調整して1行に綺麗に収める
             r_acc1 = p_acc.add_run()
             r_acc1.text = "交通  "
             r_acc1.font.size = Pt(10)
             r_acc1.font.color.rgb = RGBColor(255, 255, 255)
             r_acc1.font.name = "游明朝"
             
-            # 🌟 カッコが二重になるのを防ぐ（「」を消してから付け直す）
             clean_station = transport_station.replace("「", "").replace("」", "")
             r_acc2 = p_acc.add_run()
             r_acc2.text = f"「{clean_station}」"
@@ -1376,9 +1371,9 @@ def generate_zumen(
             r_acc3.font.color.rgb = RGBColor(255, 255, 255)
             r_acc3.font.name = "游明朝"
 
-            # 下段：メイン画像＆間取り図
-            add_color_box(Inches(0.2), Inches(2.7), Inches(3.2), Inches(3.2), "画像1", box_color, 24)
-            add_color_box(Inches(3.5), Inches(2.7), Inches(3.2), Inches(3.2), "間取り図", box_color, 24)
+            # 🌟 変更（下段：メイン画像＆間取り図）
+            add_smart_image(Inches(0.2), Inches(2.7), Inches(3.2), Inches(3.2), main_image, "画像1", box_color, 24)
+            add_smart_image(Inches(3.5), Inches(2.7), Inches(3.2), Inches(3.2), madori_image, "間取り図", box_color, 24)
             
             # 設備アイコン
             tb_eq = slide.shapes.add_textbox(Inches(0.2), Inches(6.0), Inches(0.8), Inches(0.5))
@@ -1388,7 +1383,6 @@ def generate_zumen(
             p_eq.font.color.rgb = RGBColor(80, 80, 80)
             p_eq.font.name = "游明朝"
             
-            # 🌟 変更：アイコン画像があれば貼り付ける処理（デザイン3）
             icons = [icon_image1, icon_image2, icon_image3, icon_image4, icon_image5, icon_image6]
             import tempfile
             from PIL import Image
@@ -1407,11 +1401,8 @@ def generate_zumen(
                     with Image.open(tmp_path) as img:
                         img_w, img_h = img.size
                     
-                    # 高さを枠の高さ(0.5インチ)に合わせる
                     target_h_inches = 0.5
                     target_w_inches = target_h_inches * (img_w / img_h)
-                    
-                    # 枠の横幅(0.85インチ)との差分から、中央寄せするためのX座標を計算
                     offset_x_inches = (0.85 - target_w_inches) / 2
                     centered_left = current_left + Inches(offset_x_inches)
                     
@@ -1451,42 +1442,54 @@ def generate_zumen(
             r_unit.font.color.rgb = RGBColor(255, 255, 255)
             r_unit.font.name = "游明朝"
 
-            # 価格下の白線
+# 価格下の白線
             white_line = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(7.0), Inches(1.3), Inches(2.6), Pt(1))
             white_line.fill.solid()
             white_line.fill.fore_color.rgb = RGBColor(255, 255, 255)
             white_line.line.fill.background()
             
-            # 🌟 入力がある項目だけをリストにまとめる処理（空欄の誤判定防止版）
-            info_parts = []
-            if address.strip() and address.strip() != "東京都国分寺市...":
-                info_parts.append(f"■ 住所: {address.strip()}")
-            if madori.strip():
-                info_parts.append(f"■ 間取り: {madori.strip()}")
-            if age.strip():
-                info_parts.append(f"■ 建築年: {age.strip()}")
-            if right.strip():
-                info_parts.append(f"■ 権利: {right.strip()}")
-            if land_area.strip():
-                info_parts.append(f"■ 面積: {land_area.strip()}")
-            if building_area.strip():
-                info_parts.append(f"■ バルコニー: {building_area.strip()}")
-            if plan.strip():
-                info_parts.append(f"■ 都市計画: {plan.strip()}")
+            # 🌟【ここを追加】「■ 物件詳細情報」の見出しをパワポにも描画する
+            tb_summary_title = slide.shapes.add_textbox(Inches(6.9), Inches(1.45), Inches(2.8), Inches(0.2))
+            tf_summary_title = tb_summary_title.text_frame
+            tf_summary_title.margin_top = tf_summary_title.margin_bottom = tf_summary_title.margin_left = tf_summary_title.margin_right = 0
+            p_summary_title = tf_summary_title.paragraphs[0]
+            p_summary_title.text = "■ 物件詳細情報"
+            p_summary_title.font.size = Pt(11)
+            p_summary_title.font.bold = True
+            p_summary_title.font.color.rgb = RGBColor(255, 255, 255)
+            p_summary_title.font.name = "游ゴシック"
 
-            tb_info = slide.shapes.add_textbox(Inches(6.9), Inches(1.5), Inches(2.8), Inches(4.8))
-            tf_info = tb_info.text_frame
-            tf_info.word_wrap = True
-            
-            # 🌟 受け取った全項目を縦に配置する
+            # 🌟 変更（物件詳細情報を2列・自動縮小ではみ出し防止！）
             items = [item.strip() for item in full_summary.split('|||') if item.strip()]
-            for idx, item in enumerate(items):
-                p = tf_info.paragraphs[0] if idx == 0 else tf_info.add_paragraph()
-                p.text = item
-                p.font.size = Pt(10)
-                p.font.color.rgb = RGBColor(255, 255, 255)
-                p.font.name = "游明朝"
-                p.space_before = Pt(4)
+            cols = 2
+            box_width = Inches(2.8) / cols
+            items_per_col = (len(items) + cols - 1) // cols
+            
+            for i in range(cols):
+                col_items = items[i * items_per_col : (i + 1) * items_per_col]
+                if not col_items: continue
+                
+                # 🌟 見出しを追加した分、リストの開始位置（Y座標）を少し下げる（Inches(1.7)に変更）
+                tb_info = slide.shapes.add_textbox(Inches(6.9) + i * box_width, Inches(1.7), box_width, Inches(4.6))
+                tf_info = tb_info.text_frame
+                tf_info.word_wrap = True 
+                tf_info.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE 
+                tf_info.margin_top = tf_info.margin_bottom = tf_info.margin_left = Inches(0)
+                tf_info.margin_right = Inches(0.05)
+                
+                for idx, item_text in enumerate(col_items):
+                    p = tf_info.paragraphs[0] if idx == 0 else tf_info.add_paragraph()
+                    p.text = item_text
+                    
+                    p.font.size = Pt(8.5)
+                    p.font.name = "游明朝"
+                    # 🌟 ここを (255, 255, 255) の白文字に修正します！
+                    p.font.color.rgb = RGBColor(255, 255, 255) 
+                    p.line_spacing = Pt(12.0)
+                    p.space_before = Pt(6.0)
+                
+            # フッターの線の開始位置
+            footer_y = Inches(6.65)
                 
             # フッターの線の開始位置
             footer_y = Inches(6.65)
@@ -1527,11 +1530,12 @@ def generate_zumen(
             line_h.fill.fore_color.rgb = gray_line
             line_h.line.fill.background()
 
-            add_color_box(Inches(0.2), Inches(1.5), Inches(3.4), Inches(2.8), "画像1", box_color, 18)
-            add_color_box(Inches(3.7), Inches(1.5), Inches(3.4), Inches(2.8), "間取り図", box_color, 18)
-            add_color_box(Inches(0.2), Inches(4.4), Inches(2.2), Inches(1.4), "画像2", box_color, 16)
-            add_color_box(Inches(2.5), Inches(4.4), Inches(2.2), Inches(1.4), "画像3", box_color, 16)
-            add_color_box(Inches(4.8), Inches(4.4), Inches(2.2), Inches(1.4), "画像4", box_color, 16)
+            # 🌟 変更（画像と間取り図をスマートに配置する魔法！）
+            add_smart_image(Inches(0.2), Inches(1.5), Inches(3.4), Inches(2.8), main_image, "画像1", box_color, 18)
+            add_smart_image(Inches(3.7), Inches(1.5), Inches(3.4), Inches(2.8), madori_image, "間取り図", box_color, 18)
+            add_smart_image(Inches(0.2), Inches(4.4), Inches(2.2), Inches(1.4), sub_image1, "画像2", box_color, 16)
+            add_smart_image(Inches(2.5), Inches(4.4), Inches(2.2), Inches(1.4), sub_image2, "画像3", box_color, 16)
+            add_smart_image(Inches(4.8), Inches(4.4), Inches(2.2), Inches(1.4), sub_image3, "画像4", box_color, 16)
 
             line_v = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(7.2), Inches(1.4), Pt(1), Inches(4.5))
             line_v.fill.solid()
@@ -1555,17 +1559,32 @@ def generate_zumen(
             p_summ_t.font.size = Pt(10)
             p_summ_t.font.bold = True
 
-            tb_info = slide.shapes.add_textbox(Inches(7.3), Inches(2.5), Inches(2.5), Inches(3.3))
-            tf_info = tb_info.text_frame
-            tf_info.word_wrap = True
-            
-            # 🌟 受け取った全項目を配置する
+            # 🌟 変更（物件詳細情報を2列・自動縮小ではみ出し防止！）
             items = [item.strip() for item in full_summary.split('|||') if item.strip()]
-            for idx, item in enumerate(items):
-                p = tf_info.paragraphs[0] if idx == 0 else tf_info.add_paragraph()
-                p.text = item
-                p.font.size = Pt(9)
-                p.space_before = Pt(3)
+            cols = 2
+            box_width = Inches(2.5) / cols
+            items_per_col = (len(items) + cols - 1) // cols
+            
+            for i in range(cols):
+                col_items = items[i * items_per_col : (i + 1) * items_per_col]
+                if not col_items: continue
+                
+                tb_info = slide.shapes.add_textbox(Inches(7.3) + i * box_width, Inches(2.5), box_width, Inches(3.3))
+                tf_info = tb_info.text_frame
+                tf_info.word_wrap = True 
+                tf_info.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE 
+                tf_info.margin_top = tf_info.margin_bottom = tf_info.margin_left = 0
+                tf_info.margin_right = Inches(0.05)
+                
+                for idx, item_text in enumerate(col_items):
+                    p = tf_info.paragraphs[0] if idx == 0 else tf_info.add_paragraph()
+                    p.text = item_text
+                    
+                    # 🌟 文字を大きくし、色とフォントも綺麗に設定
+                    p.font.size = Pt(8.5) 
+                    p.font.name = "游明朝"
+                    p.font.color.rgb = RGBColor(80, 80, 80)
+                    p.line_spacing = Pt(11.0) # 行間も少し広げて見やすく
 
             line_eq1 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, Inches(5.9), Inches(10), Pt(1))
             line_eq1.fill.solid()
@@ -1633,10 +1652,10 @@ def generate_zumen(
             logo_path = os.path.join(base_dir, "static", "logo_musashino.jpg")
 
         if os.path.exists(logo_path):
-            # 🌟 上下の線にかぶらないよう位置を少し下げ( + Inches(0.1) )、高さを制限する( height=Inches(0.55) )
-            slide.shapes.add_picture(logo_path, Inches(0.3), footer_y + Inches(0.1), height=Inches(0.55))
+            # 🌟 変更：ロゴのサイズを大きく（0.7インチ）し、上下のバランスを微調整する
+            slide.shapes.add_picture(logo_path, Inches(0.3), footer_y + Inches(0.05), height=Inches(0.7))
         else:
-            add_color_box(Inches(0.2), footer_y + Inches(0.1), Inches(2.0), Inches(0.55), f"{branch_name}ロゴ", RGBColor(235, 235, 235), 12)
+            add_color_box(Inches(0.2), footer_y + Inches(0.05), Inches(2.0), Inches(0.7), f"{branch_name}ロゴ", RGBColor(235, 235, 235), 12)
 
         # 会社情報
         tb_comp = slide.shapes.add_textbox(Inches(3.3), footer_y, Inches(3.0), Inches(0.85))
