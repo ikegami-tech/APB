@@ -1442,7 +1442,7 @@ def generate_zumen(
             r_unit.font.color.rgb = RGBColor(255, 255, 255)
             r_unit.font.name = "游明朝"
 
-# 価格下の白線
+            # 価格下の白線
             white_line = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(7.0), Inches(1.3), Inches(2.6), Pt(1))
             white_line.fill.solid()
             white_line.fill.fore_color.rgb = RGBColor(255, 255, 255)
