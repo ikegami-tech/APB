@@ -205,7 +205,61 @@ function goBackToStep2() {
 }
 
 // --- モーダルと通信処理 ---
-function openModal(id) { 
+// 🌟 モーダルを開くときに、現在のデザインのテキストを入力欄にセットし直す魔法
+function openModal(id) {
+    const suffix = getCurrentDesignSuffix(); // 現在のデザインを判定
+    
+    // 物件概要モーダルの場合
+    if (id === 'summaryModal') {
+        const summaryItems = [
+            'address', 'land-right', 'exclusive-area', 'balcony-area',
+            'floor', 'total-units', 'structure', 'build-date',
+            'layout', 'water', 'sewage', 'gas', 'status',
+            'delivery', 'parking', 'bike', 'bicycle',
+            'developer', 'builder', 'management', 'zoning',
+            'admin-fee', 'repair-fund', 'other-fee', 'pet', 'elevator',
+            'land-area', 'building-area', 'city-planning', 'road', 'coverage', 'floor-ratio'
+        ];
+        summaryItems.forEach(item => {
+            const dispEl = document.getElementById('display-' + item + suffix);
+            const inpEl = document.getElementById('input-' + item);
+            if (dispEl && inpEl) {
+                inpEl.value = dispEl.innerText;
+            }
+        });
+    } 
+    // タイトルモーダルの場合
+    else if (id === 'titleModal') {
+        const dispEl = document.getElementById('display-title' + suffix);
+        const inpEl = document.getElementById('input-title');
+        if (dispEl && inpEl) {
+            inpEl.value = (dispEl.innerText !== 'タイトル' && dispEl.innerText !== 'タイトルを入力') ? dispEl.innerText : '';
+        }
+    } 
+    // 販売価格モーダルの場合
+    else if (id === 'infoModal') {
+        const dispEl = document.getElementById('display-price' + suffix);
+        const inpEl = document.getElementById('input-price');
+        if (dispEl && inpEl) inpEl.value = dispEl.innerText;
+    } 
+    // 交通アクセスモーダルの場合
+    else if (id === 'accessModal') {
+        const lineDisp = document.getElementById('display-line' + suffix);
+        const lineInp = document.getElementById('input-line');
+        if (lineDisp && lineInp) lineInp.value = lineDisp.innerText !== '交通' ? lineDisp.innerText : '';
+        
+        const stationDisp = document.getElementById('display-station' + suffix);
+        const stationInp = document.getElementById('input-station');
+        if (stationDisp && stationInp) {
+            const cleanText = stationDisp.innerText.replace(/[「」]/g, '');
+            stationInp.value = cleanText !== '最寄駅' ? cleanText : '';
+        }
+        
+        const walkDisp = document.getElementById('display-walk' + suffix);
+        const walkInp = document.getElementById('input-walk');
+        if (walkDisp && walkInp) walkInp.value = walkDisp.innerText !== '〇' ? walkDisp.innerText : '';
+    }
+
     document.getElementById(id).style.display = 'block';
 }
 function closeModal(id) { 
@@ -323,9 +377,7 @@ window.syncDisplays = function() {
         }
 };
 
-// 🌟 物件概要の保存処理（空欄非表示対応版）
-
-// 🌟 物件概要の保存処理（空欄非表示対応版）
+// 🌟 物件概要の保存処理（独立・表示切替対応版に修正）
 window.saveSummary = function() {
     const summaryItems = [
         'address', 'land-right', 'exclusive-area', 'balcony-area',
@@ -334,48 +386,99 @@ window.saveSummary = function() {
         'delivery', 'parking', 'bike', 'bicycle',
         'developer', 'builder', 'management', 'zoning',
         'admin-fee', 'repair-fund', 'other-fee', 'pet', 'elevator',
-        // ▼追加：戸建て用の項目▼
         'land-area', 'building-area', 'city-planning', 'road', 'coverage', 'floor-ratio'
     ];
+    
+    const suffix = getCurrentDesignSuffix(); // 現在のデザインを判定
+    let hasInput = false; // 入力があるかどうかのフラグ
+    
     summaryItems.forEach(function(item) {
-        const dispEl = document.getElementById('display-' + item);
+        const dispEl = document.getElementById('display-' + item + suffix);
         const inpEl = document.getElementById('input-' + item);
         if (dispEl && inpEl) {
             const val = inpEl.value.trim();
             dispEl.innerText = val;
             
-            // 💡 ここが魔法！入力が空なら、その行（div）ごと非表示にする！
+            if (val !== "") {
+                hasInput = true; // 1つでも入力があればフラグを立てる
+            }
+            
+            // 行ごとの表示・非表示（空欄なら詰める処理）
             if (dispEl.parentNode) {
                 dispEl.parentNode.style.display = val === '' ? 'none' : '';
             }
         }
     });
+    
+    // 🌟 デザイン2のコンテナ表示切り替え
+    if (suffix === '-d2') {
+        const containerD2 = document.getElementById('display-summary-container-d2');
+        if (containerD2) {
+            if (hasInput) {
+                containerD2.classList.remove('hidden'); // 入力があれば表示！
+            } else {
+                containerD2.classList.add('hidden');
+            }
+        }
+    }
+    // 🌟 デザイン3のコンテナ表示切り替え
+    else if (suffix === '-d3') {
+        const hintD3 = document.getElementById('display-empty-hint-d3');
+        const containerD3 = document.getElementById('display-summary-container-d3');
+        if (containerD3) {
+            if (hasInput) {
+                if (hintD3) hintD3.style.display = 'none';
+                containerD3.classList.remove('hidden'); // 入力があれば表示！
+            } else {
+                if (hintD3) hintD3.style.display = 'block';
+                containerD3.classList.add('hidden');
+            }
+        }
+    }
+
     closeModal('summaryModal');
-    setTimeout(window.syncDisplays, 50);
 };
 
-// 🌟 交通アクセスの保存処理
+// 🌟 交通アクセスの保存処理（独立版に修正）
 function saveAccess() {
-    document.getElementById('display-line').innerText = document.getElementById('input-line').value;
-    document.getElementById('display-station').innerText = document.getElementById('input-station').value;
-    document.getElementById('display-walk').innerText = document.getElementById('input-walk').value;
+    const suffix = getCurrentDesignSuffix();
+    const lineEl = document.getElementById('display-line' + suffix);
+    const stationEl = document.getElementById('display-station' + suffix);
+    const walkEl = document.getElementById('display-walk' + suffix);
+    
+    if (lineEl) lineEl.innerText = document.getElementById('input-line').value;
+    if (stationEl) stationEl.innerText = document.getElementById('input-station').value;
+    if (walkEl) walkEl.innerText = document.getElementById('input-walk').value;
+    
     closeModal('accessModal');
-    setTimeout(window.syncDisplays, 50);
 }
-
-// 🌟 タイトルの保存処理
+// 🌟 現在表示中のデザイン番号を取得する魔法（新規追加）
+function getCurrentDesignSuffix() {
+    if (document.getElementById('zumen-layout-2') && !document.getElementById('zumen-layout-2').classList.contains('hidden')) {
+        return '-d2';
+    } else if (document.getElementById('zumen-layout-3') && !document.getElementById('zumen-layout-3').classList.contains('hidden')) {
+        return '-d3';
+    }
+    return ''; // デザイン1の場合はサフィックス（接尾辞）なし
+}
+// 🌟 タイトルの保存処理（独立版に修正）
 function saveTitle() {
     const newTitle = document.getElementById('input-title').value;
-    document.getElementById('display-title').innerText = newTitle;
+    const suffix = getCurrentDesignSuffix(); // 現在のデザインを判定
+    const displayEl = document.getElementById('display-title' + suffix);
+    if (displayEl) displayEl.innerText = newTitle;
+    
     closeModal('titleModal');
-    setTimeout(window.syncDisplays, 50);
+    // setTimeout(window.syncDisplays, 50); ← これを消すことで連動をストップ
 }
-
-// 🌟 販売価格の保存処理
+// 🌟 販売価格の保存処理（独立版に修正）
 function saveInfo() {
-    document.getElementById('display-price').innerText = document.getElementById('input-price').value;
+    const newPrice = document.getElementById('input-price').value;
+    const suffix = getCurrentDesignSuffix();
+    const displayEl = document.getElementById('display-price' + suffix);
+    if (displayEl) displayEl.innerText = newPrice;
+    
     closeModal('infoModal');
-    setTimeout(window.syncDisplays, 50);
 }
 
 // 🌟 画像モーダルを開く処理
@@ -402,39 +505,51 @@ window.openImageModal = function(targetId, title) {
     openModal('imageModal');
 };
 
+// 🌟 画像の保存処理（独立版に修正）
 window.saveImage = function() {
     const fileInput = document.getElementById('input-image');
     if (!fileInput) return;
     const file = fileInput.files[0];
+    
     if (file && window.currentImageTargetId) {
         const imageUrl = URL.createObjectURL(file);
-        const targets = document.querySelectorAll(`[data-image-target="${window.currentImageTargetId}"]`);
-        targets.forEach(target => {
-            target.style.backgroundImage = `url(${imageUrl})`;
-            target.style.backgroundPosition = 'center';
-            target.style.backgroundRepeat = 'no-repeat';
-            target.style.color = 'transparent'; // 文字を透明にして消す
-            
-            // 🌟 アイコンと写真で設定を分ける
-            if (window.currentImageTargetId.startsWith('icon')) {
-                // アイコンの場合：見切れないように全体を表示（contain）
-                target.style.backgroundSize = 'contain';
+        
+        // 今表示しているデザインレイアウトのIDを特定する
+        let currentLayoutId = 'zumen-layout-1';
+        if (document.getElementById('zumen-layout-2') && !document.getElementById('zumen-layout-2').classList.contains('hidden')) {
+            currentLayoutId = 'zumen-layout-2';
+        } else if (document.getElementById('zumen-layout-3') && !document.getElementById('zumen-layout-3').classList.contains('hidden')) {
+            currentLayoutId = 'zumen-layout-3';
+        }
+        
+        // 現在のデザインの中にある画像枠だけを狙い撃ちで書き換える
+        const parentEl = document.getElementById(currentLayoutId);
+        if (parentEl) {
+            const targets = parentEl.querySelectorAll(`[data-image-target="${window.currentImageTargetId}"]`);
+            targets.forEach(target => {
+                target.style.backgroundImage = `url(${imageUrl})`;
+                target.style.backgroundPosition = 'center';
+                target.style.backgroundRepeat = 'no-repeat';
+                target.style.color = 'transparent'; // 文字を消す
                 
-                // 🌟 追加：背景色や影を【確実に】透明にして消し去る
-                target.style.setProperty('background-color', 'transparent', 'important');
-                target.style.border = 'none';
-                target.style.boxShadow = 'none';
-                
-                // 🌟 追加：枠内の余白をゼロにして、画像を最大まで大きく表示する！
-                target.style.padding = '0';
-            } else {
-                // 写真の場合：枠に合わせて切り抜いて埋める
-                target.style.backgroundSize = 'cover';
-            }
-        });
+                if (window.currentImageTargetId.startsWith('icon')) {
+                    target.style.backgroundSize = 'contain';
+                    target.style.setProperty('background-color', 'transparent', 'important');
+                    target.style.border = 'none';
+                    target.style.boxShadow = 'none';
+                    target.style.padding = '0';
+                } else {
+                    target.style.backgroundSize = 'cover';
+                }
+            });
+        }
+        
+        // パワポ送信用の記憶
         if (!window.uploadedImages) window.uploadedImages = {};
         window.uploadedImages[window.currentImageTargetId] = file;
     }
+    
+    // 店舗テキスト処理（デザイン1用）
     if (window.currentImageTargetId === 'tenpo') {
         const textInput = document.getElementById('modal-image-text');
         const currentTextEl = document.getElementById('tenpo-text');
@@ -489,6 +604,29 @@ async function downloadPptx() {
         formData.append("land_area", exclusiveAreaText);
         formData.append("building_area", balconyAreaText);
         formData.append("plan", zoningText);
+
+        // 🌟【新規追加】物件概要の全項目を画面から直接収集してひとまとめにする魔法
+        let fullSummaryParts = [];
+        const summaryItemNames = [
+            'address', 'land-right', 'exclusive-area', 'balcony-area',
+            'floor', 'total-units', 'structure', 'build-date',
+            'layout', 'water', 'sewage', 'gas', 'status',
+            'delivery', 'parking', 'bike', 'bicycle',
+            'developer', 'builder', 'management', 'zoning',
+            'admin-fee', 'repair-fund', 'other-fee', 'pet', 'elevator',
+            'land-area', 'building-area', 'city-planning', 'road', 'coverage', 'floor-ratio'
+        ];
+        
+        summaryItemNames.forEach(item => {
+            const el = document.getElementById('display-' + item + suffix);
+            // 要素が存在し、中身が空でなく、親要素（行）が表示されている場合のみ取得
+            if (el && el.innerText.trim() !== '' && el.parentNode && el.parentNode.style.display !== 'none') {
+                const text = el.parentNode.innerText.replace(/\r?\n/g, '').trim();
+                fullSummaryParts.push(text);
+            }
+        });
+        // 全項目を「|||」という特殊な文字で区切ってPythonに送信！
+        formData.append("full_summary", fullSummaryParts.join('|||'));
 
 // 🌟 ログイン中の店舗名を裏側に送る
         const branchKey = localStorage.getItem("branch_key") || "国分寺";

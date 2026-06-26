@@ -1025,7 +1025,16 @@ def generate_zumen(
     plan: str = Form(""),
     branch_name: str = Form("国分寺"),
     design_num: str = Form("1"), # 🌟 末尾にカンマを忘れずに！
+    full_summary: str = Form(""),
     
+    # 🌟🌟【ここを追加】メイン画像・サブ画像・間取り図を受け取る
+    main_image: UploadFile = File(None),
+    sub_image1: UploadFile = File(None),
+    sub_image2: UploadFile = File(None),
+    sub_image3: UploadFile = File(None),
+    madori_image: UploadFile = File(None),
+    tenpo_image: UploadFile = File(None),
+    # 🌟🌟 追加ここまで
     # 🌟 追加：フロントから送られてくるアイコン画像を受け取る
     icon_image1: UploadFile = File(None),
     icon_image2: UploadFile = File(None),
@@ -1064,6 +1073,27 @@ def generate_zumen(
             p.font.name = "游明朝"
             p.font.color.rgb = RGBColor(80, 80, 80)
             p.alignment = PP_ALIGN.CENTER
+           # 🌟🌟【新規追加】画像がアップロードされていれば写真を、なければ色枠を配置する賢い関数
+        def add_smart_image(left, top, width, height, upload_file, fallback_text, bg_color, font_size=14):
+            if upload_file and upload_file.filename:
+                import tempfile
+                import os
+                try:
+                    suffix = os.path.splitext(upload_file.filename)[1]
+                    if not suffix: suffix = ".png"
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                        tmp.write(upload_file.file.read())
+                        tmp_path = tmp.name
+                    
+                    # 枠の大きさに合わせて画像を自動リサイズして配置
+                    slide.shapes.add_picture(tmp_path, left, top, width=width, height=height)
+                    os.remove(tmp_path)
+                    return
+                except Exception as e:
+                    print(f"画像配置エラー: {e}")
+            
+            # 画像がない場合やエラー時は今まで通りの色枠を出す
+            add_color_box(left, top, width, height, fallback_text, bg_color, font_size) 
 
         # ==========================================
         # 🎨 レイアウト分岐処理
@@ -1084,7 +1114,7 @@ def generate_zumen(
             bg_frame.line.color.rgb = RGBColor(207, 216, 220)
             
             # 左側：画像1
-            add_color_box(Inches(0.3), Inches(0.3), Inches(4.2), Inches(3.8), "画像1", box_color, 24)
+            add_smart_image(Inches(0.3), Inches(0.3), Inches(4.2), Inches(3.8), main_image, "画像1", box_color, 24)
             
             # タイトル
             tb_title = slide.shapes.add_textbox(Inches(0.3), Inches(4.2), Inches(2.6), Inches(0.8))
@@ -1156,10 +1186,10 @@ def generate_zumen(
                 else:
                     add_color_box(current_left, current_top, Inches(0.5), Inches(0.5), "設備", pink_color, 9)
 
-            # 右側：画像2,3,4
-            add_color_box(Inches(4.8), Inches(0.3), Inches(1.5), Inches(1.4), "画像2", box_color, 14)
-            add_color_box(Inches(6.4), Inches(0.3), Inches(1.5), Inches(1.4), "画像3", box_color, 14)
-            add_color_box(Inches(8.0), Inches(0.3), Inches(1.5), Inches(1.4), "画像4", box_color, 14)
+            # 🌟 変更（右側：画像2,3,4）
+            add_smart_image(Inches(4.8), Inches(0.3), Inches(1.5), Inches(1.4), sub_image1, "画像2", box_color, 14)
+            add_smart_image(Inches(6.4), Inches(0.3), Inches(1.5), Inches(1.4), sub_image2, "画像3", box_color, 14)
+            add_smart_image(Inches(8.0), Inches(0.3), Inches(1.5), Inches(1.4), sub_image3, "画像4", box_color, 14)
 
             # 交通アクセス (上の水色線)
             blue_line1 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(4.8), Inches(1.9), Inches(4.7), Pt(1))
@@ -1178,7 +1208,7 @@ def generate_zumen(
             p_acc_label.font.name = "Arial"
             p_acc_label.font.color.rgb = RGBColor(84, 153, 199)
 
-# 交通テキスト（こちらもサイズに強弱をつける）
+            # 交通テキスト（こちらもサイズに強弱をつける）
             tb_acc = slide.shapes.add_textbox(Inches(4.8), Inches(2.0), Inches(4.7), Inches(0.5))
             p_acc = tb_acc.text_frame.paragraphs[0]
             p_acc.alignment = PP_ALIGN.CENTER
@@ -1208,48 +1238,53 @@ def generate_zumen(
             blue_line2.line.fill.background()
 
             # 間取り図
-            add_color_box(Inches(4.8), Inches(2.8), Inches(4.7), Inches(2.8), "間取り図", box_color, 20)
+# 間取り図
+            add_smart_image(Inches(4.8), Inches(2.8), Inches(4.7), Inches(2.8), madori_image, "間取り図", box_color, 20)
 
-            # 水色帯（物件詳細）
-            blue_band = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.11), Inches(5.7), Inches(9.78), Inches(0.9))
+            # 水色帯（物件詳細）※高さを0.95インチに固定し、枠が下に伸びないようにする
+            blue_band = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.11), Inches(5.7), Inches(9.78), Inches(0.95))
             blue_band.fill.solid()
             blue_band.fill.fore_color.rgb = RGBColor(221, 240, 248) # #DDF0F8
             blue_band.line.fill.background()
 
-            # 🌟 入力がある項目だけをリストにまとめる処理（空欄・空白の誤判定を防止！）
-            info_parts = []
-            
-            # .strip() をつけることで、スペースだけの空欄を確実に無視します
-            if address.strip() and address.strip() != "東京都国分寺市...":
-                info_parts.append(f"■ 住所: {address.strip()}")
-            if madori.strip():
-                info_parts.append(f"■ 間取り: {madori.strip()}")
-            if age.strip():
-                info_parts.append(f"■ 建築年: {age.strip()}")
-            if right.strip():
-                info_parts.append(f"■ 権利: {right.strip()}")
-            if land_area.strip():
-                info_parts.append(f"■ 面積: {land_area.strip()}")
-                
-            # ※デザイン3用にバルコニー面積を取得している場合はここも追加
-            if building_area.strip():
-                info_parts.append(f"■ バルコニー: {building_area.strip()}")
-                
-            if plan.strip():
-                info_parts.append(f"■ 都市計画: {plan.strip()}")
+            # 「■ 物件詳細情報」の見出しをパワポにも描画する
+            tb_summary_title = slide.shapes.add_textbox(Inches(0.2), Inches(5.75), Inches(9.6), Inches(0.2))
+            tf_summary_title = tb_summary_title.text_frame
+            tf_summary_title.margin_top = tf_summary_title.margin_bottom = tf_summary_title.margin_left = tf_summary_title.margin_right = 0
+            p_summary_title = tf_summary_title.paragraphs[0]
+            p_summary_title.text = "■ 物件詳細情報"
+            p_summary_title.font.size = Pt(10)
+            p_summary_title.font.bold = True
+            p_summary_title.font.color.rgb = RGBColor(84, 153, 199) # 画面と同じ青色(#5499C7)
+            p_summary_title.font.name = "游ゴシック"
 
-            # 集めた項目をスペース3つ（   ）で繋いで1つの文章にする
-            final_info_text = "   ".join(info_parts)
-
-            tb_info = slide.shapes.add_textbox(Inches(0.2), Inches(5.7), Inches(9.6), Inches(0.9))
-            tf_info = tb_info.text_frame
-            tf_info.word_wrap = True
-            p_info = tf_info.paragraphs[0]
-            p_info.text = final_info_text
-            p_info.font.size = Pt(10)
+            # 🌟 受け取った全項目を枠内に収めるため、6列にしてフォントサイズと行間を調整する
+            items = [item.strip() for item in full_summary.split('|||') if item.strip()]
+            cols = 6  # 🌟 5列から6列に変更（1列あたりの行数を減らしてあふれを防ぐ）
+            box_width = Inches(9.6) / cols
+            items_per_col = (len(items) + cols - 1) // cols
             
-            # フッター位置は少し下げる
-            footer_y = Inches(6.7)
+            for i in range(cols):
+                col_items = items[i * items_per_col : (i + 1) * items_per_col]
+                if not col_items: continue
+                
+                # 見出しの分だけ、項目のスタート位置（Y座標）を少し下げる
+                tb_info = slide.shapes.add_textbox(Inches(0.2) + i * box_width, Inches(5.95), box_width, Inches(0.7))
+                tf_info = tb_info.text_frame
+                tf_info.word_wrap = True
+                tf_info.margin_top = tf_info.margin_bottom = tf_info.margin_left = tf_info.margin_right = 0
+                
+                for idx, item_text in enumerate(col_items):
+                    p = tf_info.paragraphs[0] if idx == 0 else tf_info.add_paragraph()
+                    p.text = item_text
+                    p.font.size = Pt(7.5) # 🌟 枠にはみ出さないように少し小さく
+                    p.font.name = "游明朝"
+                    p.font.color.rgb = RGBColor(80, 80, 80)
+                    p.line_spacing = Pt(9) # 🌟 行間をキュッと詰めて無駄なスペースをなくす
+            
+            # 🌟 フッター位置はスライド内に収まる基本位置（6.65インチ）に戻す
+            footer_y = Inches(6.65)
+
             # フッターの上の濃い線を引く
             f_line = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0.1), footer_y, Inches(9.8), Pt(2))
             f_line.fill.solid()
@@ -1435,8 +1470,10 @@ def generate_zumen(
             tf_info = tb_info.text_frame
             tf_info.word_wrap = True
             
-            for item in info_parts:
-                p = tf_info.add_paragraph()
+            # 🌟 受け取った全項目を縦に配置する
+            items = [item.strip() for item in full_summary.split('|||') if item.strip()]
+            for idx, item in enumerate(items):
+                p = tf_info.paragraphs[0] if idx == 0 else tf_info.add_paragraph()
                 p.text = item
                 p.font.size = Pt(10)
                 p.font.color.rgb = RGBColor(255, 255, 255)
@@ -1514,24 +1551,10 @@ def generate_zumen(
             tf_info = tb_info.text_frame
             tf_info.word_wrap = True
             
-            # 🌟 入力がある項目だけをリストにまとめる処理（空欄の誤判定防止）
-            info_items = []
-            if address.strip() and address.strip() != "東京都国分寺市...":
-                info_items.append(f"■ 住所 / {address.strip()}")
-            if madori.strip():
-                info_items.append(f"■ 間取り / {madori.strip()}")
-            if age.strip():
-                info_items.append(f"■ 建築年 / {age.strip()}")
-            if right.strip():
-                info_items.append(f"■ 権利 / {right.strip()}")
-            if land_area.strip():
-                info_items.append(f"■ 面積 / {land_area.strip()}")
-            if plan.strip():
-                info_items.append(f"■ 計画 / {plan.strip()}")
-
-            # リストに追加された項目だけを出力する
-            for item in info_items:
-                p = tf_info.add_paragraph()
+            # 🌟 受け取った全項目を配置する
+            items = [item.strip() for item in full_summary.split('|||') if item.strip()]
+            for idx, item in enumerate(items):
+                p = tf_info.paragraphs[0] if idx == 0 else tf_info.add_paragraph()
                 p.text = item
                 p.font.size = Pt(9)
                 p.space_before = Pt(3)
