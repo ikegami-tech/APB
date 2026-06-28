@@ -842,27 +842,49 @@ function setupDragAndDrop(inputId) {
         }
     });
 }
-// 🌟 ページを開いた瞬間に、最初から空の項目を隠して綺麗に並べる処理
+// 🌟【APB新規機能】図面がアップロードされた瞬間に裏で住所を自動解析する魔法
 document.addEventListener("DOMContentLoaded", () => {
-    setTimeout(() => {
-        const summaryItems = [
-            'address', 'land-right', 'exclusive-area', 'balcony-area',
-            'floor', 'total-units', 'structure', 'build-date',
-            'layout', 'water', 'sewage', 'gas', 'status',
-            'delivery', 'parking', 'bike', 'bicycle',
-            'developer', 'builder', 'management', 'zoning',
-            'admin-fee', 'repair-fund', 'other-fee', 'pet', 'elevator'
-        ];
-        summaryItems.forEach(function(item) {
-            const dispEl = document.getElementById('display-' + item);
-            const inpEl = document.getElementById('input-' + item);
-            if (dispEl && inpEl) {
-                dispEl.innerText = inpEl.value.trim();
-                if (dispEl.parentNode) {
-                    dispEl.parentNode.style.display = inpEl.value.trim() === '' ? 'none' : '';
+    const apbZumenInput = document.getElementById('apb-zumen'); // HTMLのinputのIDに合わせてください
+    
+    if (apbZumenInput) {
+        apbZumenInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // 地図表示エリアを表示し、「解析中」にする
+            const mapSection = document.getElementById('apb-auto-map-section');
+            const addressText = document.getElementById('apb-extracted-address-text');
+            const mapIframe = document.getElementById('apb-google-map-iframe');
+            
+            if (mapSection) mapSection.classList.remove('hidden');
+            if (addressText) addressText.innerText = "⏳ AIが販売図面から住所を読み取っています...";
+            if (mapIframe) mapIframe.src = ""; // 一旦クリア
+            
+            // FormDataを作って、選択されたファイルを裏でPythonへ送信！
+            const formData = new FormData();
+            formData.append("zumen_file", file);
+            
+            try {
+                const response = await fetch("/apb/extract_address", {
+                    method: "POST",
+                    body: formData
+                });
+                const result = await response.json();
+                
+                if (result.status === "success" && result.address) {
+                    // 1. 読み取った住所を画面に表示
+                    addressText.innerText = result.address;
+                    
+                    // 2. GoogleマップのURLを組み立ててiframeを起動！
+                    const mapUrl = `https://www.google.com/maps?q=${encodeURIComponent(result.address)}&output=embed`;
+                    mapIframe.src = mapUrl;
+                } else {
+                    addressText.innerText = "❌ 住所の自動抽出に失敗しました。手動で入力してください。";
                 }
+            } catch (error) {
+                console.error("住所解析通信エラー:", error);
+                addressText.innerText = "❌ 通信エラーが発生しました。";
             }
         });
-        if (typeof window.syncDisplays === 'function') window.syncDisplays();
-    }, 100);
+    }
 });

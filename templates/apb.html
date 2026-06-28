@@ -38,6 +38,18 @@
                 </label>
             </div>
 
+            <div id="apb-auto-map-section" class="hidden" style="margin-top: 30px; padding: 25px; border: 2px dashed #00C2A0; background-color: #F0FAF8; border-radius: 8px; text-align: left;">
+                <h3 style="margin-top: 0; color: #1E2D3D; font-size: 16px; font-weight: bold; display: flex; align-items: center; gap: 8px; border: none; padding: 0; margin-bottom: 10px;">
+                    📍 AI物件住所・場所の自動確認
+                </h3>
+                <p style="font-size: 14px; color: #333; margin-bottom: 15px; text-align: left;">
+                    図面から自動抽出された住所： <strong id="apb-extracted-address-text" style="font-size: 16px; color: #00A88B;">販売図面をアップロードするとここに住所が表示されます</strong>
+                </p>
+                <div style="width: 100%; height: 350px; border-radius: 8px; overflow: hidden; border: 1px solid #CFD8DC; background: #ffffff;">
+                    <iframe id="apb-google-map-iframe" src="" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                </div>
+            </div>
+
             <h3 class="apb-section-title">📏 スライドの向きを選択</h3>
             <div class="radio-group" style="margin-bottom: 30px;">
                 <label><input type="radio" name="apb_orientation" value="landscape"> 横向き (Landscape)</label>
