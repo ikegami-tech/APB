@@ -4,6 +4,25 @@
     <meta charset="UTF-8">
     <title>販売図面作成システム</title>
     <link rel="stylesheet" href="/static/style.css?v=3">
+    <style>
+        [onclick="openModal('titleModal')"],
+        [onclick="openModal('infoModal')"],
+        [onclick="openModal('accessModal')"],
+        [onclick="openModal('summaryModal')"] {
+            transition: all 0.2s ease-in-out;
+            border-radius: 4px;
+        }
+
+        [onclick="openModal('titleModal')"]:hover,
+        [onclick="openModal('infoModal')"]:hover,
+        [onclick="openModal('accessModal')"]:hover,
+        [onclick="openModal('summaryModal')"]:hover {
+            outline: 2px dashed #E74C3C !important; /* 目立つ赤色の破線 */
+            outline-offset: 2px; /* 枠の少し外側に線を引くことでレイアウト崩れを完全防止 */
+            background-color: rgba(231, 76, 60, 0.05) !important; /* 薄い赤色の背景色をつけて直感的に */
+            z-index: 10;
+        }
+    </style>
 </head>
 <body>
 
@@ -531,11 +550,15 @@
     <div class="modal-content">
         <h3>🚆 交通アクセスの編集</h3>
         
-        <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #1E2D3D;">路線（例：JR中央線）</label>
-        <input type="text" id="input-line" value="" placeholder="例）JR中央線" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 15px;">
+        <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #1E2D3D;">路線</label>
+        <select id="input-line" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 15px;" onchange="window.updateStations()">
+            <option value="">路線を選択してください</option>
+        </select>
         
-        <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #1E2D3D;">最寄駅（例：国分寺駅）</label>
-        <input type="text" id="input-station" value="" placeholder="例）国分寺駅" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 15px;">
+        <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #1E2D3D;">最寄駅</label>
+        <select id="input-station" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 15px;">
+            <option value="">先に路線を選択してください</option>
+        </select>
         
         <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #1E2D3D;">駅距離 / 徒歩（分）</label>
         <input type="text" id="input-walk" value="" placeholder="例）5" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 20px;">

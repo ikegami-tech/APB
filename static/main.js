@@ -268,11 +268,15 @@ function openModal(id) {
         const inpEl = document.getElementById('input-price');
         if (dispEl && inpEl) inpEl.value = dispEl.innerText;
     } 
-    // 交通アクセスモーダルの場合
+// 交通アクセスモーダルの場合
     else if (id === 'accessModal') {
         const lineDisp = document.getElementById('display-line' + suffix);
         const lineInp = document.getElementById('input-line');
-        if (lineDisp && lineInp) lineInp.value = lineDisp.innerText !== '交通' ? lineDisp.innerText : '';
+        if (lineDisp && lineInp) {
+            lineInp.value = lineDisp.innerText !== '交通' ? lineDisp.innerText : '';
+            // 🌟 路線がセットされたら、裏で駅リストのプルダウンを自動生成する
+            if (typeof window.updateStations === 'function') window.updateStations();
+        }
         
         const stationDisp = document.getElementById('display-station' + suffix);
         const stationInp = document.getElementById('input-station');
@@ -911,6 +915,60 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.error("住所解析通信エラー:", error);
                 addressText.innerText = "❌ 通信エラーが発生しました。";
             }
+        });
+    }
+});
+// ==========================================
+// 🚆 5. 関東主要路線のデータとプルダウン連動処理
+// ==========================================
+// 名前（あいうえお）順、下りの始発駅からの順番で登録しています
+const kantoTrainData = [
+    { line: "JR京浜東北線", stations: ["大宮", "さいたま新都心", "与野", "北浦和", "浦和", "南浦和", "蕨", "西川口", "川口", "赤羽", "東十条", "王子", "上野", "御徒町", "秋葉原", "神田", "東京", "有楽町", "新橋", "浜松町", "田町", "高輪ゲートウェイ", "品川", "大井町", "大森", "蒲田", "川崎", "鶴見", "新子安", "東神奈川", "横浜"] },
+    { line: "JR埼京線", stations: ["大崎", "恵比寿", "渋谷", "新宿", "池袋", "板橋", "十条", "赤羽", "北赤羽", "浮間舟渡", "戸田公園", "戸田", "北戸田", "武蔵浦和", "中浦和", "南与野", "与野本町", "北与野", "大宮"] },
+    { line: "JR中央線", stations: ["東京", "神田", "御茶ノ水", "水道橋", "飯田橋", "市ケ谷", "四ツ谷", "信濃町", "千駄ケ谷", "代々木", "新宿", "大久保", "東中野", "中野", "高円寺", "阿佐ケ谷", "荻窪", "西荻窪", "吉祥寺", "三鷹", "武蔵境", "東小金井", "武蔵小金井", "国分寺", "西国分寺", "国立", "立川", "日野", "豊田", "八王子", "西八王子", "高尾"] },
+    { line: "JR山手線", stations: ["品川", "大崎", "五反田", "目黒", "恵比寿", "渋谷", "原宿", "代々木", "新宿", "新大久保", "高田馬場", "目白", "池袋", "大塚", "巣鴨", "駒込", "田端", "西日暮里", "日暮里", "鶯谷", "上野", "御徒町", "秋葉原", "神田", "東京", "有楽町", "新橋", "浜松町", "田町", "高輪ゲートウェイ"] },
+    { line: "京王線", stations: ["新宿", "笹塚", "代田橋", "明大前", "下高井戸", "桜上水", "上北沢", "八幡山", "芦花公園", "千歳烏山", "仙川", "つつじヶ丘", "柴崎", "国領", "布田", "調布", "西調布", "飛田給", "武蔵野台", "多磨霊園", "白糸台", "東府中", "府中", "分倍河原", "中河原", "聖蹟桜ヶ丘", "百草園", "高幡不動", "南平", "平山城址公園", "長沼", "北野", "京王八王子"] },
+    { line: "京王井の頭線", stations: ["渋谷", "神泉", "駒場東大前", "池ノ上", "下北沢", "新代田", "明大前", "永福町", "西永福", "浜田山", "高井戸", "富士見ヶ丘", "久我山", "三鷹台", "井の頭公園", "吉祥寺"] },
+    { line: "小田急小田原線", stations: ["新宿", "南新宿", "参宮橋", "代々木八幡", "代々木上原", "東北沢", "下北沢", "世田谷代田", "梅ヶ丘", "豪徳寺", "経堂", "千歳船橋", "祖師ヶ谷大蔵", "成城学園前", "喜多見", "狛江", "和泉多摩川", "登戸", "向ヶ丘遊園", "生田", "読売ランド前", "百合ヶ丘", "新百合ヶ丘", "柿生", "鶴川", "玉川学園前", "町田", "相模大野"] },
+    { line: "西武新宿線", stations: ["西武新宿", "高田馬場", "下落合", "中井", "新井薬師前", "沼袋", "野方", "都立家政", "鷺ノ宮", "下井草", "井荻", "上井草", "上石神井", "武蔵関", "東伏見", "西武柳沢", "田無", "花小金井", "小平", "久米川", "東村山", "所沢", "航空公園", "新所沢", "入曽", "狭山市", "新狭山", "南大塚", "本川越"] },
+    { line: "西武池袋線", stations: ["池袋", "椎名町", "東長崎", "江古田", "桜台", "練馬", "中村橋", "富士見台", "練馬高野台", "石神井公園", "大泉学園", "保谷", "ひばりヶ丘", "東久留米", "清瀬", "秋津", "所沢", "西所沢", "小手指", "狭山ヶ丘", "武蔵藤沢", "稲荷山公園", "入間市", "仏子", "元加治", "飯能"] },
+    { line: "東武東上線", stations: ["池袋", "北池袋", "下板橋", "大山", "中板橋", "ときわ台", "上板橋", "東武練馬", "下赤塚", "成増", "和光市", "朝霞", "朝霞台", "志木", "柳瀬川", "みずほ台", "鶴瀬", "ふじみ野", "上福岡", "新河岸", "川越", "川越市", "霞ヶ関"] }
+    // 💡 さらに路線を増やしたい場合は、ここに同じ形式で追加してください！
+];
+
+window.updateStations = function() {
+    const lineInp = document.getElementById('input-line');
+    const stationInp = document.getElementById('input-station');
+    if (!lineInp || !stationInp) return;
+    
+    // 現在の駅の選択をクリア
+    stationInp.innerHTML = '<option value="">駅を選択してください</option>';
+    
+    const selectedLine = lineInp.value;
+    const lineData = kantoTrainData.find(d => d.line === selectedLine);
+    
+    if (lineData) {
+        lineData.stations.forEach(station => {
+            const opt = document.createElement('option');
+            opt.value = station;
+            opt.innerText = station;
+            stationInp.appendChild(opt);
+        });
+    } else {
+        stationInp.innerHTML = '<option value="">先に路線を選択してください</option>';
+    }
+};
+
+// ページ読み込み時に「路線」のプルダウンを自動構築する
+document.addEventListener("DOMContentLoaded", () => {
+    const lineInp = document.getElementById('input-line');
+    if (lineInp) {
+        lineInp.innerHTML = '<option value="">路線を選択してください</option>';
+        kantoTrainData.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.line;
+            opt.innerText = d.line;
+            lineInp.appendChild(opt);
         });
     }
 });
