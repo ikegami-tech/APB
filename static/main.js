@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let logoSrc = "/static/logo.png"; // デフォルト（国分寺の既存ロゴ）
         
         if (savedBranchKey === "練馬") {
-            logoSrc = "/static/logo_nerima.jpg"; // ステップ1で配置した練馬ロゴ
+            logoSrc = "/static/logo_nerima.png"; // ステップ1で配置した練馬ロゴ
             // 🌟このロゴにCSSを適用するため、クラスを追加する魔法
             logoImages.forEach(img => img.classList.add('footer-logo-img'));
         } else if (savedBranchKey === "武蔵野") {
@@ -79,14 +79,40 @@ document.addEventListener("DOMContentLoaded", () => {
         else if (html.includes('画像3')) { targetId = 'image3'; modalTitle = '画像3'; }
         else if (html.includes('画像4')) { targetId = 'image4'; modalTitle = '画像4'; }
         
-        if (targetId) {
+if (targetId) {
             box.setAttribute('data-image-target', targetId);
             // 元々HTMLに書かれているアラート(onclick)を強制的に上書きして無効化します
             box.onclick = function() { window.openImageModal(targetId, modalTitle); };
             box.style.cursor = 'pointer';
         }
     });
-}); // 👈 🌟これ（DOMContentLoadedを閉じるカッコ）を1行書き足してください！
+
+    // 🌟【追加】初期表示時に、中身が空の物件詳細情報（■〇〇 / ）をすべて非表示にする
+    const summaryItemNames = [
+        'address', 'land-right', 'exclusive-area', 'balcony-area',
+        'floor', 'total-units', 'structure', 'build-date',
+        'layout', 'water', 'sewage', 'gas', 'status',
+        'delivery', 'parking', 'bike', 'bicycle',
+        'developer', 'builder', 'management', 'zoning',
+        'admin-fee', 'repair-fund', 'other-fee', 'pet', 'elevator',
+        'land-area', 'building-area', 'city-planning', 'road', 'coverage', 'floor-ratio'
+    ];
+    
+    // 全デザイン（1, 2, 3）に対して一気に処理を行う
+    ['', '-d2', '-d3'].forEach(suffix => {
+        summaryItemNames.forEach(item => {
+            const el = document.getElementById('display-' + item + suffix);
+            // 項目が存在し、かつ親要素（行）に「■」が含まれているか確認
+            if (el && el.parentNode && el.parentNode.innerText.includes('■')) {
+                // 中身（値）が空っぽなら、親要素（項目名が書かれている行）ごと隠す！
+                if (el.innerText.trim() === '') {
+                    el.parentNode.style.display = 'none';
+                }
+            }
+        });
+    });
+
+});
 
 // ==========================================
 // 🔑 2. ログイン画面用（login.html）の処理
@@ -505,15 +531,13 @@ window.openImageModal = function(targetId, title) {
     openModal('imageModal');
 };
 
-// 🌟 画像の保存処理（独立版に修正）
+// 🌟 画像の保存処理（即時反映・自動クローズ版に修正）
 window.saveImage = function() {
     const fileInput = document.getElementById('input-image');
     if (!fileInput) return;
     const file = fileInput.files[0];
-    
     if (file && window.currentImageTargetId) {
         const imageUrl = URL.createObjectURL(file);
-        
         // 今表示しているデザインレイアウトのIDを特定する
         let currentLayoutId = 'zumen-layout-1';
         if (document.getElementById('zumen-layout-2') && !document.getElementById('zumen-layout-2').classList.contains('hidden')) {
@@ -557,9 +581,11 @@ window.saveImage = function() {
             currentTextEl.innerText = textInput.value.trim();
         }
     }
+    
+    // 🌟 処理が終わったら、ファイル選択欄をリセットしてモーダルを自動で閉じる
+    fileInput.value = '';
     closeModal('imageModal');
 };
-
 async function downloadPptx() {
     const btn = document.querySelector('button[onclick="downloadPptx()"]');
     if (!btn) return;

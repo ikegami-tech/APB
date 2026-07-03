@@ -337,101 +337,97 @@ def generate_apb(
         if address_for_map and gemini_client and (not map_bytes) and ("万円" not in address_for_map) and (len(address_for_map) > 3):
             print(f"🌍 住所「{address_for_map}」から周辺のリアル地図画像を自動生成中...")
             try:
-                # 1. Geminiを使って住所から緯度経度を高精度に特定
-                # 🌟修正：ハルシネーションを防ぐために、駅名や物件名をヒントとして強烈に注入します！
-                station_hint = extracted_info.get("station_info", "").replace('\n', ' ')
-                prop_hint = extracted_info.get("property_name_jp", "")
+                import urllib.parse
+                import requests
                 
-                map_instruction = (
-                    f"日本国内の正確な住所「{address_for_map}」の緯度（latitude）と経度（longitude）を特定してください。\n"
-                    f"【重要な地理的ヒント】\n"
-                    f"・最寄り駅: {station_hint}\n"
-                    f"・物件名: {prop_hint}\n"
-                    f"この物件の位置（富士町など他の地域と絶対に間違えず、必ずひばりヶ丘駅周辺の正しい位置にしてください）の座標を、必ず以下のJSON形式（オブジェクトのみ、他の説明文は一切なし）で出力してください。\n"
-                    f"{{\"lat\": 緯度の数値, \"lng\": 経度の数値}}"
-                )
+                # 🌟【大改革】AI(Gemini)の推測による位置ズレ（ハルシネーション）を完全に排除！
+                # 国土地理院が提供する「公式の住所検索API」を使用して、番地レベルの正確な緯度経度を一撃で取得します。
+                search_url = f"https://msearch.gsi.go.jp/address-search/AddressSearch?q={urllib.parse.quote(address_for_map)}"
+                geo_res = requests.get(search_url, timeout=5)
+                
+                lat, lng = None, None
+                if geo_res.status_code == 200:
+                    geo_data = geo_res.json()
+                    if len(geo_data) > 0:
+                        # 検索結果の1件目から正確な座標を取得 (GeoJSON形式: coordinates: [lng, lat])
+                        lng = geo_data[0]["geometry"]["coordinates"][0]
+                        lat = geo_data[0]["geometry"]["coordinates"][1]
+                        print(f"📍 国土地理院APIから正確な座標を取得成功: {geo_data[0]['properties']['title']}")
 
-                lat_lng_res = generate_with_retry(
-                    model_name='gemini-2.5-flash',
-                    prompt_contents=map_instruction,
-                    generation_config=types.GenerateContentConfig(response_mime_type="application/json")
-                )
-                if lat_lng_res:
-                    res_text = lat_lng_res.text.strip()
+                if lat and lng and lat != 0.0 and lng != 0.0 and (20.0 < lat < 50.0) and (120.0 < lng < 150.0):
+                    print(f"📌 緯度経度を特定（lat={lat}, lng={lng}）。Googleマップのタイルを取得します...")
+                    import math
                     
-                    # 🧼【インデント修復】AIが余計なマークダウン枠(```json)をつけてきたら綺麗に剥ぎ取る
-                    if res_text.startswith("```"):
-                        if res_text.startswith("```json"):
-                            res_text = res_text[7:]
-                        else:
-                            res_text = res_text[3:]
-                        if res_text.endswith("```"):
-                            res_text = res_text[:-3]
-                        res_text = res_text.strip()
+                    zoom = 16
+                    lat_rad = math.radians(lat)
+                    n = 2.0 ** zoom
                     
-                    try:
-                        coords = json.loads(res_text)
-                    except Exception as json_err:
-                        import re
-                        lat_match = re.search(r'"lat"\s*:\s*([0-9.]+)', res_text)
-                        lng_match = re.search(r'"lng"\s*:\s*([0-9.]+)', res_text)
-                        if lat_match and lng_match:
-                            coords = {"lat": float(lat_match.group(1)), "lng": float(lng_match.group(1))}
-                        else:
-                            raise json_err
-                            
-                    lat = coords.get("lat")
-                    lng = coords.get("lng")
+                    # 🌟 目的地の全世界での正確なピクセル座標を算出
+                    x_pixel_global = (lng + 180.0) / 360.0 * n * 256
+                    y_pixel_global = (1.0 - math.log(math.tan(lat_rad) + (1.0 / math.cos(lat_rad))) / math.pi) / 2.0 * n * 256
                     
-                    if lat and lng and lat != 0.0 and lng != 0.0 and (20.0 < lat < 50.0) and (120.0 < lng < 150.0):
-                        print(f"📌 緯度経度を特定（lat={lat}, lng={lng}）。国土地理院の標準地図タイルを取得します...")
-                        import math
-                        import requests
-                        
-                        zoom = 16
-                        lat_rad = math.radians(lat)
-                        n = 2.0 ** zoom
-                        xtile = int((lng + 180.0) / 360.0 * n)
-                        ytile = int((1.0 - math.log(math.tan(lat_rad) + (1.0 / math.cos(lat_rad))) / math.pi) / 2.0 * n)
-                        
-                        # 3x3のタイル画像を結合して大きな周辺地図を作成
-                        merged_img = Image.new('RGB', (256 * 3, 256 * 3))
-                        tile_success_count = 0
-                        
-                        # 通常のブラウザからのアクセスに完璧に偽装するヘッダー（社内ネット対策）
-                        browser_headers = {
-                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                            "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-                            "Accept-Language": "ja,en-US;q=0.9,en;q=0.8"
-                        }
-                        
-                        for i in range(-1, 2):
-                            for j in range(-1, 2):
-                                x = xtile + i
-                                y = ytile + j
-                                # 🧼【最重要修正】余計なマークダウンリンク表記をすべて削除し、純粋なURL文字列に直しました
-                                tile_url = f"https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={zoom}"
-                                try:
-                                    tile_res = requests.get(tile_url, headers=browser_headers, timeout=5)
-                                    if tile_res.status_code == 200:
-                                        t_img = Image.open(BytesIO(tile_res.content)).convert("RGB")
-                                        tile_success_count += 1
-                                    else:
-                                        t_img = Image.new('RGB', (256, 256), color=(250, 250, 250))
-                                except:
+                    xtile = int(x_pixel_global // 256)
+                    ytile = int(y_pixel_global // 256)
+                    
+                    merged_img = Image.new('RGB', (256 * 3, 256 * 3))
+                    tile_success_count = 0
+                    
+                    # 通常のブラウザからのアクセスに完璧に偽装するヘッダー（社内ネット対策）
+                    browser_headers = {
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                        "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+                        "Accept-Language": "ja,en-US;q=0.9,en;q=0.8"
+                    }
+                    
+                    for i in range(-1, 2):
+                        for j in range(-1, 2):
+                            x = xtile + i
+                            y = ytile + j
+                            tile_url = f"https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={zoom}"
+                            try:
+                                tile_res = requests.get(tile_url, headers=browser_headers, timeout=5)
+                                if tile_res.status_code == 200:
+                                    t_img = Image.open(BytesIO(tile_res.content)).convert("RGB")
+                                    tile_success_count += 1
+                                else:
                                     t_img = Image.new('RGB', (256, 256), color=(250, 250, 250))
-                                merged_img.paste(t_img, ((i + 1) * 256, (j + 1) * 256))
+                            except:
+                                t_img = Image.new('RGB', (256, 256), color=(250, 250, 250))
+                            merged_img.paste(t_img, ((i + 1) * 256, (j + 1) * 256))
+                    
+                    if tile_success_count > 0:
+                        # 結合した画像の中で目的地がどこにあるかピクセル単位で計算
+                        target_x_in_merged = x_pixel_global - (xtile - 1) * 256
+                        target_y_in_merged = y_pixel_global - (ytile - 1) * 256
                         
-                        if tile_success_count > 0:
-                            auto_map_img = merged_img.crop((84, 134, 684, 634))
-                            map_buf = BytesIO()
-                            auto_map_img.save(map_buf, format="PNG")
-                            map_bytes = map_buf.getvalue()
-                            print("✅ 本物の周辺実地図の自動取得・結合に成功しました！")
-                        else:
-                            print("⚠️ 会社のネットワーク制限により地図タイルのダウンロードが遮断されました。")
+                        # 目的地が中心(300, 250)になるように切り抜き枠を計算
+                        crop_left = int(target_x_in_merged - 300)
+                        crop_top = int(target_y_in_merged - 250)
+                        
+                        # 画像の枠外に出ないように安全ガード
+                        crop_left = max(0, min(crop_left, 768 - 600))
+                        crop_top = max(0, min(crop_top, 768 - 500))
+                        
+                        auto_map_img = merged_img.crop((crop_left, crop_top, crop_left + 600, crop_top + 500))
+                        
+                        # 🌟 正確なピン描画
+                        px = target_x_in_merged - crop_left
+                        py = target_y_in_merged - crop_top
+                        
+                        draw_pin = ImageDraw.Draw(auto_map_img)
+                        draw_pin.ellipse([(px - 5, py - 2), (px + 5, py + 2)], fill=(180, 180, 180))
+                        draw_pin.polygon([(px - 7, py - 13), (px + 7, py - 13), (px, py)], fill=(234, 67, 53))
+                        draw_pin.ellipse([(px - 10, py - 31), (px + 10, py - 11)], fill=(234, 67, 53))
+                        draw_pin.ellipse([(px - 4, py - 25), (px + 4, py - 17)], fill=(255, 255, 255))
+                        
+                        map_buf = BytesIO()
+                        auto_map_img.save(map_buf, format="PNG")
+                        map_bytes = map_buf.getvalue()
+                        print("✅ 本物の周辺実地図（ピン中央配置）の自動取得・結合に成功しました！")
                     else:
-                        print("⚠️ 異常な緯度経度が検出されたため、地図の自動生成を安全にスキップしました。")
+                        print("⚠️ 会社のネットワーク制限により地図タイルのダウンロードが遮断されました。")
+                else:
+                    print("⚠️ 住所から緯度経度を特定できませんでした。")
             except Exception as map_err:
                 import traceback
                 print(f"⚠️ 地図画像の自動取得中にエラーが発生しました:\n{traceback.format_exc()}")
@@ -1759,13 +1755,13 @@ def generate_zumen(
         base_dir = os.path.dirname(__file__)
         logo_path = os.path.join(base_dir, "static", "logo.png")
         if branch_name == "練馬":
-            logo_path = os.path.join(base_dir, "static", "logo_nerima.jpg")
+            logo_path = os.path.join(base_dir, "static", "logo_nerima.png")
         elif branch_name == "武蔵野":
             logo_path = os.path.join(base_dir, "static", "logo_musashino.jpg")
 
         if os.path.exists(logo_path):
             # 🌟 変更：ロゴのサイズを大きく（0.7インチ）し、上下のバランスを微調整する
-            slide.shapes.add_picture(logo_path, Inches(0.3), footer_y + Inches(0.05), height=Inches(0.7))
+            slide.shapes.add_picture(logo_path, Inches(0.1), footer_y - Inches(0.2), height=Inches(1.2))
         else:
             add_color_box(Inches(0.2), footer_y + Inches(0.05), Inches(2.0), Inches(0.7), f"{branch_name}ロゴ", RGBColor(235, 235, 235), 12)
 
