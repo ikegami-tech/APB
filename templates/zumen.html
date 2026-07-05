@@ -4,25 +4,6 @@
     <meta charset="UTF-8">
     <title>販売図面作成システム</title>
     <link rel="stylesheet" href="/static/style.css?v=3">
-    <style>
-        [onclick="openModal('titleModal')"],
-        [onclick="openModal('infoModal')"],
-        [onclick="openModal('accessModal')"],
-        [onclick="openModal('summaryModal')"] {
-            transition: all 0.2s ease-in-out;
-            border-radius: 4px;
-        }
-
-        [onclick="openModal('titleModal')"]:hover,
-        [onclick="openModal('infoModal')"]:hover,
-        [onclick="openModal('accessModal')"]:hover,
-        [onclick="openModal('summaryModal')"]:hover {
-            outline: 2px dashed #E74C3C !important; /* 目立つ赤色の破線 */
-            outline-offset: 2px; /* 枠の少し外側に線を引くことでレイアウト崩れを完全防止 */
-            background-color: rgba(231, 76, 60, 0.05) !important; /* 薄い赤色の背景色をつけて直感的に */
-            z-index: 10;
-        }
-    </style>
 </head>
 <body>
 
@@ -125,7 +106,7 @@
                             <span style="font-size: 20px; font-weight: bold;">万円</span>
                         </div>
                     </div>
-                    <div class="zumen-d1-body">
+                    <div class="zumen-d1-body" style="min-height: 0;">
                         <div class="zumen-d1-left" style="width: 72%;">
                             <div style="display: flex; gap: 15px; height: 55%; margin-bottom: 10px;">
                                 <div class="z-box" style="flex: 1;" onclick="openModal('imageModal')">画像1</div>
@@ -137,61 +118,48 @@
                                 <div class="z-box" style="flex: 1;" onclick="alert('サブ画像4')">画像4</div>
                             </div>
                         </div>
-                        <div class="zumen-d1-right" style="width: 26%; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; justify-content: space-between;">
+                        <div class="zumen-d1-right" style="width: 26%; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; justify-content: space-between; min-height: 0; height: 100%;">
                             <div style="text-align: center; border-bottom: 1px solid #777; padding: 5px 0; height: 75px; box-sizing: border-box; flex-shrink: 0; cursor: pointer;" onclick="openModal('accessModal')">
                                 <span style="font-size: 16px;" id="display-line">交通</span><br>
                                 <span style="font-size: 24px; font-weight: bold;" id="display-station">「最寄駅」</span> 
                                 <span style="font-size: 14px;">徒歩 <span id="display-walk">〇</span> 分</span>
                             </div>
-                            <div class="z-box zumen-summary-box" style="flex-grow: 1; padding: 8px; cursor: pointer; display: flex; flex-direction: column; gap: 5px; overflow: hidden; background-color: transparent;" onclick="openModal('summaryModal')">
-                                <div style="font-size: 11px; font-weight: bold; border-bottom: 1px solid #777; padding-bottom: 2px; margin-bottom: 3px;">■ 物件詳細情報</div>
-                                <div style="display: flex; width: 100%; gap: 6px; flex-grow: 1;">
-                                    <div style="flex: 1; display: flex; flex-direction: column; gap: 3px; font-size: 11px; line-height: 1.2; min-width: 0;">
-                                        <div>■ 物件住所 / <span id="display-address"></span></div>
-                                        <div>■ 土地権利 / <span id="display-land-right"></span></div>
-
-                                        <div class="only-kodate">■ 土地面積 / <span id="display-land-area"></span></div>
-                                        <div class="only-kodate">■ 建物面積 / <span id="display-building-area"></span></div>
-
-                                        <div class="only-mansion">■ 専有面積 / <span id="display-exclusive-area"></span></div>
-                                        <div class="only-mansion">■ バルコニー / <span id="display-balcony-area"></span></div>
-                                        <div class="only-mansion">■ 所在階 / <span id="display-floor"></span></div>
-                                        <div class="only-mansion">■ 総戸数 / <span id="display-total-units"></span></div>
-
-                                        <div>■ 建物構造 / <span id="display-structure"></span></div>
-                                        <div>■ 建築年月 / <span id="display-build-date"></span></div>
-                                        <div>■ 間取り / <span id="display-layout"></span></div>
-
-                                        <div class="only-kodate">■ 都市計画 / <span id="display-city-planning"></span></div>
-                                        <div class="only-kodate">■ 接道 / <span id="display-road"></span></div>
-
-                                        <div>■ 水道 / <span id="display-water"></span></div>
-                                        <div>■ 汚水 / <span id="display-sewage"></span></div>
-                                        <div>■ ガス / <span id="display-gas"></span></div>
-                                        <div>■ 現況 / <span id="display-status"></span></div>
-                                    </div>
-                                    <div style="flex: 1; display: flex; flex-direction: column; gap: 3px; font-size: 11px; line-height: 1.2; min-width: 0;">
-                                        <div>■ 引渡時期 / <span id="display-delivery"></span></div>
-                                        <div>■ 駐車場 / <span id="display-parking"></span></div>
-
-                                        <div class="only-mansion">■ バイク置場 / <span id="display-bike"></span></div>
-                                        <div class="only-mansion">■ 駐輪場 / <span id="display-bicycle"></span></div>
-                                        <div class="only-mansion">■ 分譲会社 / <span id="display-developer"></span></div>
-
-                                        <div>■ 施工会社 / <span id="display-builder"></span></div>
-
-                                        <div class="only-mansion">■ 管理会社 / <span id="display-management"></span></div>
-
-                                        <div>■ 用途地域 / <span id="display-zoning"></span></div>
-
-                                        <div class="only-mansion">■ 管理費 / <span id="display-admin-fee"></span></div>
-                                        <div class="only-mansion">■ 修繕積立金 / <span id="display-repair-fund"></span></div>
-                                        <div class="only-mansion">■ その他費用 / <span id="display-other-fee"></span></div>
-                                        <div class="only-mansion">■ ペット飼育 / <span id="display-pet"></span></div>
-                                        <div class="only-mansion">■ エレベーター / <span id="display-elevator"></span></div>
-
-                                        <div class="only-kodate">■ 建蔽率 / <span id="display-coverage"></span></div>
-                                        <div class="only-kodate">■ 容積率 / <span id="display-floor-ratio"></span></div>
+                            <div class="z-box zumen-summary-box" style="flex-grow: 1; padding: 8px; cursor: pointer; display: flex; flex-direction: column; gap: 5px; background-color: transparent; min-height: 0;" onclick="openModal('summaryModal')">
+                                <div style="font-size: 11px; font-weight: bold; border-bottom: 1px solid #777; padding-bottom: 2px; margin-bottom: 3px; flex-shrink: 0;">■ 物件詳細情報</div>
+                                <div style="flex-grow: 1; position: relative; width: 100%; min-height: 0;">
+                                    <div id="summary-container-d1" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; column-count: 1; column-gap: 15px; column-fill: auto;">
+                                        <div class="summary-item-d1">■ 物件住所 / <span id="display-address"></span></div>
+                                        <div class="summary-item-d1">■ 土地権利 / <span id="display-land-right"></span></div>
+                                        <div class="summary-item-d1 only-kodate">■ 土地面積 / <span id="display-land-area"></span></div>
+                                        <div class="summary-item-d1 only-kodate">■ 建物面積 / <span id="display-building-area"></span></div>
+                                        <div class="summary-item-d1 only-mansion">■ 専有面積 / <span id="display-exclusive-area"></span></div>
+                                        <div class="summary-item-d1 only-mansion">■ バルコニー / <span id="display-balcony-area"></span></div>
+                                        <div class="summary-item-d1 only-mansion">■ 所在階 / <span id="display-floor"></span></div>
+                                        <div class="summary-item-d1 only-mansion">■ 総戸数 / <span id="display-total-units"></span></div>
+                                        <div class="summary-item-d1">■ 建物構造 / <span id="display-structure"></span></div>
+                                        <div class="summary-item-d1">■ 建築年月 / <span id="display-build-date"></span></div>
+                                        <div class="summary-item-d1">■ 間取り / <span id="display-layout"></span></div>
+                                        <div class="summary-item-d1 only-kodate">■ 都市計画 / <span id="display-city-planning"></span></div>
+                                        <div class="summary-item-d1 only-kodate">■ 接道 / <span id="display-road"></span></div>
+                                        <div class="summary-item-d1">■ 水道 / <span id="display-water"></span></div>
+                                        <div class="summary-item-d1">■ 汚水 / <span id="display-sewage"></span></div>
+                                        <div class="summary-item-d1">■ ガス / <span id="display-gas"></span></div>
+                                        <div class="summary-item-d1">■ 現況 / <span id="display-status"></span></div>
+                                        <div class="summary-item-d1">■ 引渡時期 / <span id="display-delivery"></span></div>
+                                        <div class="summary-item-d1">■ 駐車場 / <span id="display-parking"></span></div>
+                                        <div class="summary-item-d1 only-mansion">■ バイク置場 / <span id="display-bike"></span></div>
+                                        <div class="summary-item-d1 only-mansion">■ 駐輪場 / <span id="display-bicycle"></span></div>
+                                        <div class="summary-item-d1 only-mansion">■ 分譲会社 / <span id="display-developer"></span></div>
+                                        <div class="summary-item-d1">■ 施工会社 / <span id="display-builder"></span></div>
+                                        <div class="summary-item-d1 only-mansion">■ 管理会社 / <span id="display-management"></span></div>
+                                        <div class="summary-item-d1">■ 用途地域 / <span id="display-zoning"></span></div>
+                                        <div class="summary-item-d1 only-mansion">■ 管理費 / <span id="display-admin-fee"></span></div>
+                                        <div class="summary-item-d1 only-mansion">■ 修繕積立金 / <span id="display-repair-fund"></span></div>
+                                        <div class="summary-item-d1 only-mansion">■ その他費用 / <span id="display-other-fee"></span></div>
+                                        <div class="summary-item-d1 only-mansion">■ ペット飼育 / <span id="display-pet"></span></div>
+                                        <div class="summary-item-d1 only-mansion">■ エレベーター / <span id="display-elevator"></span></div>
+                                        <div class="summary-item-d1 only-kodate">■ 建蔽率 / <span id="display-coverage"></span></div>
+                                        <div class="summary-item-d1 only-kodate">■ 容積率 / <span id="display-floor-ratio"></span></div>
                                     </div>
                                 </div>
                             </div>
@@ -208,31 +176,42 @@
                             <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #F8E8F8; border-radius: 4px;" onclick="openImageModal('icon6', '設備アイコン6')" data-image-target="icon6">アイコン</div>
                         </div>
                     </div>
-                    <div class="zumen-d1-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; flex-grow: 1; background-color: #FFF;">
-                        <div style="display: flex; align-items: center; height: 100%;">
-                            <img class="footer-logo-img" src="/static/logo.png" style="height: 100%; width: auto; transform: scale(1.6); transform-origin: left center;" alt="店舗ロゴ">
+                    <div class="zumen-d1-footer" onclick="openModal('footerModal')" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 25px; height: 14%; background-color: #0A3260; color: #FFF; box-sizing: border-box; font-family: 'Helvetica Neue', Arial, '游ゴシックMedium', sans-serif; cursor: pointer;">
+
+                        <div style="width: 22%; display: flex; align-items: center; height: 100%;">
+                            <img class="footer-logo-img" src="/static/logo.png" style="height: 80%; width: auto; object-fit: contain; transform: scale(1.4); transform-origin: left center; filter: brightness(0) invert(1);" alt="店舗ロゴ">
                         </div>
-                        <div style="font-size: 11px; color: #333; line-height: 1.3;">
-                            <div class="foot-license" style="font-size: 9px; color: #555;">免許番号</div>
-                            <div class="foot-tel" style="font-size: 18px; font-weight: bold; margin: 2px 0;">📞 会社電話番号</div>
-                            <div>
-                                <div class="foot-company" style="font-weight: bold;">会社名</div>
-                                <div class="foot-address" style="font-size: 10px; color: #666;">住所</div>
+
+                        <div style="flex-grow: 1; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 18px; display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                            <div style="font-size: 26px; font-weight: bold; letter-spacing: 1px; white-space: nowrap; line-height: 1; margin-bottom: 4px;">
+                                <span style="font-size: 11px; margin-right: 4px; font-weight: normal;">TEL.</span><span class="foot-tel">0120-384-700</span>
+                            </div>
+                            <div class="foot-license" style="font-size: 9px; white-space: nowrap; margin-bottom: 2px;">免許番号</div>
+                            <div class="foot-company" style="font-weight: bold; font-size: 14px; white-space: nowrap; letter-spacing: 1px;">会社名</div>
+                            <div class="foot-address" style="font-size: 9px; line-height: 1.2;">住所</div>
+                        </div>
+
+                        <div style="width: 24%; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 18px; display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                            <div style="margin-bottom: 8px; display: flex; align-items: baseline;">
+                                <span style="font-size: 9px; margin-right: 6px;">担当</span>
+                                <strong style="font-size: 17px; letter-spacing: 1px; white-space: nowrap;">担当者名</strong>
+                            </div>
+                            <div style="font-size: 9px; line-height: 1.5;">
+                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mobile.</span>携帯番号</div>
+                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mail.</span>メールアドレス</div>
                             </div>
                         </div>
-                        <div style="font-size: 11px; color: #333; line-height: 1.5;">
-                            <div style="margin-bottom: 2px;"><span style="font-size: 11px; color: #555;">担当</span> <strong style="font-size: 16px;">担当者名</strong></div>
-                            <div><span style="font-size: 12px; font-weight: bold;">℡</span> 携帯番号</div>
-                            <div>✉ メールアドレス</div>
-                        </div>
-                        <div style="border: 1px solid #777; width: 140px; font-size: 11px;">
-                            <div style="display: flex; background-color: #888; color: #FFF; text-align: center; border-bottom: 1px solid #777;">
-                                <div style="flex: 1; border-right: 1px solid #FFF; padding: 2px 0;">取引態様</div>
-                                <div style="flex: 1; padding: 2px 0;">手数料</div>
-                            </div>
-                            <div style="display: flex; height: 35px; background-color: #FFF;">
-                                <div style="flex: 1; border-right: 1px solid #777;"></div>
-                                <div style="flex: 1;"></div>
+
+                        <div style="width: 15%; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 15px; display: flex; align-items: center; justify-content: flex-end; height: 100%;">
+                            <div class="foot-table-wrap" style="border: 1px solid #FFF; width: 100%; max-width: 140px; font-size: 9px; border-radius: 0; overflow: hidden;">
+                                <div class="foot-table-head" style="display: flex; text-align: center; border-bottom: 1px solid #FFF;">
+                                    <div class="foot-table-cell" style="flex: 1; border-right: 1px solid #FFF; padding: 4px 0; font-weight: bold;">取引態様</div>
+                                    <div style="flex: 1; padding: 4px 0; font-weight: bold;">手数料</div>
+                                </div>
+                                <div style="display: flex; height: 28px;">
+                                    <div class="foot-table-cell" style="flex: 1; border-right: 1px solid #FFF;"></div>
+                                    <div style="flex: 1;"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -340,31 +319,42 @@
                         </div>
                     </div>
 
-                    <div class="zumen-d1-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; height: 12%; background-color: #FFF; border-top: 3px solid #1E2D3D; box-sizing: border-box;">
-                        <div style="display: flex; align-items: center; height: 100%;">
-                            <img class="footer-logo-img" src="/static/logo.png" style="height: 100%; width: auto; transform: scale(1.6); transform-origin: left center;" alt="店舗ロゴ">
+                    <div class="zumen-d1-footer" onclick="openModal('footerModal')" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 25px; height: 14%; background-color: #0A3260; color: #FFF; box-sizing: border-box; font-family: 'Helvetica Neue', Arial, '游ゴシックMedium', sans-serif; cursor: pointer;">
+
+                        <div style="width: 22%; display: flex; align-items: center; height: 100%;">
+                            <img class="footer-logo-img" src="/static/logo.png" style="height: 80%; width: auto; object-fit: contain; transform: scale(1.4); transform-origin: left center; filter: brightness(0) invert(1);" alt="店舗ロゴ">
                         </div>
-                        <div style="font-size: 11px; color: #333; line-height: 1.3;">
-                            <div class="foot-license" style="font-size: 9px; color: #555;">免許番号</div>
-                            <div class="foot-tel" style="font-size: 18px; font-weight: bold; margin: 2px 0;">📞 会社電話番号</div>
-                            <div>
-                                <div class="foot-company" style="font-weight: bold;">会社名</div>
-                                <div class="foot-address" style="font-size: 10px; color: #666;">住所</div>
+
+                        <div style="flex-grow: 1; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 18px; display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                            <div style="font-size: 26px; font-weight: bold; letter-spacing: 1px; white-space: nowrap; line-height: 1; margin-bottom: 4px;">
+                                <span style="font-size: 11px; margin-right: 4px; font-weight: normal;">TEL.</span><span class="foot-tel">0120-384-700</span>
+                            </div>
+                            <div class="foot-license" style="font-size: 9px; white-space: nowrap; margin-bottom: 2px;">免許番号</div>
+                            <div class="foot-company" style="font-weight: bold; font-size: 14px; white-space: nowrap; letter-spacing: 1px;">会社名</div>
+                            <div class="foot-address" style="font-size: 9px; line-height: 1.2;">住所</div>
+                        </div>
+
+                        <div style="width: 24%; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 18px; display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                            <div style="margin-bottom: 8px; display: flex; align-items: baseline;">
+                                <span style="font-size: 9px; margin-right: 6px;">担当</span>
+                                <strong style="font-size: 17px; letter-spacing: 1px; white-space: nowrap;">担当者名</strong>
+                            </div>
+                            <div style="font-size: 9px; line-height: 1.5;">
+                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mobile.</span>携帯番号</div>
+                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mail.</span>メールアドレス</div>
                             </div>
                         </div>
-                        <div style="font-size: 11px; color: #333; line-height: 1.5;">
-                            <div style="margin-bottom: 2px;"><span style="font-size: 11px; color: #555;">担当</span> <strong style="font-size: 16px;">担当者名</strong></div>
-                            <div><span style="font-size: 12px; font-weight: bold;">℡</span> 携帯番号</div>
-                            <div>✉ メールアドレス</div>
-                        </div>
-                        <div style="border: 1px solid #777; width: 140px; font-size: 11px;">
-                            <div style="display: flex; background-color: #888; color: #FFF; text-align: center; border-bottom: 1px solid #777;">
-                                <div style="flex: 1; border-right: 1px solid #FFF; padding: 2px 0;">取引態様</div>
-                                <div style="flex: 1; padding: 2px 0;">手数料</div>
-                            </div>
-                            <div style="display: flex; height: 35px; background-color: #FFF;">
-                                <div style="flex: 1; border-right: 1px solid #777;"></div>
-                                <div style="flex: 1;"></div>
+
+                        <div style="width: 15%; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 15px; display: flex; align-items: center; justify-content: flex-end; height: 100%;">
+                            <div class="foot-table-wrap" style="border: 1px solid #FFF; width: 100%; max-width: 140px; font-size: 9px; border-radius: 0; overflow: hidden;">
+                                <div class="foot-table-head" style="display: flex; text-align: center; border-bottom: 1px solid #FFF;">
+                                    <div class="foot-table-cell" style="flex: 1; border-right: 1px solid #FFF; padding: 4px 0; font-weight: bold;">取引態様</div>
+                                    <div style="flex: 1; padding: 4px 0; font-weight: bold;">手数料</div>
+                                </div>
+                                <div style="display: flex; height: 28px;">
+                                    <div class="foot-table-cell" style="flex: 1; border-right: 1px solid #FFF;"></div>
+                                    <div style="flex: 1;"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -469,31 +459,42 @@
                         </div>
                     </div>
                     
-                    <div class="zumen-d1-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; height: 15%; background-color: #FFF; border-top: 2px solid #333; box-sizing: border-box;">
-                        <div style="display: flex; align-items: center; height: 100%;">
-                            <img class="footer-logo-img" src="/static/logo.png" style="height: 100%; width: auto; transform: scale(1.6); transform-origin: left center;" alt="店舗ロゴ">
+                    <div class="zumen-d1-footer" onclick="openModal('footerModal')" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 25px; height: 14%; background-color: #0A3260; color: #FFF; box-sizing: border-box; font-family: 'Helvetica Neue', Arial, '游ゴシックMedium', sans-serif; cursor: pointer;">
+
+                        <div style="width: 22%; display: flex; align-items: center; height: 100%;">
+                            <img class="footer-logo-img" src="/static/logo.png" style="height: 80%; width: auto; object-fit: contain; transform: scale(1.4); transform-origin: left center; filter: brightness(0) invert(1);" alt="店舗ロゴ">
                         </div>
-                        <div style="font-size: 11px; color: #333; line-height: 1.3;">
-                            <div class="foot-license" style="font-size: 9px; color: #555;">免許番号</div>
-                            <div class="foot-tel" style="font-size: 18px; font-weight: bold; margin: 2px 0;">📞 会社電話番号</div>
-                            <div>
-                                <div class="foot-company" style="font-weight: bold;">会社名</div>
-                                <div class="foot-address" style="font-size: 10px; color: #666;">住所</div>
+
+                        <div style="flex-grow: 1; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 18px; display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                            <div style="font-size: 26px; font-weight: bold; letter-spacing: 1px; white-space: nowrap; line-height: 1; margin-bottom: 4px;">
+                                <span style="font-size: 11px; margin-right: 4px; font-weight: normal;">TEL.</span><span class="foot-tel">0120-384-700</span>
+                            </div>
+                            <div class="foot-license" style="font-size: 9px; white-space: nowrap; margin-bottom: 2px;">免許番号</div>
+                            <div class="foot-company" style="font-weight: bold; font-size: 14px; white-space: nowrap; letter-spacing: 1px;">会社名</div>
+                            <div class="foot-address" style="font-size: 9px; line-height: 1.2;">住所</div>
+                        </div>
+
+                        <div style="width: 24%; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 18px; display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                            <div style="margin-bottom: 8px; display: flex; align-items: baseline;">
+                                <span style="font-size: 9px; margin-right: 6px;">担当</span>
+                                <strong style="font-size: 17px; letter-spacing: 1px; white-space: nowrap;">担当者名</strong>
+                            </div>
+                            <div style="font-size: 9px; line-height: 1.5;">
+                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mobile.</span>携帯番号</div>
+                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mail.</span>メールアドレス</div>
                             </div>
                         </div>
-                        <div style="font-size: 11px; color: #333; line-height: 1.5;">
-                            <div style="margin-bottom: 2px;"><span style="font-size: 11px; color: #555;">担当</span> <strong style="font-size: 16px;">担当者名</strong></div>
-                            <div><span style="font-size: 12px; font-weight: bold;">℡</span> 携帯番号</div>
-                            <div>✉ メールアドレス</div>
-                        </div>
-                        <div style="border: 1px solid #777; width: 140px; font-size: 11px;">
-                            <div style="display: flex; background-color: #888; color: #FFF; text-align: center; border-bottom: 1px solid #777;">
-                                <div style="flex: 1; border-right: 1px solid #FFF; padding: 2px 0;">取引態様</div>
-                                <div style="flex: 1; padding: 2px 0;">手数料</div>
-                            </div>
-                            <div style="display: flex; height: 35px; background-color: #FFF;">
-                                <div style="flex: 1; border-right: 1px solid #777;"></div>
-                                <div style="flex: 1;"></div>
+
+                        <div style="width: 15%; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 15px; display: flex; align-items: center; justify-content: flex-end; height: 100%;">
+                            <div class="foot-table-wrap" style="border: 1px solid #FFF; width: 100%; max-width: 140px; font-size: 9px; border-radius: 0; overflow: hidden;">
+                                <div class="foot-table-head" style="display: flex; text-align: center; border-bottom: 1px solid #FFF;">
+                                    <div class="foot-table-cell" style="flex: 1; border-right: 1px solid #FFF; padding: 4px 0; font-weight: bold;">取引態様</div>
+                                    <div style="flex: 1; padding: 4px 0; font-weight: bold;">手数料</div>
+                                </div>
+                                <div style="display: flex; height: 28px;">
+                                    <div class="foot-table-cell" style="flex: 1; border-right: 1px solid #FFF;"></div>
+                                    <div style="flex: 1;"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -576,7 +577,7 @@
         </div>
         <div style="flex-grow: 1; overflow-y: auto; padding: 20px; min-height: 0;">
 <div style="display: flex; flex-direction: column; gap: 8px;">
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">物件住所</label><input type="text" id="input-address" placeholder="例）東京都国分寺市南町..." style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">物件住所</label><textarea id="input-address" placeholder="例）東京都国分寺市南町..." style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; resize: vertical; overflow-y: auto; height: 80px; line-height: 1.4;"></textarea></div>
                 <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">土地権利</label><input type="text" id="input-land-right" placeholder="例）所有権" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
                 
                 <div class="only-kodate"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">土地面積</label><input type="text" id="input-land-area" placeholder="例）〇㎡" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
@@ -587,7 +588,7 @@
                 <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">所在階</label><input type="text" id="input-floor" placeholder="例）〇階建〇階部分" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
                 <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">総戸数</label><input type="text" id="input-total-units" placeholder="例）〇戸" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
 
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">建物構造</label><input type="text" id="input-structure" placeholder="例）木造在来軸組工法 / RC構造等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">建物構造</label><textarea id="input-structure" placeholder="例）木造在来軸組工法 / RC構造等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; resize: vertical; overflow-y: auto; height: 80px; line-height: 1.4;"></textarea></div>
                 <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">間取り</label><input type="text" id="input-layout" placeholder="例）〇LDK" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
                 <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">建築年月</label><input type="text" id="input-build-date" placeholder="例）平成〇年〇月・20〇〇年〇月" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
 
@@ -603,18 +604,18 @@
 
                 <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">バイク置き場</label><input type="text" id="input-bike" placeholder="例）年間〇円〜〇円等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
                 <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">駐輪場</label><input type="text" id="input-bicycle" placeholder="例）年間〇円〜〇円等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">分譲会社</label><input type="text" id="input-developer" placeholder="例）株式会社〇〇" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">分譲会社</label><textarea id="input-developer" placeholder="例）株式会社〇〇" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; resize: vertical; overflow-y: auto; height: 80px; line-height: 1.4;"></textarea></div>
                 
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">施工会社</label><input type="text" id="input-builder" placeholder="例）株式会社〇〇建設" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">施工会社</label><textarea id="input-builder" placeholder="例）株式会社〇〇建設" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; resize: vertical; overflow-y: auto; height: 80px; line-height: 1.4;"></textarea></div>
                 
-                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">管理会社</label><input type="text" id="input-management" placeholder="例）株式会社〇〇" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">管理会社</label><textarea id="input-management" placeholder="例）株式会社〇〇" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; resize: vertical; overflow-y: auto; height: 80px; line-height: 1.4;"></textarea></div>
                 
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">用途地域</label><input type="text" id="input-zoning" placeholder="例）第一種低層住居専用地域" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">用途地域</label><textarea id="input-zoning" placeholder="例）第一種低層住居専用地域" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; resize: vertical; overflow-y: auto; height: 80px; line-height: 1.4;"></textarea></div>
 
                 <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">管理費</label><input type="text" id="input-admin-fee" placeholder="例）月額〇円" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
                 <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">修繕積立金</label><input type="text" id="input-repair-fund" placeholder="例）月額〇円" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">その他費用</label><input type="text" id="input-other-fee" placeholder="例）CATV使用料〇円等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">ペット飼育</label><input type="text" id="input-pet" placeholder="例）可(小鳥・小魚)" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">その他費用</label><textarea id="input-other-fee" placeholder="例）CATV使用料〇円等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; resize: vertical; overflow-y: auto; height: 80px; line-height: 1.4;"></textarea></div>
+                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">ペット飼育</label><textarea id="input-pet" placeholder="例）可(小鳥・小魚)" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; resize: vertical; overflow-y: auto; height: 80px; line-height: 1.4;"></textarea></div>
                 <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">エレベーター</label><input type="text" id="input-elevator" placeholder="例）あり・なし" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
 
                 <div class="only-kodate"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">建蔽率</label><input type="text" id="input-coverage" placeholder="例）〇%" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
@@ -624,6 +625,54 @@
         <div style="padding: 15px 20px; border-top: 1px solid #eee; background: #fff; display: flex; justify-content: flex-end; gap: 10px; border-radius: 0 0 8px 8px;">
             <button style="background-color: #FA8A76; color: white; border: none; padding: 10px 30px; border-radius: 6px; cursor: pointer; font-weight: bold;" onclick="window.saveSummary()">保存して反映</button>
             <button class="btn-cancel" style="margin: 0; padding: 10px 20px;" onclick="closeModal('summaryModal')">キャンセル</button>
+        </div>
+    </div>
+</div>
+<div id="footerModal" class="modal">
+    <div class="modal-content" style="max-width: 700px;">
+        <h3 style="border-left: 5px solid #1E2D3D; padding-left: 10px; margin-top: 0;">デザインサンプルを選択</h3>
+        <p style="font-size: 14px; color: #555; margin-bottom: 25px;">ベースとなる図面のデザインをクリックして下さい。</p>
+        
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            
+            <div class="footer-sample-card" onclick="selectFooterDesign('1')">
+                <h4 style="margin: 0 0 10px 0; font-weight: normal; font-size: 20px; letter-spacing: 1px;">サンプル1</h4>
+                <div>
+                    <img src="/static/footer_sample2.png" style="width: 100%; height: auto; border: 1px solid #E4E7EB; border-radius: 4px;" alt="サンプル1" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div style="display: none; height: 80px; background: #0A3260; border: 1px solid #0A3260; align-items: center; justify-content: center; font-weight: bold; color: #FFF; border-radius: 4px; text-align: center;">高級感ネイビー<br>(デフォルト設定)</div>
+                </div>
+            </div>
+            
+            <div class="footer-sample-card" onclick="selectFooterDesign('2')">
+                <h4 style="margin: 0 0 10px 0; font-weight: normal; font-size: 20px; letter-spacing: 1px;">サンプル2</h4>
+                <div>
+                    <img src="/static/footer_sample1.png" style="width: 100%; height: auto; border: 1px solid #E4E7EB; border-radius: 4px;" alt="サンプル2" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div style="display: none; height: 80px; background: #FFF; border: 1px solid #ccc; align-items: center; justify-content: center; font-weight: bold; color: #333; border-radius: 4px; text-align: center;">スマート＆モダン<br>(白背景・縦線あり)</div>
+                </div>
+            </div>
+            
+            <div class="footer-sample-card" onclick="selectFooterDesign('3')">
+                <h4 style="margin: 0 0 10px 0; font-weight: normal; font-size: 20px; letter-spacing: 1px;">サンプル3</h4>
+                <div>
+                    <img src="/static/footer_sample3.png" style="width: 100%; height: auto; border: 1px solid #E4E7EB; border-radius: 4px;" alt="サンプル3" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div style="display: none; height: 80px; background: #F4F6F8; border: 1px solid #E4E7EB; align-items: center; justify-content: center; font-weight: bold; color: #333; border-radius: 4px; text-align: center;">シンプル・フラット<br>(線なし・スッキリ)</div>
+                </div>
+            </div>
+            
+            <div class="footer-sample-card" onclick="selectFooterDesign('4')">
+                <h4 style="margin: 0 0 10px 0; font-weight: normal; font-size: 20px; letter-spacing: 1px;">サンプル4</h4>
+                <div>
+                    <img src="/static/footer_sample4.png" style="width: 100%; height: auto; border: 1px solid #E4E7EB; border-radius: 4px;" alt="サンプル4" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div style="display: none; height: 80px; background: #FFF; border: 2px dashed #CFD8DC; align-items: center; justify-content: center; font-weight: bold; color: #555; border-radius: 4px; text-align: center;">📁 オリジナル画像を<br>アップロード</div>
+                </div>
+            </div>
+
+        </div>
+
+        <input type="file" id="input-footer-image" accept="image/png, image/jpeg" style="display: none;" onchange="window.applyCustomFooterImage()">
+        
+        <div style="display: flex; justify-content: flex-end;">
+            <button class="btn-cancel" style="margin: 0; padding: 10px 30px;" onclick="closeModal('footerModal')">キャンセル</button>
         </div>
     </div>
 </div>

@@ -1132,18 +1132,18 @@ def generate_zumen(
     building_area: str = Form(""),
     plan: str = Form(""),
     branch_name: str = Form("国分寺"),
-    design_num: str = Form("1"), # 🌟 末尾にカンマを忘れずに！
+    design_num: str = Form("1"),
     full_summary: str = Form(""),
-    
-    # 🌟🌟【ここを追加】メイン画像・サブ画像・間取り図を受け取る
+    footer_design_num: str = Form("1"), # 🌟 ここを追加！
+
     main_image: UploadFile = File(None),
     sub_image1: UploadFile = File(None),
     sub_image2: UploadFile = File(None),
     sub_image3: UploadFile = File(None),
     madori_image: UploadFile = File(None),
     tenpo_image: UploadFile = File(None),
-    # 🌟🌟 追加ここまで
-    # 🌟 追加：フロントから送られてくるアイコン画像を受け取る
+    custom_footer_image: UploadFile = File(None), # 🌟 ここも追加！
+
     icon_image1: UploadFile = File(None),
     icon_image2: UploadFile = File(None),
     icon_image3: UploadFile = File(None),
@@ -1749,99 +1749,248 @@ def generate_zumen(
             line_eq2.fill.fore_color.rgb = RGBColor(30, 45, 61)
             line_eq2.line.fill.background()
 
+# ==========================================
+        # 🎨 共通フッターエリア（スマート・モダンフォント完全対応版！）
         # ==========================================
-        # 🎨 共通フッターエリア（どのデザインでも表示）
-        # ==========================================
-        base_dir = os.path.dirname(__file__)
-        logo_path = os.path.join(base_dir, "static", "logo.png")
-        if branch_name == "練馬":
-            logo_path = os.path.join(base_dir, "static", "logo_nerima.png")
-        elif branch_name == "武蔵野":
-            logo_path = os.path.join(base_dir, "static", "logo_musashino.jpg")
+        footer_y = Inches(6.45)
+        footer_h = Inches(1.05)
 
-        if os.path.exists(logo_path):
-            # 🌟 変更：ロゴのサイズを大きく（0.7インチ）し、上下のバランスを微調整する
-            slide.shapes.add_picture(logo_path, Inches(0.1), footer_y - Inches(0.2), height=Inches(1.2))
+        # 🌟 候補2：ラグジュアリー・クラシック用のフォント定義
+        FONT_ENG = "Trebuchet MS"
+        FONT_JPN = "メイリオ (Meiryo)"
+
+        # 🌟 背景と基本色の設定（デフォルトはTOHOブルー）
+        bg_color = RGBColor(10, 50, 96) 
+        text_color_main = RGBColor(255, 255, 255)
+        text_color_sub = RGBColor(200, 200, 200)
+        line_color = RGBColor(255, 255, 255)
+        top_border_color = RGBColor(10, 50, 96)
+        invert_logo = True
+
+        if footer_design_num == "2": # 白背景
+            bg_color = RGBColor(255, 255, 255)
+            text_color_main = RGBColor(51, 51, 51)
+            text_color_sub = RGBColor(119, 119, 119)
+            line_color = RGBColor(207, 216, 220)
+            top_border_color = RGBColor(10, 50, 96)
+            invert_logo = False
+        elif footer_design_num == "3": # グレー背景
+            bg_color = RGBColor(244, 246, 248)
+            text_color_main = RGBColor(51, 51, 51)
+            text_color_sub = RGBColor(119, 119, 119)
+            line_color = None
+            top_border_color = None
+            invert_logo = False
+
+        # --- 背景の描画 ---
+        if footer_design_num == "4" and custom_footer_image:
+            # 🌟 オリジナル画像を使用
+            import tempfile
+            from PIL import Image
+            suffix = os.path.splitext(custom_footer_image.filename)[1]
+            if not suffix: suffix = ".png"
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                tmp.write(custom_footer_image.file.read())
+                tmp_path = tmp.name
+            slide.shapes.add_picture(tmp_path, 0, footer_y, width=Inches(10), height=footer_h)
+            os.remove(tmp_path)
         else:
-            add_color_box(Inches(0.2), footer_y + Inches(0.05), Inches(2.0), Inches(0.7), f"{branch_name}ロゴ", RGBColor(235, 235, 235), 12)
+            # 帯の背景
+            bg_shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, footer_y, Inches(10), footer_h)
+            bg_shape.fill.solid()
+            bg_shape.fill.fore_color.rgb = bg_color
+            bg_shape.line.fill.background()
+            
+            # 上のボーダー線
+            if top_border_color:
+                top_line = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, footer_y, Inches(10), Pt(2))
+                top_line.fill.solid()
+                top_line.fill.fore_color.rgb = top_border_color
+                top_line.line.fill.background()
 
-        # 会社情報
-        tb_comp = slide.shapes.add_textbox(Inches(3.3), footer_y, Inches(3.0), Inches(0.85))
-        tf_comp = tb_comp.text_frame
-        tf_comp.clear()
-        tf_comp.margin_top = 0
-        
-        p1 = tf_comp.paragraphs[0] 
-        p1.text = branch.get("license", "免許番号")
-        p1.font.size = Pt(8)
-        p1.font.color.rgb = RGBColor(120, 120, 120)
-        
-        p2 = tf_comp.add_paragraph()
-        p2.text = f"📞 {branch.get('tel', '')}"
-        p2.font.size = Pt(16)
-        p2.font.bold = True
-        p2.space_before = Pt(1)
-        
-        p3 = tf_comp.add_paragraph()
-        p3.text = f"{branch.get('full_name', '')}\n{branch.get('address', '')}"
-        p3.font.size = Pt(8)
-        p3.font.color.rgb = RGBColor(80, 80, 80)
-        p3.space_before = Pt(2)
+            # ロゴ
+            base_dir = os.path.dirname(__file__)
+            logo_path = os.path.join(base_dir, "static", "logo.png")
+            if branch_name == "練馬": logo_path = os.path.join(base_dir, "static", "logo_nerima.png")
+            elif branch_name == "武蔵野": logo_path = os.path.join(base_dir, "static", "logo_musashino.jpg")
 
-        # 担当者情報
-        tb_person = slide.shapes.add_textbox(Inches(6.2), footer_y, Inches(1.8), Inches(0.85))
-        tf_person = tb_person.text_frame
-        tf_person.clear()
-        tf_person.margin_top = 0
-        
-        p_p1 = tf_person.paragraphs[0] 
-        r1 = p_p1.add_run()
-        r1.text = "担当 "
-        r1.font.size = Pt(8)
-        r1.font.color.rgb = RGBColor(120, 120, 120)
-        r2 = p_p1.add_run()
-        r2.text = "担当者名"
-        r2.font.size = Pt(12)
-        r2.font.bold = True
-        
-        p_p2 = tf_person.add_paragraph()
-        p_p2.text = "℡ 携帯番号\n✉ メールアドレス"
-        p_p2.font.size = Pt(8.5)
-        p_p2.font.color.rgb = RGBColor(80, 80, 80)
-        p_p2.space_before = Pt(3)
+            if os.path.exists(logo_path):
+                # TOHOブルーの時はロゴを白抜きに変換
+                if invert_logo and logo_path.endswith('.png'):
+                    from PIL import Image
+                    from io import BytesIO
+                    with Image.open(logo_path).convert("RGBA") as img:
+                        r, g, b, a = img.split()
+                        r = r.point(lambda i: 255)
+                        g = g.point(lambda i: 255)
+                        b = b.point(lambda i: 255)
+                        white_img = Image.merge("RGBA", (r, g, b, a))
+                        tmp_logo_io = BytesIO()
+                        white_img.save(tmp_logo_io, format="PNG")
+                        tmp_logo_io.seek(0)
+                        slide.shapes.add_picture(tmp_logo_io, Inches(0.15), footer_y + Inches(0.05), height=Inches(1.2))
+                else:
+                    slide.shapes.add_picture(logo_path, Inches(0.15), footer_y + Inches(0.05), height=Inches(1.2))
 
-        # 取引態様・手数料の表
-        table_left = Inches(8.1)
-        table_top = footer_y + Inches(0.1)
-        col_w = Inches(0.8)
-        row_h1 = Inches(0.25)
-        row_h2 = Inches(0.35)
-        
-        def draw_cell(l, t, w, h, text, bg_color, text_color):
-            rect = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, l, t, w, h)
-            rect.fill.solid()
-            rect.fill.fore_color.rgb = bg_color
-            rect.line.color.rgb = RGBColor(120, 120, 120)
-            rect.line.width = Pt(1)
-            tf = rect.text_frame
-            tf.word_wrap = True
-            tf.margin_top = tf.margin_bottom = tf.margin_left = tf.margin_right = 0
-            tf.vertical_anchor = MSO_ANCHOR.MIDDLE
-            p = tf.paragraphs[0]
-            p.text = text
-            p.font.size = Pt(9)
-            p.font.color.rgb = text_color
-            p.alignment = PP_ALIGN.CENTER
+            # 縦線1
+            if line_color:
+                vl1 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(2.6), footer_y + Inches(0.15), Pt(1), Inches(0.75))
+                vl1.fill.solid()
+                vl1.fill.fore_color.rgb = line_color
+                vl1.line.fill.background()
 
-        bg_header = RGBColor(136, 136, 136)
-        tc_header = RGBColor(255, 255, 255)
-        draw_cell(table_left, table_top, col_w, row_h1, "取引態様", bg_header, tc_header)
-        draw_cell(table_left + col_w, table_top, col_w, row_h1, "手数料", bg_header, tc_header)
-        
-        bg_val = RGBColor(255, 255, 255)
-        tc_val = RGBColor(0, 0, 0)
-        draw_cell(table_left, table_top + row_h1, col_w, row_h2, "", bg_val, tc_val)
-        draw_cell(table_left + col_w, table_top + row_h1, col_w, row_h2, "", bg_val, tc_val)
+            # 🌟 絶対に綺麗に出るフォント定義
+            FONT_ENG = "Arial"
+            FONT_JPN = "游明朝"
+
+            # 会社情報（🌟太字を減らして抜け感を出す）
+            tb_comp = slide.shapes.add_textbox(Inches(2.7), footer_y + Inches(0.08), Inches(3.5), Inches(0.85))
+            tf_comp = tb_comp.text_frame
+            tf_comp.clear()
+            tf_comp.margin_top = 0
+            
+            p1 = tf_comp.paragraphs[0]
+            r1 = p1.add_run()
+            r1.text = "TEL."
+            r1.font.size = Pt(11)
+            r1.font.bold = False # 🌟 細字にしてスタイリッシュに
+            r1.font.color.rgb = text_color_sub
+            r1.font.name = FONT_ENG
+            
+            r2 = p1.add_run()
+            r2.text = f" {branch.get('tel', '')}"
+            r2.font.size = Pt(24)
+            r2.font.bold = False # 🌟 あえて細字にして高級感を出す
+            r2.font.color.rgb = text_color_main
+            r2.font.name = FONT_ENG
+            
+            p2 = tf_comp.add_paragraph()
+            p2.text = branch.get("license", "免許番号")
+            p2.font.size = Pt(8)
+            p2.font.bold = False
+            p2.font.color.rgb = text_color_sub
+            p2.font.name = FONT_JPN
+            
+            p3 = tf_comp.add_paragraph()
+            p3.text = branch.get('full_name', '')
+            p3.font.size = Pt(13)
+            p3.font.bold = True # 会社名だけ太字
+            p3.font.color.rgb = text_color_main
+            p3.font.name = FONT_JPN
+            
+            p4 = tf_comp.add_paragraph()
+            p4.text = branch.get('address', '')
+            p4.font.size = Pt(8)
+            p4.font.bold = False
+            p4.font.color.rgb = text_color_sub
+            p4.font.name = FONT_JPN
+
+            # 縦線2
+            if line_color:
+                vl2 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(6.0), footer_y + Inches(0.15), Pt(1), Inches(0.75))
+                vl2.fill.solid()
+                vl2.fill.fore_color.rgb = line_color
+                vl2.line.fill.background()
+
+            # 担当者情報（🌟美しく整列）
+            tb_person = slide.shapes.add_textbox(Inches(6.1), footer_y + Inches(0.15), Inches(2.0), Inches(0.75))
+            tf_person = tb_person.text_frame
+            tf_person.clear()
+            tf_person.margin_top = 0
+            
+            p_p1 = tf_person.paragraphs[0] 
+            r1 = p_p1.add_run()
+            r1.text = "担当 "
+            r1.font.size = Pt(9)
+            r1.font.bold = False
+            r1.font.color.rgb = text_color_sub
+            r1.font.name = FONT_JPN
+            
+            r2 = p_p1.add_run()
+            r2.text = "担当者名"
+            r2.font.size = Pt(14)
+            r2.font.bold = True
+            r2.font.color.rgb = text_color_main
+            r2.font.name = FONT_JPN
+            
+            p_p2 = tf_person.add_paragraph()
+            p_p2.space_before = Pt(4)
+            r_mob_lbl = p_p2.add_run()
+            r_mob_lbl.text = "Mobile. "
+            r_mob_lbl.font.size = Pt(8.5)
+            r_mob_lbl.font.bold = False
+            r_mob_lbl.font.color.rgb = text_color_main
+            r_mob_lbl.font.name = FONT_ENG
+            
+            r_mob_val = p_p2.add_run()
+            r_mob_val.text = "携帯番号"
+            r_mob_val.font.size = Pt(8.5)
+            r_mob_val.font.bold = False
+            r_mob_val.font.color.rgb = text_color_sub
+            r_mob_val.font.name = FONT_ENG # 数字なので英字フォント
+            
+            p_p3 = tf_person.add_paragraph()
+            p_p3.space_before = Pt(1)
+            r_mail_lbl = p_p3.add_run()
+            r_mail_lbl.text = "Mail. "
+            r_mail_lbl.font.size = Pt(8.5)
+            r_mail_lbl.font.bold = False
+            r_mail_lbl.font.color.rgb = text_color_main
+            r_mail_lbl.font.name = FONT_ENG
+            
+            r_mail_val = p_p3.add_run()
+            r_mail_val.text = "メールアドレス"
+            r_mail_val.font.size = Pt(8.5)
+            r_mail_val.font.bold = False
+            r_mail_val.font.color.rgb = text_color_sub
+            r_mail_val.font.name = FONT_ENG
+
+            # 縦線3
+            if line_color:
+                vl3 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(8.1), footer_y + Inches(0.15), Pt(1), Inches(0.75))
+                vl3.fill.solid()
+                vl3.fill.fore_color.rgb = line_color
+                vl3.line.fill.background()
+
+            # 取引態様・手数料の表
+            table_left = Inches(8.3)
+            table_top = footer_y + Inches(0.2)
+            col_w = Inches(0.8)
+            row_h1 = Inches(0.25)
+            row_h2 = Inches(0.35)
+            
+            def draw_cell(l, t, w, h, text, is_header):
+                rect = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, l, t, w, h)
+                rect.fill.solid()
+                if footer_design_num == "1":
+                    rect.fill.fore_color.rgb = bg_color if is_header else RGBColor(255,255,255)
+                    rect.line.color.rgb = RGBColor(255,255,255)
+                    tc = RGBColor(255,255,255) if is_header else RGBColor(0,0,0)
+                elif footer_design_num == "2":
+                    rect.fill.fore_color.rgb = top_border_color if is_header else RGBColor(255,255,255)
+                    rect.line.color.rgb = top_border_color
+                    tc = RGBColor(255,255,255) if is_header else RGBColor(0,0,0)
+                else:
+                    rect.fill.fore_color.rgb = RGBColor(136,136,136) if is_header else RGBColor(255,255,255)
+                    rect.line.color.rgb = RGBColor(136,136,136)
+                    tc = RGBColor(255,255,255) if is_header else RGBColor(0,0,0)
+
+                rect.line.width = Pt(1)
+                tf = rect.text_frame
+                tf.word_wrap = True
+                tf.margin_top = tf.margin_bottom = tf.margin_left = tf.margin_right = 0
+                tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+                p = tf.paragraphs[0]
+                p.text = text
+                p.font.size = Pt(9)
+                p.font.color.rgb = tc
+                p.font.name = FONT_JPN # 表の中も美しく統一
+                p.alignment = PP_ALIGN.CENTER
+
+            draw_cell(table_left, table_top, col_w, row_h1, "取引態様", True)
+            draw_cell(table_left + col_w, table_top, col_w, row_h1, "手数料", True)
+            draw_cell(table_left, table_top + row_h1, col_w, row_h2, "", False)
+            draw_cell(table_left + col_w, table_top + row_h1, col_w, row_h2, "", False)
 
         # 6. 完成したPowerPointファイルをバイナリ化して返す
         from fastapi.responses import StreamingResponse
@@ -1862,6 +2011,10 @@ def generate_zumen(
     except Exception as e:
         import traceback
         from fastapi.responses import JSONResponse
+        error_details = traceback.format_exc()
+        print(f"Error: {error_details}")
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+
 @app.post("/apb/extract_address")
 async def apb_extract_address(zumen_file: UploadFile = File(...)):
     try:

@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = branchInfo[savedBranchKey];
         // 画面上にあるすべてのフッターテキストを一撃で書き換え
         document.querySelectorAll('.foot-license').forEach(el => el.innerText = data.license);
-        document.querySelectorAll('.foot-tel').forEach(el => el.innerText = "📞 " + data.tel);
+        document.querySelectorAll('.foot-tel').forEach(el => el.innerText = data.tel);
         document.querySelectorAll('.foot-company').forEach(el => el.innerText = data.name);
         document.querySelectorAll('.foot-address').forEach(el => el.innerText = data.address);
     }
@@ -465,9 +465,35 @@ window.saveSummary = function() {
             }
         }
     }
+// 🌟 デザイン1：はみ出したら自動で2段表示に切り替える＆縮小する最強魔法
+    if (suffix === '') {
+        const container = document.getElementById('summary-container-d1');
+        if (container) {
+            container.style.columnCount = '1';
+            const items = container.querySelectorAll('.summary-item-d1');
+            items.forEach(el => el.style.fontSize = '11px');
+            
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    // 🌟 修正：コラム（段組み）は下にではなく右に溢れるので、scrollWidth（横幅）で判定します！
+                    if (container.scrollWidth > container.clientWidth + 2) {
+                        container.style.columnCount = '2';
+                        
+                        requestAnimationFrame(() => {
+                            // 🌟 2段にしてもさらに右に溢れるなら、文字を小さくして収める
+                            if (container.scrollWidth > container.clientWidth + 2) {
+                                items.forEach(el => el.style.fontSize = '9.5px');
+                            }
+                        });
+                    }
+                });
+            });
+        }
+    }
 
-    closeModal('summaryModal');
-};
+    closeModal('summaryModal'); // 👈 元々ある行
+}; // 👈 元々ある行
+
 
 // 🌟 交通アクセスの保存処理（独立版に修正）
 function saveAccess() {
@@ -649,16 +675,24 @@ async function downloadPptx() {
         
         summaryItemNames.forEach(item => {
             const el = document.getElementById('display-' + item + suffix);
-            // 要素が存在し、中身が空でなく、親要素（行）が表示されている場合のみ取得
             if (el && el.innerText.trim() !== '' && el.parentNode && el.parentNode.style.display !== 'none') {
                 const text = el.parentNode.innerText.replace(/\r?\n/g, '').trim();
                 fullSummaryParts.push(text);
             }
         });
-        // 全項目を「|||」という特殊な文字で区切ってPythonに送信！
         formData.append("full_summary", fullSummaryParts.join('|||'));
 
-// 🌟 ログイン中の店舗名を裏側に送る
+        // 🌟 今どのフッター（帯）デザインを選んでいるかを判定してPythonに伝える
+        let currentFooter = "1"; // デフォルト（TOHOブルー）
+        const footerEl = document.querySelector('.zumen-d1-footer');
+        if (footerEl) {
+            if (footerEl.classList.contains('footer-design-2')) currentFooter = "2";
+            else if (footerEl.classList.contains('footer-design-3')) currentFooter = "3";
+            else if (footerEl.classList.contains('footer-design-4')) currentFooter = "4";
+        }
+        formData.append("footer_design_num", currentFooter);
+
+        // 🌟 ログイン中の店舗名を裏側に送る
         const branchKey = localStorage.getItem("branch_key") || "国分寺";
         formData.append("branch_name", branchKey);
 
@@ -671,7 +705,12 @@ async function downloadPptx() {
             if (window.uploadedImages['madori']) formData.append("madori_image", window.uploadedImages['madori']);
             if (window.uploadedImages['tenpo']) formData.append("tenpo_image", window.uploadedImages['tenpo']);
             
-            // 🌟 追加：設備アイコン画像（1〜6）の送信
+            // 🌟 オリジナル帯画像（デザイン4）がアップロードされている場合は送信
+            if (window.uploadedImages['custom_footer']) {
+                formData.append("custom_footer_image", window.uploadedImages['custom_footer']);
+            }
+            
+            // 🌟 設備アイコン画像（1〜6）の送信
             for (let i = 1; i <= 6; i++) {
                 if (window.uploadedImages[`icon${i}`]) {
                     formData.append(`icon_image${i}`, window.uploadedImages[`icon${i}`]);
@@ -972,3 +1011,57 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+// ==========================================
+// 🌟 6. テキストエリアの自動伸縮処理
+// ==========================================
+window.autoResize = function(el) {
+    el.style.height = 'auto'; // 一旦高さをリセット
+    el.style.height = el.scrollHeight + 'px'; // 中身の文字の高さに合わせて枠を広げる
+};
+// ==========================================
+// 🌟 帯（フッター）のデザイン即時変更処理
+// ==========================================
+window.selectFooterDesign = function(selected) {
+    // デザイン4（オリジナル画像）が選ばれた場合は、裏側にあるファイル選択画面を強制クリック！
+    if (selected === "4") {
+        document.getElementById('input-footer-image').click();
+    } 
+    // それ以外のデザインが選ばれた場合は、即座にCSSクラスを切り替えてモーダルを閉じる
+    else {
+        const footers = document.querySelectorAll('.zumen-d1-footer');
+        footers.forEach(footer => {
+            footer.classList.remove('footer-design-2', 'footer-design-3', 'footer-design-4');
+            footer.style.backgroundImage = 'none';
+            footer.style.borderTop = ''; // 元のスタイルに戻す
+            
+            if (selected === "2") footer.classList.add('footer-design-2');
+            if (selected === "3") footer.classList.add('footer-design-3');
+        });
+        closeModal('footerModal');
+    }
+};
+
+// 🌟 デザイン4でファイルが選択された瞬間に発動する魔法
+window.applyCustomFooterImage = function() {
+    const fileInput = document.getElementById('input-footer-image');
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const imageUrl = URL.createObjectURL(file);
+        const footers = document.querySelectorAll('.zumen-d1-footer');
+        
+        footers.forEach(footer => {
+            footer.classList.remove('footer-design-2', 'footer-design-3');
+            footer.classList.add('footer-design-4');
+            footer.style.backgroundImage = `url(${imageUrl})`;
+            footer.style.borderTop = 'none';
+        });
+        
+        // パワポ送信用の記憶
+        if (!window.uploadedImages) window.uploadedImages = {};
+        window.uploadedImages['custom_footer'] = file;
+        
+        // ファイル選択用の中身をリセットしてモーダルを閉じる
+        fileInput.value = '';
+        closeModal('footerModal');
+    }
+};

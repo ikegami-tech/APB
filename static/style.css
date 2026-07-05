@@ -144,6 +144,7 @@ input[type="text"], input[type="file"] { width: 90%; padding: 12px; margin-top: 
 .z-box:hover {
     background-color: #F8D8BC;
     outline: 2px dashed #FA8A76;
+    outline-offset: -2px; /* 🌟 枠線を内側に引くことで、端っこでも隠れないようにする */
 }
 
 /* ヘッダーエリア */
@@ -159,9 +160,11 @@ input[type="text"], input[type="file"] { width: 90%; padding: 12px; margin-top: 
 /* メインエリア（左右分割） */
 .zumen-d1-body {
     display: flex;
-    height: 60%; /* 高さをパーセントで固定 */
+    height: 60%;
+    /* 高さをパーセントで固定 */
     border-bottom: 1px solid #888;
     box-sizing: border-box;
+    min-height: 0; /* 🌟 追加：枠の無限膨張を完全に防ぐ最強のストッパー */
 }
 
 .zumen-d1-left {
@@ -535,4 +538,110 @@ label.file-upload-card:hover {
     background: transparent !important;
     background-color: transparent !important;
     color: inherit !important;
+}
+/* 🌟 追加：テキストエリアの改行をプレビュー画面にも反映させる設定 */
+[id^="display-"] {
+    white-space: pre-wrap;
+}
+/* =========================================
+   🌟 文字入力エリア（タイトル・価格など）のホバー時の赤枠設定
+   ========================================= */
+[onclick="openModal('titleModal')"],
+[onclick="openModal('infoModal')"],
+[onclick="openModal('accessModal')"],
+[onclick="openModal('summaryModal')"] {
+    transition: all 0.2s ease-in-out;
+    border-radius: 4px;
+}
+
+[onclick="openModal('titleModal')"]:hover,
+[onclick="openModal('infoModal')"]:hover,
+[onclick="openModal('accessModal')"]:hover,
+[onclick="openModal('summaryModal')"]:hover {
+    outline: 2px dashed #E74C3C !important;
+    outline-offset: 2px;
+    background-color: rgba(231, 76, 60, 0.05) !important;
+    position: relative; /* 🌟 前面に出すための設定 */
+    z-index: 10;
+}
+/* =========================================
+   🌟 デザイン1：物件詳細情報の自動折り返し＆左揃え整列
+   ========================================= */
+.summary-item-d1 {
+    width: 100%;
+    font-size: 11px;
+    line-height: 1.2;
+    word-break: break-all;
+    margin-bottom: 3px;
+    display: flex;         /* 項目名と入力文字を左右に分ける */
+    break-inside: avoid;   /* 🌟 追加：項目が途中でちぎれて左右に分かれるのを防ぐ */
+}
+
+.summary-item-d1 span {
+    flex: 1;               /* 2行目以降の文字が項目名の下に潜り込まないようにブロック化 */
+}
+/* =========================================
+   🌟 帯（フッター）のデザイン着せ替え魔法
+   ========================================= */
+.zumen-d1-footer {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    background-size: 100% 100%; /* 画像をピッタリ収める */
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+}
+/* マウスを乗せた時に赤枠を表示 */
+.zumen-d1-footer:hover::after {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    outline: 2px dashed #FA8A76; outline-offset: -2px;
+    background-color: rgba(250, 138, 118, 0.1); pointer-events: none; z-index: 10;
+}
+
+/* 🎨 デザイン2：スマート＆モダン（白背景にチェンジ） */
+.footer-design-2 {
+    background-color: #FFF !important;
+    color: #333 !important;
+    border-top: 2px solid #0A3260 !important; /* 🌟 アクセント線をTOHOブルーに */
+}
+.footer-design-2 div, .footer-design-2 span, .footer-design-2 strong { color: #333 !important; }
+.footer-design-2 .footer-logo-img { filter: none !important; } /* ロゴの白抜き解除 */
+.footer-design-2 > div { border-left-color: #CFD8DC !important; } /* 縦線をグレーに */
+.footer-design-2 .foot-table-wrap { border-color: #0A3260 !important; } /* 🌟 表の枠線をTOHOブルーに */
+.footer-design-2 .foot-table-head { border-bottom-color: #0A3260 !important; background-color: #0A3260 !important; } /* 🌟 表の見出しをTOHOブルーに */
+.footer-design-2 .foot-table-head div { color: #FFF !important; }
+.footer-design-2 .foot-table-cell { border-right-color: #0A3260 !important; } /* 🌟 表の縦線をTOHOブルーに */
+
+/* 🎨 デザイン3：シンプル・フラット（グレー背景にチェンジ） */
+.footer-design-3 {
+    background-color: #F4F6F8 !important;
+    color: #333 !important;
+    border-top: none !important;
+}
+.footer-design-3 div, .footer-design-3 span, .footer-design-3 strong { color: #333 !important; }
+.footer-design-3 .footer-logo-img { filter: none !important; }
+.footer-design-3 > div { border-left: none !important; } /* 縦線を消す */
+.footer-design-3 .foot-table-wrap { border-color: #888 !important; }
+.footer-design-3 .foot-table-head { border-bottom-color: #888 !important; background-color: #888 !important; }
+.footer-design-3 .foot-table-head div { color: #FFF !important; }
+.footer-design-3 .foot-table-cell { border-right-color: #888 !important; }
+
+/* 🖼️ デザイン4：オリジナル画像（中身の文字を透明にして隠す） */
+.footer-design-4 > div {
+    opacity: 0 !important; pointer-events: none;
+}
+/* 🌟 帯デザイン選択用カードのスタイル */
+.footer-sample-card {
+    cursor: pointer;
+    text-align: center;
+    border: 1px solid #CFD8DC;
+    padding: 15px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background-color: #FFF;
+}
+.footer-sample-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    border-color: #3B597B;
 }
