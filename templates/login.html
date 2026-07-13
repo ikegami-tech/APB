@@ -25,12 +25,12 @@
         
         <form onsubmit="handleLogin(event)">
             <div class="login-input-group">
-                <label>👤 ログインID</label>
-                <input type="text" id="login-id" class="login-input" placeholder="th-kokubunji" required>
+                <label>✉️ メールアドレス</label>
+                <input type="email" id="login-id" class="login-input" placeholder="example@toho-nerima.co.jp" required>
             </div>
             <div class="login-input-group">
                 <label>🔒 パスワード</label>
-                <input type="password" class="login-input" placeholder="••••••••" required>
+                <input type="password" id="login-pass" class="login-input" placeholder="••••••••" required>
             </div>
             <button type="submit" class="btn-login">ログイン</button>
         </form>

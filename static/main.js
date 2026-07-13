@@ -54,9 +54,21 @@ document.addEventListener("DOMContentLoaded", () => {
             logoSrc = "/static/logo_musashino.jpg"; // 武蔵野用（今後用意する場合）
         }
         
-        // 画面上にあるすべてのフッターロゴを一撃で書き換え
-        logoImages.forEach(img => {
-            img.src = logoSrc;
+    // 画面上にあるすべてのフッターロゴを一撃で書き換え
+            logoImages.forEach(img => {
+                img.src = logoSrc;
+            });
+    }
+
+    // 🌟 ここに追加：保存されている個人のフッターデザインを自動適用する魔法
+    const savedFooterDesign = localStorage.getItem("apb_footer_design");
+    if (savedFooterDesign && savedFooterDesign !== "1") {
+        const footers = document.querySelectorAll('.zumen-d1-footer');
+        footers.forEach(footer => {
+            footer.classList.remove('footer-design-2', 'footer-design-3', 'footer-design-4');
+            if (savedFooterDesign === "2") footer.classList.add('footer-design-2');
+            if (savedFooterDesign === "3") footer.classList.add('footer-design-3');
+            // ※デザイン4（オリジナル画像）は画像データがないと復元できないため今回は除外
         });
     }
 
@@ -117,34 +129,40 @@ if (targetId) {
 // ==========================================
 // 🔑 2. ログイン画面用（login.html）の処理
 // ==========================================
-function handleLogin(event) {
-    event.preventDefault(); // 画面の勝手なリロードを防止
-
-    const loginIdInput = document.getElementById('login-id');
-    if (!loginIdInput) return;
-    const loginId = loginIdInput.value.trim(); 
-
-    let companyName = "株式会社東宝ハウス国分寺"; // 予備のデフォルト
-    let branchKey = "国分寺";
-
-    // 入力されたIDに応じて会社名と店舗キーを判定
-    if (loginId === "th-nerima") {
-        companyName = "株式会社 東宝ハウス練馬";
-        branchKey = "練馬";
-    } else if (loginId === "musashino") {
-        companyName = "株式会社 東宝ハウス武蔵野";
-        branchKey = "武蔵野";
-    } else if (loginId === "kokubunji" || loginId === "th-kokubunji") {
-        companyName = "株式会社 東宝ハウス国分寺";
-        branchKey = "国分寺";
+async function handleLogin(event) {
+    event.preventDefault();
+    const loginId = document.getElementById("login-id").value.trim();
+    const loginPass = document.getElementById("login-pass").value;
+    
+    const formData = new FormData();
+    formData.append("username", loginId);
+    formData.append("password", loginPass);
+    
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.status === "success") {
+            // DBから返ってきた個人の設定情報をブラウザに記憶させる
+            localStorage.setItem("apb_user_email", result.email);
+            localStorage.setItem("apb_user_name", result.name);
+            localStorage.setItem("branch_key", result.branch_key);
+            localStorage.setItem("company_name", "株式会社 東宝ハウス" + result.branch_key);
+            localStorage.setItem("apb_footer_design", result.footer_design_num);
+            
+            alert(`ログイン成功！\nようこそ、${result.name} さん`);
+            window.location.href = "/menu";
+        } else {
+            alert(result.message);
+        }
+    } catch (error) {
+        console.error("ログイン通信エラー:", error);
+        alert("サーバーと通信できませんでした。");
     }
-
-    // ブラウザの記憶箱（localStorage）にカチッと保存
-    localStorage.setItem("company_name", companyName);
-    localStorage.setItem("branch_key", branchKey);
-
-    // 記憶が完了したら、満を持して総合メニュー画面へジャンプ！
-    window.location.href = '/menu';
 }
 
 // ==========================================
@@ -288,6 +306,12 @@ function openModal(id) {
         const walkDisp = document.getElementById('display-walk' + suffix);
         const walkInp = document.getElementById('input-walk');
         if (walkDisp && walkInp) walkInp.value = walkDisp.innerText !== '〇' ? walkDisp.innerText : '';
+    }
+    // 🌟 追加：フッターモーダルを開くときに、DBから履歴を読み込む
+    else if (id === 'footerModal') {
+        if (typeof window.loadFooterHistory === 'function') {
+            window.loadFooterHistory();
+        }
     }
 
     document.getElementById(id).style.display = 'block';
@@ -695,6 +719,12 @@ async function downloadPptx() {
         // 🌟 ログイン中の店舗名を裏側に送る
         const branchKey = localStorage.getItem("branch_key") || "国分寺";
         formData.append("branch_name", branchKey);
+        
+        // 🌟 ログイン中の個人のメールアドレスを裏側に送る！
+        const userEmail = localStorage.getItem("apb_user_email") || "";
+        formData.append("user_email", userEmail);
+
+// 各種画像データ（画像1〜4、間取り、店舗写真）の送信
 
         // 各種画像データ（画像1〜4、間取り、店舗写真）の送信
         if (window.uploadedImages) {
@@ -724,7 +754,7 @@ async function downloadPptx() {
         const blob = await response.blob();
         const a = document.createElement('a');
         a.href = window.URL.createObjectURL(blob);
-        a.download = `販売図面_デザイン${currentDesign}_${titleText}.pptx`;
+        a.download = "販売図面.pptx"; // 🌟 ファイル名を「販売図面.pptx」に固定
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(a.href);
@@ -1041,14 +1071,33 @@ window.selectFooterDesign = function(selected) {
     }
 };
 
-// 🌟 デザイン4でファイルが選択された瞬間に発動する魔法
-window.applyCustomFooterImage = function() {
+// 🌟 デザイン4でファイルが選択された瞬間に発動する魔法（DB保存対応版！）
+window.applyCustomFooterImage = async function() {
     const fileInput = document.getElementById('input-footer-image');
     if (fileInput.files.length > 0) {
         const file = fileInput.files[0];
         const imageUrl = URL.createObjectURL(file);
+        const userEmail = localStorage.getItem("apb_user_email");
+
+        // 🌟 1. まずサーバー（DB）に画像を保存する
+        if (userEmail) {
+            const formData = new FormData();
+            formData.append("user_email", userEmail);
+            formData.append("file", file);
+            try {
+                const res = await fetch("/api/upload_footer", { method: "POST", body: formData });
+                const result = await res.json();
+                if (result.status === "success") {
+                    // 最新の帯URLとしてブラウザに記憶
+                    localStorage.setItem("apb_last_footer_url", result.url);
+                }
+            } catch (e) {
+                console.error("帯画像保存エラー", e);
+            }
+        }
+
+        // 🌟 2. 画面上の帯を書き換える
         const footers = document.querySelectorAll('.zumen-d1-footer');
-        
         footers.forEach(footer => {
             footer.classList.remove('footer-design-2', 'footer-design-3');
             footer.classList.add('footer-design-4');
@@ -1060,8 +1109,85 @@ window.applyCustomFooterImage = function() {
         if (!window.uploadedImages) window.uploadedImages = {};
         window.uploadedImages['custom_footer'] = file;
         
-        // ファイル選択用の中身をリセットしてモーダルを閉じる
         fileInput.value = '';
         closeModal('footerModal');
+    }
+};
+
+// 🌟 過去の帯履歴をDBから取得して並べる魔法
+window.loadFooterHistory = async function() {
+    const userEmail = localStorage.getItem("apb_user_email");
+    if (!userEmail) return;
+
+    // 「前回使用した帯」のプレビュー表示
+    const lastUrl = localStorage.getItem("apb_last_footer_url");
+    const lastContainer = document.getElementById('last-used-footer-container');
+    const lastImg = document.getElementById('last-used-footer-img');
+    if (lastUrl && lastContainer && lastImg) {
+        lastImg.src = lastUrl;
+        lastContainer.style.display = 'block';
+    }
+
+    try {
+        // DBから履歴リストを取得
+        const res = await fetch(`/api/footer_history/${userEmail}`);
+        const result = await res.json();
+        const historySection = document.getElementById('footer-history-section');
+        const historyList = document.getElementById('footer-history-list');
+        
+        if (result.status === "success" && result.histories.length > 0) {
+            historyList.innerHTML = ''; // 一旦リストをリセット
+            result.histories.forEach(h => {
+                const item = document.createElement('div');
+                // 🌟 中央揃えと背景色を追加
+                item.style = "border: 1px solid #CFD8DC; border-radius: 4px; padding: 5px; cursor: pointer; transition: 0.2s; text-align: center; background-color: #f8f9fa;";
+                item.onclick = () => applyHistoryFooter(h.url);
+                item.onmouseover = () => item.style.borderColor = '#56B4CB';
+                item.onmouseout = () => item.style.borderColor = '#CFD8DC';
+                
+                const img = document.createElement('img');
+                img.src = h.url;
+                // 🌟 最大高さを100pxに制限し、コンパクトに並べる
+                img.style = "max-width: 100%; max-height: 100px; width: auto; border-radius: 2px; display: inline-block; object-fit: contain;";
+                
+                item.appendChild(img);
+                historyList.appendChild(item);
+            });
+            historySection.style.display = 'block';
+        } else {
+            if (historySection) historySection.style.display = 'none';
+        }
+    } catch(e) {
+        console.error("履歴取得エラー", e);
+    }
+};
+
+// 🌟 履歴の帯をクリックしたときに、一発で適用する魔法
+window.applyHistoryFooter = async function(url) {
+    const footers = document.querySelectorAll('.zumen-d1-footer');
+    footers.forEach(footer => {
+        footer.classList.remove('footer-design-2', 'footer-design-3');
+        footer.classList.add('footer-design-4');
+        footer.style.backgroundImage = `url(${url})`;
+        footer.style.borderTop = 'none';
+    });
+    
+    // 🌟 URLから画像ファイル（Blob）を作り直し、パワポ送信用にセットする
+    try {
+        const res = await fetch(url);
+        const blob = await res.blob();
+        const filename = url.split('/').pop();
+        const file = new File([blob], filename, { type: blob.type });
+        
+        if (!window.uploadedImages) window.uploadedImages = {};
+        window.uploadedImages['custom_footer'] = file;
+        
+        // 前回使用として記憶
+        localStorage.setItem("apb_last_footer_url", url);
+        
+        closeModal('footerModal');
+    } catch(e) {
+        console.error("履歴画像の適用エラー", e);
+        alert("画像の適用に失敗しました。");
     }
 };

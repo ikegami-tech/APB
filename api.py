@@ -31,45 +31,58 @@ load_dotenv()
 gemini_api_key = os.getenv("GEMINI_API_KEY")
 # APIキーがあればGeminiクライアントを準備
 gemini_client = genai.Client(api_key=gemini_api_key) if gemini_api_key else None
+# --- 🌟ここから：データベース接続設定（SQLAlchemy） ---
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+# 店舗テーブルの設計図
+class Branch(Base):
+    __tablename__ = 'branches'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    branch_key = Column(String(50), unique=True, nullable=False)
+    full_name = Column(String(100), nullable=False)
+    license = Column(String(100), nullable=False)
+    address = Column(String(200), nullable=False)
+    tel = Column(String(20), nullable=False)
+    login_id = Column(String(50), nullable=False)
+    password = Column(String(100), nullable=False)
+# --- 🌟ここまで ---
+# 🌟 ここに追加：テーマテーブルの設計図
+class Theme(Base):
+    __tablename__ = 'themes'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    theme_key = Column(String(50), unique=True, nullable=False)
+    name = Column(String(100), nullable=False)
+    bg_color = Column(String(50), nullable=False)
+    text_color = Column(String(50), nullable=False)
+    accent_color = Column(String(50), nullable=False)
+
+# 🌟 ここに追加：ユーザーテーブルの設計図
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    email = Column(String(100), unique=True, nullable=False)
+    name = Column(String(50), nullable=False)
+    password = Column(String(100), nullable=False)
+    branch_key = Column(String(50), nullable=False)
+    footer_design_num = Column(String(10), default="1")
+# 🌟 ここに追加：帯（フッター）履歴テーブルの設計図
+from sqlalchemy import DateTime
+from datetime import datetime
+
+class FooterHistory(Base):
+    __tablename__ = 'footer_history'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_email = Column(String(100), nullable=False)
+    image_filename = Column(String(200), nullable=False)
+    created_at = Column(DateTime, default=datetime.now)
 
 FONT_PATH = './NotoSansCJKjp-Bold.ttf'
-
-# --- 店舗・テーマデータの定義（app.pyからお引越し） ---
-THEMES = {
-    "luxury":       {"name": "1 高級・ラグジュアリー", "bg_color": (40, 40, 45), "text_color": "white", "accent_color": (180, 150, 80)},
-    "family":       {"name": "2 ファミリー・温もり", "bg_color": (255, 245, 235), "text_color": "black", "accent_color": (240, 130, 50)},
-    "modern":       {"name": "3 スタイリッシュ・モダン", "bg_color": (240, 245, 255), "text_color": "black", "accent_color": (50, 100, 180)},
-    "wa_modern":    {"name": "4 和モダン・伝統美", "bg_color": (230, 225, 215), "text_color": "black", "accent_color": (100, 120, 80)},
-    "casual":       {"name": "5 カジュアル・ポップ", "bg_color": (255, 250, 220), "text_color": "black", "accent_color": (250, 100, 130)},
-    "other":        {"name": "6 その他（自由入力スタイル）", "bg_color": (240, 240, 240), "text_color": "black", "accent_color": (100, 100, 100)}
-}
-
-BRANCH_DATA = {
-    "練馬": {
-        "full_name": "株式会社 東宝ハウス練馬",
-        "license": "東京都知事（4）第86488号",
-        "address": "〒178-0063 東京都練馬区東大泉1-27-22光和ビル2F",
-        "tel": "0120-384-700",
-        "login_id": "th-nerima",      
-        "password": "th-nerima"   
-    },
-    "国分寺": {
-        "full_name": "株式会社 東宝ハウス国分寺",
-        "license": "東京都知事（9）第42787号",
-        "address": "〒185-0021 東京都国分寺市南町3-22-2",
-        "tel": "0120-13-3107",
-        "login_id": "kokubunji",   
-        "password": "kokubunji"   
-    },
-    "武蔵野": {
-        "full_name": "株式会社 東宝ハウス武蔵野",
-        "license": "東京都知事（3）第90333号",
-        "address": "〒180-0004 東京都武蔵野市吉祥寺本町1-15-9",
-        "tel": "0120-15-3101",
-        "login_id": "musashino",   
-        "password": "musashino"   
-    },
-}
 
 app = FastAPI(title="らくらく販売図面 APIサーバー")
 # （これより下はそのまま残します）
@@ -111,6 +124,73 @@ def read_root():
         return f.read()
 # 👆 ここまで 👆
 
+# 🌟 新設：個人アカウントでのログインAPI
+@app.post("/api/login")
+def api_login(username: str = Form(...), password: str = Form(...)):
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.email == username, User.password == password).first()
+        if user:
+            return {
+                "status": "success",
+                "email": user.email,
+                "name": user.name,
+                "branch_key": user.branch_key,
+                "footer_design_num": user.footer_design_num
+            }
+        else:
+            return {"status": "error", "message": "メールアドレスまたはパスワードが間違っています。"}
+    finally:
+        db.close()
+
+import shutil
+import uuid
+
+# 🌟 帯画像を保存する専用フォルダの設定（なければ自動作成）
+FOOTER_DIR = os.path.join(os.path.dirname(__file__), "static", "footers")
+os.makedirs(FOOTER_DIR, exist_ok=True)
+
+# 🌟 API 1：帯画像をアップロードして保存する
+@app.post("/api/upload_footer")
+def upload_footer(user_email: str = Form(...), file: UploadFile = File(...)):
+    db = SessionLocal()
+    try:
+        # ファイル名がかぶらないようにランダムなIDを生成
+        ext = os.path.splitext(file.filename)[1]
+        if not ext: ext = ".png"
+        unique_filename = f"{uuid.uuid4().hex}{ext}"
+        save_path = os.path.join(FOOTER_DIR, unique_filename)
+
+        # サーバーの static/footers フォルダに実体画像を保存
+        with open(save_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        # データベースに「誰がどの画像を保存したか」を記録
+        new_history = FooterHistory(user_email=user_email, image_filename=unique_filename)
+        db.add(new_history)
+        db.commit()
+
+        return {"status": "success", "filename": unique_filename, "url": f"/static/footers/{unique_filename}"}
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "message": str(e)}
+    finally:
+        db.close()
+
+# 🌟 API 2：個人の帯画像履歴を呼び出す（新しい順に最大10件）
+@app.get("/api/footer_history/{user_email}")
+def get_footer_history(user_email: str):
+    db = SessionLocal()
+    try:
+        histories = db.query(FooterHistory).filter(FooterHistory.user_email == user_email).order_by(FooterHistory.created_at.desc()).limit(10).all()
+        history_list = [
+            {"id": h.id, "filename": h.image_filename, "url": f"/static/footers/{h.image_filename}"}
+            for h in histories
+        ]
+        return {"status": "success", "histories": history_list}
+    finally:
+        db.close()
+        
 # 🌟 2. 総合メニューポータル画面
 @app.get("/menu", response_class=HTMLResponse)
 def read_menu():
@@ -1132,6 +1212,7 @@ def generate_zumen(
     building_area: str = Form(""),
     plan: str = Form(""),
     branch_name: str = Form("国分寺"),
+    user_email: str = Form(""), # 🌟 ここを追加！ログインユーザーのメアドを受け取る
     design_num: str = Form("1"),
     full_summary: str = Form(""),
     footer_design_num: str = Form("1"), # 🌟 ここを追加！
@@ -1164,8 +1245,30 @@ def generate_zumen(
         prs.slide_width, prs.slide_height = Inches(10), Inches(7.5)
         slide = prs.slides.add_slide(prs.slide_layouts[6])
 
-        # 2. 店舗データの取得
-        branch = BRANCH_DATA.get(branch_name, BRANCH_DATA["国分寺"])
+        # 2. 店舗データの取得（🌟 ログインユーザーに紐づく店舗をDBから自動判定！）
+        db = SessionLocal()
+        try:
+            # リクエストしてきたユーザーの情報を取得
+            db_user = db.query(User).filter(User.email == user_email).first()
+            
+            if db_user:
+                target_branch = db_user.branch_key
+            else:
+                target_branch = branch_name
+
+            # 判定された店舗キーで店舗情報を取得
+            db_branch = db.query(Branch).filter(Branch.branch_key == target_branch).first()
+            if not db_branch:
+                db_branch = db.query(Branch).filter(Branch.branch_key == "国分寺").first()
+            
+            branch = {
+                "full_name": db_branch.full_name,
+                "license": db_branch.license,
+                "address": db_branch.address,
+                "tel": db_branch.tel
+            }
+        finally:
+            db.close()
 
         # 共通の描画ヘルパー関数
         def add_color_box(left, top, width, height, text, bg_color, font_size=14):
@@ -1619,6 +1722,21 @@ def generate_zumen(
             else:
                 add_color_box(Inches(0.2), Inches(0.2), Inches(2.8), Inches(1.1), "店舗写真", RGBColor(235, 235, 235), 12)
             
+            # 🌟 ここに追加: 店舗写真の上に重なるテキストを描画する魔法
+            tb_tenpo = slide.shapes.add_textbox(Inches(0.2), Inches(0.2), Inches(2.8), Inches(1.1))
+            tf_tenpo = tb_tenpo.text_frame
+            tf_tenpo.vertical_anchor = MSO_ANCHOR.MIDDLE # 上下中央揃え
+            p_tenpo = tf_tenpo.paragraphs[0]
+            p_tenpo.text = "「住まい」のもっと先へ。"
+            p_tenpo.font.size = Pt(14)
+            p_tenpo.font.bold = True
+            p_tenpo.font.color.rgb = RGBColor(255, 255, 255) # 白文字
+            p_tenpo.font.name = "游ゴシック"
+            p_tenpo.alignment = PP_ALIGN.CENTER # 左右中央揃え
+            # 文字を見やすくするための影をつける
+            try: p_tenpo.font.shadow = True
+            except: pass
+
             tb_title = slide.shapes.add_textbox(Inches(3.2), Inches(0.3), Inches(4.0), Inches(1.0))
             p_title = tb_title.text_frame.paragraphs[0]
             p_title.text = title if title else "タイトルを入力してください"
@@ -1667,32 +1785,25 @@ def generate_zumen(
             p_summ_t.font.size = Pt(10)
             p_summ_t.font.bold = True
 
-            # 🌟 変更（物件詳細情報を2列・自動縮小ではみ出し防止！）
+            # 🌟 変更：2列処理を廃止し、1列で自動縮小（TEXT_TO_FIT_SHAPE）させる
             items = [item.strip() for item in full_summary.split('|||') if item.strip()]
-            cols = 2
-            box_width = Inches(2.5) / cols
-            items_per_col = (len(items) + cols - 1) // cols
             
-            for i in range(cols):
-                col_items = items[i * items_per_col : (i + 1) * items_per_col]
-                if not col_items: continue
+            # 🌟 枠の高さを 3.3 → 3.45 に伸ばしてスペースを確保
+            tb_info = slide.shapes.add_textbox(Inches(7.3), Inches(2.5), Inches(2.5), Inches(3.45))
+            tf_info = tb_info.text_frame
+            tf_info.word_wrap = True 
+            tf_info.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE 
+            tf_info.margin_top = tf_info.margin_bottom = tf_info.margin_left = tf_info.margin_right = 0
+            
+            for idx, item_text in enumerate(items):
+                p = tf_info.paragraphs[0] if idx == 0 else tf_info.add_paragraph()
+                p.text = item_text
                 
-                tb_info = slide.shapes.add_textbox(Inches(7.3) + i * box_width, Inches(2.5), box_width, Inches(3.3))
-                tf_info = tb_info.text_frame
-                tf_info.word_wrap = True 
-                tf_info.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE 
-                tf_info.margin_top = tf_info.margin_bottom = tf_info.margin_left = 0
-                tf_info.margin_right = Inches(0.05)
-                
-                for idx, item_text in enumerate(col_items):
-                    p = tf_info.paragraphs[0] if idx == 0 else tf_info.add_paragraph()
-                    p.text = item_text
-                    
-                    # 🌟 文字を大きくし、色とフォントも綺麗に設定
-                    p.font.size = Pt(8.5) 
-                    p.font.name = "游明朝"
-                    p.font.color.rgb = RGBColor(80, 80, 80)
-                    p.line_spacing = Pt(11.0) # 行間も少し広げて見やすく
+                # 🌟 行間を少し詰めて、全項目が余裕で収まるように調整
+                p.font.size = Pt(7.0) 
+                p.font.name = "游明朝"
+                p.font.color.rgb = RGBColor(80, 80, 80)
+                p.line_spacing = Pt(9.0)
 
             line_eq1 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, Inches(5.9), Inches(10), Pt(1))
             line_eq1.fill.solid()
@@ -1828,9 +1939,11 @@ def generate_zumen(
                         tmp_logo_io = BytesIO()
                         white_img.save(tmp_logo_io, format="PNG")
                         tmp_logo_io.seek(0)
-                        slide.shapes.add_picture(tmp_logo_io, Inches(0.15), footer_y + Inches(0.05), height=Inches(1.2))
+                        # 🌟 左に引っ張って透明な余白を相殺し、左右の中央に配置
+                        slide.shapes.add_picture(tmp_logo_io, Inches(-0.05), footer_y - Inches(0.075), height=Inches(1.2))
                 else:
-                    slide.shapes.add_picture(logo_path, Inches(0.15), footer_y + Inches(0.05), height=Inches(1.2))
+                    # 🌟 こちらも同様に修正
+                    slide.shapes.add_picture(logo_path, Inches(-0.05), footer_y - Inches(0.075), height=Inches(1.2))
 
             # 縦線1
             if line_color:
