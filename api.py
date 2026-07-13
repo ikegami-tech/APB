@@ -277,7 +277,15 @@ def add_station_info_circle(slide_obj, x, y, radius, text, color=(245, 240, 225)
     tf.clear()
     p = tf.add_paragraph()
     p.text = text
-    p.font.size = Pt(11)
+    
+    # 🌟 文字数に応じてフォントサイズを自動で縮小させる
+    if len(text) > 16:
+        p.font.size = Pt(9)
+    elif len(text) > 12:
+        p.font.size = Pt(10)
+    else:
+        p.font.size = Pt(11)
+        
     p.font.color.rgb = RGBColor(color[0], color[1], color[2]) 
     p.font.name = "游明朝"
     p.alignment = PP_ALIGN.CENTER
@@ -370,6 +378,14 @@ def generate_apb(
             prompt = f"""
             あなたはプロの不動産ライターです。提供された【補助データ】を隅々まで解析し、以下の情報をJSON形式（オブジェクト、または配列の最初の要素）で出力してください。
             必須キー: property_name_jp, property_name_en, city_town, station_info, price, price_jp, land_area, building_area, sub_copy, headline, sub_headline, main_text, access_info, life_info, company_name, license, address, tel
+            
+            【厳守事項：文字数制限とフォーマット】
+            パンフレットのレイアウト崩れを防ぐため、以下のルールを絶対に守ってください。
+            ・sub_copy（表紙のキャッチコピー）: 最大35文字以内。簡潔に。
+            ・station_info（円形アイコン用駅情報）: 綺麗に収まるよう短い3行で出力（例：「西武池袋線\\nひばりヶ丘駅\\n徒歩2分」）。
+            ・sub_headline（サブ見出し）: 40文字以内で簡潔に。
+            ・main_text（本文）: 100〜130文字程度に要約してください（最大でも絶対に150文字を超えないこと）。
+            
             出力は必ず純粋なJSON形式のみにしてください。
             比率: {ratio_text}
             【補助データ】: {pdf_text}
@@ -610,8 +626,11 @@ def generate_apb(
                 except: pass
                 bottom_bar.line.fill.background()
                 
-                tx_sub = slide.shapes.add_textbox(Inches(1.5), bottom_bar_y + Inches(0.3), sw - Inches(1.8), Inches(1.0))
-                p_sub = tx_sub.text_frame.paragraphs[0]
+                # 🌟 Y座標を少し上げて2行になっても収まるようにする
+                tx_sub = slide.shapes.add_textbox(Inches(1.5), bottom_bar_y + Inches(0.2), sw - Inches(1.8), Inches(1.0))
+                tf_sub = tx_sub.text_frame
+                tf_sub.word_wrap = True # 🌟 キャッチコピーの折り返しを有効化
+                p_sub = tf_sub.paragraphs[0]
                 p_sub.text = extracted_info.get("sub_copy", "都市の洗練と、静謐なるプライベートを纏う新邸。")
                 p_sub.font.size = Pt(13)
                 p_sub.font.name = "游明朝"
@@ -619,7 +638,8 @@ def generate_apb(
                 p_sub.alignment = PP_ALIGN.CENTER
                 
                 station_text = extracted_info.get("station_info", "最寄駅\n徒歩分数").replace('\\n', '\n')
-                add_station_info_circle(slide, Inches(0.4), bottom_bar_y - Inches(0.5), Inches(0.55), station_text, color=(215, 185, 140))
+                # 🌟 円のサイズを少し大きく（0.55 → 0.65）し、位置を微調整して文字あふれを防ぐ
+                add_station_info_circle(slide, Inches(0.35), bottom_bar_y - Inches(0.6), Inches(0.65), station_text, color=(215, 185, 140))
 
         # ────────────────────────────────────────────────────────
         # 🌟 ② コンセプト（Concept / aerial_map）の書き出し
@@ -657,11 +677,12 @@ def generate_apb(
                 line1.fill.solid()
                 line1.fill.fore_color.rgb = bronze_rgb
                 line1.line.color.rgb = bronze_rgb
-                tx_box_sub = slide.shapes.add_textbox(Inches(0.5), Inches(1.6), Inches(6.5), Inches(0.6))
-                tx_box_main = slide.shapes.add_textbox(Inches(0.5), Inches(2.5), Inches(6.5), Inches(1.5))
+                tx_box_sub = slide.shapes.add_textbox(Inches(0.5), Inches(1.5), Inches(6.5), Inches(0.8)) # 🌟 高さを広げて2行対応
+                tx_box_main = slide.shapes.add_textbox(Inches(0.5), Inches(2.4), Inches(6.5), Inches(2.0))
                 
                 add_placeholder_box(slide, Inches(0), Inches(4.5), Inches(7.5), Inches(5.5), "【 メイン画像 】")
-                add_placeholder_box(slide, Inches(4.5), Inches(3.5), Inches(2.5), Inches(2.0), "写真1")
+                # 🌟 写真1のY座標(縦位置)を 3.5 → 4.8 に下げて、本文と被らないように修正
+                add_placeholder_box(slide, Inches(4.5), Inches(4.8), Inches(2.5), Inches(2.0), "写真1")
                 add_placeholder_box(slide, Inches(0.5), Inches(7.5), Inches(2.5), Inches(2.0), "写真2")
 
             p_head = tx_box_head.text_frame.paragraphs[0]
@@ -670,10 +691,13 @@ def generate_apb(
             p_head.font.size = Pt(36)
             p_head.font.bold = True
             
-            p_sub = tx_box_sub.text_frame.paragraphs[0]
+            # 🌟 サブヘッドラインにも Word Wrap（折り返し）を追加し、サイズを少し落として安全マージンを取る
+            tf_sub = tx_box_sub.text_frame
+            tf_sub.word_wrap = True
+            p_sub = tf_sub.paragraphs[0]
             p_sub.text = sub_headline
             p_sub.font.name = "游ゴシック"
-            p_sub.font.size = Pt(24)
+            p_sub.font.size = Pt(20) # (元は24)
             p_sub.font.bold = True
             p_sub.font.color.rgb = RGBColor(0,0,0)
 
@@ -682,7 +706,7 @@ def generate_apb(
             p_main = tf_main.paragraphs[0]
             p_main.text = main_text
             p_main.font.name = "游ゴシック"
-            p_main.font.size = Pt(13)
+            p_main.font.size = Pt(12) # 🌟 文字が多い場合に備えて少し小さく (元は13)
             p_main.font.color.rgb = RGBColor(80,80,80)
 
         # ────────────────────────────────────────────────────────
