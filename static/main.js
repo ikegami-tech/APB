@@ -269,10 +269,16 @@ function openModal(id) {
             const inpEl = document.getElementById('input-' + item);
             if (dispEl && inpEl) {
                 inpEl.value = dispEl.innerText;
+                // 🌟 ここから追加：新デザイン用の復元処理
+                if (['exclusive-area', 'balcony-area', 'floor', 'total-units'].includes(item)) {
+                    if (typeof window.restoreCombinedUI === 'function') {
+                        window.restoreCombinedUI(item, dispEl.innerText);
+                    }
+                }
             }
         });
     } 
-    // タイトルモーダルの場合
+        // タイトルモーダルの場合
     else if (id === 'titleModal') {
         const dispEl = document.getElementById('display-title' + suffix);
         const inpEl = document.getElementById('input-title');
@@ -1223,4 +1229,105 @@ window.toggleCheckboxText = function(inputId, containerId) {
     
     // 6. 最後に「、」で美しく繋いで入力欄にセット！
     input.value = finalItems.join('、');
+};
+// --- 複合UI（面積・階数など）の切り替えと合体魔法 ---
+window.toggleFreeInput = function(targetId, isChecked) {
+    const standardDiv = document.getElementById('standard-' + targetId);
+    const freeInput = document.getElementById('input-' + targetId + '-free');
+    if (!standardDiv || !freeInput) return;
+    
+    if (isChecked) {
+        standardDiv.style.display = 'none';
+        freeInput.style.display = 'block';
+    } else {
+        standardDiv.style.display = 'flex';
+        freeInput.style.display = 'none';
+    }
+    window.updateCombinedValue(targetId);
+};
+
+window.updateCombinedValue = function(targetId) {
+    const hiddenInput = document.getElementById('input-' + targetId);
+    const freeInput = document.getElementById('input-' + targetId + '-free');
+    if (!hiddenInput || !freeInput) return;
+    
+    const isFree = freeInput.style.display !== 'none';
+    let res = "";
+    
+    if (isFree) {
+        res = freeInput.value;
+    } else {
+        if (targetId === 'exclusive-area' || targetId === 'balcony-area') {
+            let val = document.getElementById('input-' + targetId + '-val').value.trim();
+            if (val) res = val + "㎡";
+        } else if (targetId === 'total-units') {
+            let val = document.getElementById('input-' + targetId + '-val').value.trim();
+            if (val) res = val + "戸";
+        } else if (targetId === 'floor') {
+            let v1 = document.getElementById('input-floor-val1').value.trim();
+            let v2 = document.getElementById('input-floor-val2').value.trim();
+            if (v1) res += v1 + "階建";
+            if (v2) res += (res ? " " : "") + v2 + "階部分";
+        }
+    }
+    hiddenInput.value = res;
+};
+
+// --- 表示されている文字を解析して枠に戻す魔法 ---
+window.restoreCombinedUI = function(targetId, text) {
+    text = text || "";
+    const freeCheck = document.getElementById('check-free-' + targetId);
+    const freeInput = document.getElementById('input-' + targetId + '-free');
+    if (!freeCheck || !freeInput) return;
+    
+    let isStandard = false;
+    let match = null;
+    
+    if (targetId === 'exclusive-area' || targetId === 'balcony-area') {
+        if (text === "") {
+            isStandard = true;
+            document.getElementById('input-' + targetId + '-val').value = "";
+        } else {
+            // "数字＋㎡" なら定型枠に入れる
+            match = text.match(/^([0-9\.]+)\s*㎡$/);
+            if (match) {
+                isStandard = true;
+                document.getElementById('input-' + targetId + '-val').value = match[1];
+            }
+        }
+    } else if (targetId === 'total-units') {
+        if (text === "") {
+            isStandard = true;
+            document.getElementById('input-' + targetId + '-val').value = "";
+        } else {
+            match = text.match(/^(\d+)\s*戸$/);
+            if (match) {
+                isStandard = true;
+                document.getElementById('input-' + targetId + '-val').value = match[1];
+            }
+        }
+    } else if (targetId === 'floor') {
+        if (text === "") {
+            isStandard = true;
+            document.getElementById('input-floor-val1').value = "";
+            document.getElementById('input-floor-val2').value = "";
+        } else {
+            match = text.match(/^(?:(\d+)階建)?\s*(?:(\d+)階部分)?$/);
+            if (match && (match[1] || match[2])) {
+                isStandard = true;
+                document.getElementById('input-floor-val1').value = match[1] || "";
+                document.getElementById('input-floor-val2').value = match[2] || "";
+            }
+        }
+    }
+    
+    // 定型フォーマットに合致するかどうかでチェックボックスをオンオフする
+    if (isStandard) {
+        freeCheck.checked = false;
+        freeInput.value = "";
+    } else {
+        freeCheck.checked = true;
+        freeInput.value = text;
+    }
+    window.toggleFreeInput(targetId, freeCheck.checked);
 };

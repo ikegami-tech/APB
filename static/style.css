@@ -645,3 +645,57 @@ label.file-upload-card:hover {
     box-shadow: 0 8px 16px rgba(0,0,0,0.1);
     border-color: #3B597B;
 }
+/* =========================================
+   🌟 物件概要入力フォーム：A案（背景グレー×白カード）
+   ========================================= */
+
+/* 💡 モーダルのスクロールエリアの背景を「薄いグレー」にする */
+#summaryModal .modal-content > div:nth-child(2) {
+    background-color: #F4F6F8 !important;
+}
+
+/* 💡 すべての項目を「真っ白な角丸カード」にする */
+.smart-item-card {
+    background-color: #FFFFFF !important;
+    border: 1px solid #E4E7EB !important;
+    padding: 20px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important; /* ほんの少しの影で立体感を出す */
+    box-sizing: border-box;
+}
+
+/* ボタン風チェックボックスの並び */
+.btn-check-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+/* フリー入力ボタン（TOHOネイビーの丸みボタン） */
+.btn-check-label {
+    display: inline-block;
+    padding: 6px 20px;
+    background-color: #FFF;
+    border: 1px solid #CFD8DC;
+    border-radius: 20px;
+    font-size: 13px;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+.btn-check-label:hover {
+    background-color: #F0F4F8;
+}
+/* チェックされたらネイビーに光る */
+.btn-check-label:has(input:checked) {
+    background-color: #1A567B;
+    border-color: #1A567B;
+    color: #FFF;
+    font-weight: bold;
+    box-shadow: 0 2px 6px rgba(26, 86, 123, 0.3);
+}
+.btn-check-label input[type="checkbox"] {
+    display: none;
+}
