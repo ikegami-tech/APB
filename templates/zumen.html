@@ -539,7 +539,7 @@
     <div class="modal-content">
         <h3>💰 販売価格の編集</h3>
         <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #1E2D3D;">販売価格（万円）</label>
-        <input type="text" id="input-price" value="5,000" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 20px;">
+        <input type="text" id="input-price" value="5,000" onkeydown="if(event.key==='Enter') this.blur();" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 20px;">
         
         <div style="display: flex; justify-content: flex-end; gap: 10px;">
             <button style="background-color: #FA8A76; color: white; border: none; padding: 10px 30px; border-radius: 6px; cursor: pointer; font-weight: bold;" onclick="saveInfo()">保存して反映</button>
@@ -578,19 +578,53 @@
         <div style="flex-grow: 1; overflow-y: auto; padding: 20px; min-height: 0;">
 <div style="display: flex; flex-direction: column; gap: 8px;">
                 <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">物件住所</label><textarea id="input-address" placeholder="例）東京都国分寺市南町..." style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; resize: vertical; overflow-y: auto; height: 80px; line-height: 1.4;"></textarea></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">土地権利</label><input type="text" id="input-land-right" placeholder="例）所有権" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">土地権利</label>
+                    <!-- 🌟 styleの最後に margin-bottom: 4px; を追加しました -->
+                    <input type="text" id="input-land-right" placeholder="例）所有権" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 4px;">
+                    <div id="group-land-right" style="margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap;">
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="所有権" onchange="toggleCheckboxText('input-land-right', 'group-land-right')"> 所有権</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="旧法借地権" onchange="toggleCheckboxText('input-land-right', 'group-land-right')"> 旧法借地権</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="普通借地権" onchange="toggleCheckboxText('input-land-right', 'group-land-right')"> 普通借地権</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="定期借地権" onchange="toggleCheckboxText('input-land-right', 'group-land-right')"> 定期借地権</label>
+                    </div>
+                </div>
                 
-                <div class="only-kodate"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">土地面積</label><input type="text" id="input-land-area" placeholder="例）〇㎡" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div class="only-kodate"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">建物面積</label><input type="text" id="input-building-area" placeholder="例）〇㎡" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+<div class="only-kodate">
+    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">土地面積</label>
+    <input type="text" id="input-land-area" placeholder="例）〇㎡" onkeydown="if(event.key==='Enter') this.blur();" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+</div>
+<div class="only-kodate">
+    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">建物面積</label>
+    <input type="text" id="input-building-area" placeholder="例）〇㎡" onkeydown="if(event.key==='Enter') this.blur();" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+</div>
 
-                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">専有面積</label><input type="text" id="input-exclusive-area" placeholder="例）〇㎡" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">バルコニー面積</label><input type="text" id="input-balcony-area" placeholder="例）〇㎡" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">所在階</label><input type="text" id="input-floor" placeholder="例）〇階建〇階部分" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">総戸数</label><input type="text" id="input-total-units" placeholder="例）〇戸" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+<div class="only-mansion">
+    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">専有面積</label>
+    <input type="text" id="input-exclusive-area" placeholder="例）〇㎡" onkeydown="if(event.key==='Enter') this.blur();" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+</div>
+<div class="only-mansion">
+    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">バルコニー面積</label>
+    <input type="text" id="input-balcony-area" placeholder="例）〇㎡" onkeydown="if(event.key==='Enter') this.blur();" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+</div>
+<div class="only-mansion">
+    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">所在階</label>
+    <input type="text" id="input-floor" placeholder="例）〇階建〇階部分" onkeydown="if(event.key==='Enter') this.blur();" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+</div>
+<div class="only-mansion">
+    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">総戸数</label>
+    <input type="text" id="input-total-units" placeholder="例）〇戸" onkeydown="if(event.key==='Enter') this.blur();" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+</div>
 
                 <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">建物構造</label><textarea id="input-structure" placeholder="例）木造在来軸組工法 / RC構造等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; resize: vertical; overflow-y: auto; height: 80px; line-height: 1.4;"></textarea></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">間取り</label><input type="text" id="input-layout" placeholder="例）〇LDK" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">建築年月</label><input type="text" id="input-build-date" placeholder="例）平成〇年〇月・20〇〇年〇月" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+<div>
+    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">間取り</label>
+    <input type="text" id="input-layout" placeholder="例）〇LDK" onkeydown="if(event.key==='Enter') this.blur();" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+</div>
+<div>
+    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">建築年月</label>
+    <input type="text" id="input-build-date" placeholder="例）平成〇年〇月・20〇〇年〇月" onkeydown="if(event.key==='Enter') this.blur();" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+</div>
 
                 <div class="only-kodate"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">都市計画</label><input type="text" id="input-city-planning" placeholder="例）市街化区域" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
                 <div class="only-kodate"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">接道</label><input type="text" id="input-road" placeholder="例）東側〇m私道／中央側〇m私道" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
@@ -598,8 +632,29 @@
                 <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">水道</label><input type="text" id="input-water" placeholder="例）公営水道 / 公道等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
                 <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">汚水</label><input type="text" id="input-sewage" placeholder="例）公共下水" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
                 <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">ガス</label><input type="text" id="input-gas" placeholder="例）都市ガス" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">現況</label><input type="text" id="input-status" placeholder="例）空家・居住中等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">引渡し時期</label><input type="text" id="input-delivery" placeholder="例）即・相談等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">現況</label>
+                    <!-- 🌟 styleの最後に margin-bottom: 4px; を追加しました -->
+                    <input type="text" id="input-status" placeholder="例）空家・居住中等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 4px;">
+                    <div id="group-status" style="margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap;">
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="空家" onchange="toggleCheckboxText('input-status', 'group-status')"> 空家</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="居住中" onchange="toggleCheckboxText('input-status', 'group-status')"> 居住中</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="賃貸中" onchange="toggleCheckboxText('input-status', 'group-status')"> 賃貸中</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="建築中" onchange="toggleCheckboxText('input-status', 'group-status')"> 建築中</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="未完成" onchange="toggleCheckboxText('input-status', 'group-status')"> 未完成</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="更地" onchange="toggleCheckboxText('input-status', 'group-status')"> 更地</label>
+                    </div>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">引渡し時期</label>
+                    <!-- 🌟 styleの最後に margin-bottom: 4px; を追加しました -->
+                    <input type="text" id="input-delivery" placeholder="例）即・相談等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 4px;">
+                    <div id="group-delivery" style="margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap;">
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="即時" onchange="toggleCheckboxText('input-delivery', 'group-delivery')"> 即時</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="相談" onchange="toggleCheckboxText('input-delivery', 'group-delivery')"> 相談</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="期日指定" onchange="toggleCheckboxText('input-delivery', 'group-delivery')"> 期日指定</label>
+                    </div>
+                </div>
                 <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">駐車場</label><input type="text" id="input-parking" placeholder="例）月々〇円〜〇円・空きなし等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
 
                 <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">バイク置き場</label><input type="text" id="input-bike" placeholder="例）年間〇円〜〇円等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
@@ -610,16 +665,63 @@
                 
                 <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">管理会社</label><textarea id="input-management" placeholder="例）株式会社〇〇" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; resize: vertical; overflow-y: auto; height: 80px; line-height: 1.4;"></textarea></div>
                 
-                <div><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">用途地域</label><textarea id="input-zoning" placeholder="例）第一種低層住居専用地域" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; resize: vertical; overflow-y: auto; height: 80px; line-height: 1.4;"></textarea></div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">用途地域</label>
+                    <!-- 🌟 styleの最後に margin-bottom: 4px; を追加しました -->
+                    <input type="text" id="input-zoning" placeholder="例）第一種低層住居専用地域" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 4px;">
+                    <div id="group-zoning" style="margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap;">
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="第一種低層住居専用地域" onchange="toggleCheckboxText('input-zoning', 'group-zoning')"> 第一種低層住居専用地域</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="第二種低層住居専用地域" onchange="toggleCheckboxText('input-zoning', 'group-zoning')"> 第二種低層住居専用地域</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="第一種中高層住居専用地域" onchange="toggleCheckboxText('input-zoning', 'group-zoning')"> 第一種中高層住居専用地域</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="第二種中高層住居専用地域" onchange="toggleCheckboxText('input-zoning', 'group-zoning')"> 第二種中高層住居専用地域</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="第一種住居地域" onchange="toggleCheckboxText('input-zoning', 'group-zoning')"> 第一種住居地域</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="第二種住居地域" onchange="toggleCheckboxText('input-zoning', 'group-zoning')"> 第二種住居地域</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="準住居地域" onchange="toggleCheckboxText('input-zoning', 'group-zoning')"> 準住居地域</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="近隣商業地域" onchange="toggleCheckboxText('input-zoning', 'group-zoning')"> 近隣商業地域</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="商業地域" onchange="toggleCheckboxText('input-zoning', 'group-zoning')"> 商業地域</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="準工業地域" onchange="toggleCheckboxText('input-zoning', 'group-zoning')"> 準工業地域</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="工業地域" onchange="toggleCheckboxText('input-zoning', 'group-zoning')"> 工業地域</label>
+                    </div>
+                </div>
 
-                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">管理費</label><input type="text" id="input-admin-fee" placeholder="例）月額〇円" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">修繕積立金</label><input type="text" id="input-repair-fund" placeholder="例）月額〇円" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+<div class="only-mansion">
+    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">管理費</label>
+    <input type="text" id="input-admin-fee" placeholder="例）月額〇円" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+</div>
+<div class="only-mansion">
+    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">修繕積立金</label>
+    <input type="text" id="input-repair-fund" placeholder="例）月額〇円" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+</div>
                 <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">その他費用</label><textarea id="input-other-fee" placeholder="例）CATV使用料〇円等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; resize: vertical; overflow-y: auto; height: 80px; line-height: 1.4;"></textarea></div>
-                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">ペット飼育</label><textarea id="input-pet" placeholder="例）可(小鳥・小魚)" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; resize: vertical; overflow-y: auto; height: 80px; line-height: 1.4;"></textarea></div>
-                <div class="only-mansion"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">エレベーター</label><input type="text" id="input-elevator" placeholder="例）あり・なし" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+                <div class="only-mansion">
+                    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">ペット飼育</label>
+                    <!-- 🌟 styleの最後に margin-bottom: 4px; を追加しました -->
+                    <input type="text" id="input-pet" placeholder="例）可(細則あり)" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 4px;">
+                    <div id="group-pet" style="margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap;">
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="可" onchange="toggleCheckboxText('input-pet', 'group-pet')"> 可</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="可(細則あり)" onchange="toggleCheckboxText('input-pet', 'group-pet')"> 可(細則あり)</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="不可" onchange="toggleCheckboxText('input-pet', 'group-pet')"> 不可</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="相談" onchange="toggleCheckboxText('input-pet', 'group-pet')"> 相談</label>
+                    </div>
+                </div>
+                <div class="only-mansion">
+                    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">エレベーター</label>
+                    <!-- 🌟 styleの最後に margin-bottom: 4px; を追加しました -->
+                    <input type="text" id="input-elevator" placeholder="例）あり・なし" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 4px;">
+                    <div id="group-elevator" style="margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap;">
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="あり" onchange="toggleCheckboxText('input-elevator', 'group-elevator')"> あり</label>
+                        <label style="font-size: 12px; cursor: pointer; color: #333;"><input type="checkbox" value="なし" onchange="toggleCheckboxText('input-elevator', 'group-elevator')"> なし</label>
+                    </div>
+                </div>
 
-                <div class="only-kodate"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">建蔽率</label><input type="text" id="input-coverage" placeholder="例）〇%" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
-                <div class="only-kodate"><label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">容積率</label><input type="text" id="input-floor-ratio" placeholder="例）〇%" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;"></div>
+<div class="only-kodate">
+    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">建蔽率</label>
+    <input type="text" id="input-coverage" placeholder="例）〇%" onkeydown="if(event.key==='Enter') this.blur();" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+</div>
+<div class="only-kodate">
+    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">容積率</label>
+    <input type="text" id="input-floor-ratio" placeholder="例）〇%" onkeydown="if(event.key==='Enter') this.blur();" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+</div>
             </div>
         </div>
         <div style="padding: 15px 20px; border-top: 1px solid #eee; background: #fff; display: flex; justify-content: flex-end; gap: 10px; border-radius: 0 0 8px 8px;">

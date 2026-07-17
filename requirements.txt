@@ -7,3 +7,5 @@ pillow
 python-pptx
 google-genai
 python-dotenv
+sqlalchemy
+pymysql

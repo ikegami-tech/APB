@@ -1191,3 +1191,36 @@ window.applyHistoryFooter = async function(url) {
         alert("画像の適用に失敗しました。");
     }
 };
+
+// チェックボックスのオンオフと順番を管理する魔法の機能（最強安定版）
+window.toggleCheckboxText = function(inputId, containerId) {
+    const input = document.getElementById(inputId);
+    const container = document.getElementById(containerId);
+    if (!input || !container) return; // エラー回避
+    
+    const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+    
+    // 1. 現在の入力欄のテキストを「、」や「・」でバラバラのリスト（配列）にする
+    // ※ゴミや空白はここで完全に消滅します！
+    let currentItems = input.value.split(/[、・,，]+/).map(s => s.trim()).filter(s => s !== '');
+    
+    // 2. チェックボックスに用意されている「すべての選択肢」のリストを作る
+    const allOptions = Array.from(checkboxes).map(cb => cb.value);
+    
+    // 3. 入力欄にある文字の中から、チェックボックスの選択肢に「ない」もの（＝手入力した独自の文字）だけを抽出する
+    const customItems = currentItems.filter(item => !allOptions.includes(item));
+    
+    // 4. 今チェックが入っている項目を、HTMLの配置順（左から順）に拾い集める
+    const selectedOptions = [];
+    checkboxes.forEach(cb => {
+        if (cb.checked) {
+            selectedOptions.push(cb.value);
+        }
+    });
+    
+    // 5. チェックされた項目と、独自の手入力テキストを綺麗に合体させる
+    const finalItems = [...selectedOptions, ...customItems];
+    
+    // 6. 最後に「、」で美しく繋いで入力欄にセット！
+    input.value = finalItems.join('、');
+};
