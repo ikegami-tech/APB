@@ -1240,6 +1240,7 @@ def generate_zumen(
     design_num: str = Form("1"),
     full_summary: str = Form(""),
     footer_design_num: str = Form("1"), # 🌟 ここを追加！
+    summary_font_size: str = Form("10"), # 🌟 ここを追加！WEBから送られてくる文字サイズを受け取る
 
     main_image: UploadFile = File(None),
     sub_image1: UploadFile = File(None),
@@ -1809,25 +1810,53 @@ def generate_zumen(
             p_summ_t.font.size = Pt(10)
             p_summ_t.font.bold = True
 
-            # 🌟 変更：2列処理を廃止し、1列で自動縮小（TEXT_TO_FIT_SHAPE）させる
             items = [item.strip() for item in full_summary.split('|||') if item.strip()]
             
-            # 🌟 枠の高さを 3.3 → 3.45 に伸ばしてスペースを確保
             tb_info = slide.shapes.add_textbox(Inches(7.3), Inches(2.5), Inches(2.5), Inches(3.45))
             tf_info = tb_info.text_frame
             tf_info.word_wrap = True 
-            tf_info.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE 
+            # 🚨 パワポの勝手な縮小機能をオフにして、こちらの計算を絶対優先させます
             tf_info.margin_top = tf_info.margin_bottom = tf_info.margin_left = tf_info.margin_right = 0
+            
+            # 🌟 【等間隔＆ジャストフィットの究極魔法】
+            available_height_pt = 240.0 # 枠の高さ(3.45インチ)の実質利用可能ポイント
+            
+            # まず、折り返しを考慮した「実質的な行数」を見積もる
+            num_lines = 0
+            for item_text in items:
+                if len(item_text) > 19: # 20文字以上は2行に折り返されると判定
+                    num_lines += 2
+                else:
+                    num_lines += 1
+
+            if num_lines == 0: num_lines = 1
+            
+            # ギリギリまで文字を大きく（最大9.5Pt、最小5.0Pt）
+            calc_font_size = (available_height_pt / num_lines) * 0.8
+            ppt_font_size = max(5.0, min(9.5, calc_font_size))
+            
+            # 折り返した行同士の隙間は少し詰める
+            inner_line_spacing = ppt_font_size * 1.15
+            
+            # テキスト自体の総高さ
+            total_text_height = num_lines * inner_line_spacing
+            
+            # 余った隙間を割り出して、各項目の「間」に均等に振り分ける
+            remaining_height = available_height_pt - total_text_height
+            space_between = remaining_height / len(items) if remaining_height > 0 else 0
             
             for idx, item_text in enumerate(items):
                 p = tf_info.paragraphs[0] if idx == 0 else tf_info.add_paragraph()
                 p.text = item_text
                 
-                # 🌟 行間を少し詰めて、全項目が余裕で収まるように調整
-                p.font.size = Pt(7.0) 
+                p.font.size = Pt(ppt_font_size) 
                 p.font.name = "游明朝"
                 p.font.color.rgb = RGBColor(80, 80, 80)
-                p.line_spacing = Pt(9.0)
+                p.line_spacing = Pt(inner_line_spacing)
+                
+                # 🌟 等間隔に散らすために、項目と項目の間に計算した余白を挿入！
+                if idx > 0:
+                    p.space_before = Pt(space_between)
 
             line_eq1 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, Inches(5.9), Inches(10), Pt(1))
             line_eq1.fill.solid()

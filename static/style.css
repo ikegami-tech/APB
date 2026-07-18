@@ -699,3 +699,13 @@ label.file-upload-card:hover {
 .btn-check-label input[type="checkbox"] {
     display: none;
 }
+/* =========================================
+   🔥 横並びパーツ（間取りなど）のズレを強制リセット
+   ========================================= */
+.smart-item-card input[type="text"],
+.smart-item-card select {
+    margin: 0 !important;             /* ➔ 犯人だった上下のすき間を完全にゼロにします！ */
+    height: 42px !important;           /* ➔ 高さを42pxに完全固定 */
+    box-sizing: border-box !important; /* ➔ サイズの計算方法を統一 */
+    vertical-align: middle !important; /* ➔ 縦の並び順を綺麗に中央揃えに固定 */
+}

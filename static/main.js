@@ -270,7 +270,7 @@ function openModal(id) {
             if (dispEl && inpEl) {
                 inpEl.value = dispEl.innerText;
                 // 🌟 ここから追加：新デザイン用の復元処理
-                if (['exclusive-area', 'balcony-area', 'floor', 'total-units'].includes(item)) {
+                if (['exclusive-area', 'balcony-area', 'floor', 'total-units', 'layout', 'parking', 'bike', 'bicycle', 'admin-fee', 'repair-fund', 'build-date'].includes(item)) {
                     if (typeof window.restoreCombinedUI === 'function') {
                         window.restoreCombinedUI(item, dispEl.innerText);
                     }
@@ -663,6 +663,17 @@ async function downloadPptx() {
             currentDesign = "3";
         }
         formData.append("design_num", currentDesign);
+
+        // 🌟【新規追加】WEB画面で自動調整されたフォントサイズを検出してパワポ側に引き継ぐ魔法
+        let currentFontSize = "10"; // 何も取得できなかった場合の安全用デフォルト値
+        if (currentDesign === "1") {
+            const firstItem = document.querySelector('.summary-item-d1');
+            if (firstItem && firstItem.style.fontSize) {
+                // 例：「11px」から数値の「11」だけを綺麗に抜き出します
+                currentFontSize = parseInt(firstItem.style.fontSize).toString();
+            }
+        }
+        formData.append("summary_font_size", currentFontSize);
 
         // 各デザインの画面から現在表示されているテキストを正しく収集する処理
         let suffix = currentDesign === "1" ? "" : "-d" + currentDesign;
@@ -1263,11 +1274,14 @@ window.updateCombinedValue = function(targetId) {
         } else if (targetId === 'total-units') {
             let val = document.getElementById('input-' + targetId + '-val').value.trim();
             if (val) res = val + "戸";
-        } else if (targetId === 'floor') {
-            let v1 = document.getElementById('input-floor-val1').value.trim();
-            let v2 = document.getElementById('input-floor-val2').value.trim();
-            if (v1) res += v1 + "階建";
-            if (v2) res += (res ? " " : "") + v2 + "階部分";
+        } else if (targetId === 'build-date') {
+            let era = document.getElementById('input-build-era').value;
+            let year = document.getElementById('input-build-year').value.trim();
+            let month = document.getElementById('input-build-month').value.trim();
+            if (year && month) {
+                // 西暦なら「2026年7月」、和暦なら「令和8年7月」のように綺麗に組み立てます
+                res = (era === '西暦' ? '' : era) + year + "年" + month + "月";
+            }
         }
     }
     hiddenInput.value = res;
@@ -1283,18 +1297,19 @@ window.restoreCombinedUI = function(targetId, text) {
     let isStandard = false;
     let match = null;
     
+    // ① 専有面積・バルコニー面積
     if (targetId === 'exclusive-area' || targetId === 'balcony-area') {
         if (text === "") {
             isStandard = true;
             document.getElementById('input-' + targetId + '-val').value = "";
         } else {
-            // "数字＋㎡" なら定型枠に入れる
             match = text.match(/^([0-9\.]+)\s*㎡$/);
             if (match) {
                 isStandard = true;
                 document.getElementById('input-' + targetId + '-val').value = match[1];
             }
         }
+    // ② 総戸数
     } else if (targetId === 'total-units') {
         if (text === "") {
             isStandard = true;
@@ -1306,6 +1321,7 @@ window.restoreCombinedUI = function(targetId, text) {
                 document.getElementById('input-' + targetId + '-val').value = match[1];
             }
         }
+    // ③ 所在階
     } else if (targetId === 'floor') {
         if (text === "") {
             isStandard = true;
@@ -1319,6 +1335,58 @@ window.restoreCombinedUI = function(targetId, text) {
                 document.getElementById('input-floor-val2').value = match[2] || "";
             }
         }
+    // ④ 間取り
+    } else if (targetId === 'layout') {
+        if (text === "") {
+            isStandard = true;
+            document.getElementById('input-layout-num').value = "";
+            document.getElementById('input-layout-type').value = "LDK";
+        } else {
+            match = text.match(/^(\d+)\s*(LDK|DK|K|LK|SLDK)$/i);
+            if (match) {
+                isStandard = true;
+                document.getElementById('input-layout-num').value = match[1];
+                document.getElementById('input-layout-type').value = match[2].toUpperCase();
+            }
+        }
+    // ⑤ 各種月額費用（駐車場、バイク、駐輪場、管理費、修繕積立金）
+    } else if (['parking', 'bike', 'bicycle', 'admin-fee', 'repair-fund'].includes(targetId)) {
+        if (text === "") {
+            isStandard = true;
+            document.getElementById('input-' + targetId + '-val').value = "";
+        } else {
+            match = text.match(/^([0-9,.\s]+)\s*円\/月$/);
+            if (match) {
+                isStandard = true;
+                document.getElementById('input-' + targetId + '-val').value = match[1].trim();
+            }
+        }
+    // ⑥ 建築年月
+    } else if (targetId === 'build-date') {
+        if (text === "") {
+            isStandard = true;
+            document.getElementById('input-build-era').value = "西暦";
+            document.getElementById('input-build-year').value = "";
+            document.getElementById('input-build-month').value = "";
+        } else {
+            // 元号パターンの分解
+            match = text.match(/^(令和|平成|昭和)(\d+)年(\d+)月$/);
+            if (match) {
+                isStandard = true;
+                document.getElementById('input-build-era').value = match[1];
+                document.getElementById('input-build-year').value = match[2];
+                document.getElementById('input-build-month').value = match[3];
+            } else {
+                // 西暦パターンの分解
+                match = text.match(/^(\d+)年(\d+)月$/);
+                if (match) {
+                    isStandard = true;
+                    document.getElementById('input-build-era').value = "西暦";
+                    document.getElementById('input-build-year').value = match[1];
+                    document.getElementById('input-build-month').value = match[2];
+                }
+            }
+        }
     }
     
     // 定型フォーマットに合致するかどうかでチェックボックスをオンオフする
@@ -1330,4 +1398,24 @@ window.restoreCombinedUI = function(targetId, text) {
         freeInput.value = text;
     }
     window.toggleFreeInput(targetId, freeCheck.checked);
+};
+// 🌟 デザイン1：枠の高さに合わせて文字の大きさを「限界までジャストフィット」させる魔法
+window.adjustDesign1FontSize = function() {
+    const container = document.getElementById('summary-container-d1');
+    if (container) {
+        const items = container.querySelectorAll('.summary-item-d1');
+        const parent = container.parentElement; // 基準となる外枠の高さ
+        
+        if (parent && items.length > 0) {
+            let fontSize = 12; // ➔ まずは項目が少ない時に一番見やすい「12px」からスタート！
+            items.forEach(el => el.style.fontSize = fontSize + 'px');
+            
+            // 💡 文字が外枠の高さからはみ出している間、1pxずつ文字を小さくしていくループ処理
+            // 最低でも文字が潰れない「7px」でストップさせる安全ガード付き
+            while (container.scrollHeight > parent.clientHeight && fontSize > 7) {
+                fontSize--;
+                items.forEach(el => el.style.fontSize = fontSize + 'px');
+            }
+        }
+    }
 };

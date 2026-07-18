@@ -125,9 +125,10 @@
                                 <span style="font-size: 14px;">徒歩 <span id="display-walk">〇</span> 分</span>
                             </div>
                             <div class="z-box zumen-summary-box" style="flex-grow: 1; padding: 8px; cursor: pointer; display: flex; flex-direction: column; gap: 5px; background-color: transparent; min-height: 0;" onclick="openModal('summaryModal')">
-                                <div style="font-size: 11px; font-weight: bold; border-bottom: 1px solid #777; padding-bottom: 2px; margin-bottom: 3px; flex-shrink: 0;">■ 物件詳細情報</div>
-                                <div style="flex-grow: 1; position: relative; width: 100%; min-height: 0;">
-                                    <div id="summary-container-d1" style="position: absolute; top: 0; left: 0; width: 153%; height: 153%; display: flex; flex-direction: column; overflow: hidden; font-size: 10px; line-height: 1.2; transform: scale(0.65); transform-origin: top left;">
+                                    <div style="font-size: 11px; font-weight: bold; border-bottom: 1px solid #777; padding-bottom: 2px; margin-bottom: 3px; flex-shrink: 0;">■ 物件詳細情報</div>
+                                    <!-- 💡 縦幅いっぱいに広げ、はみ出し計算を正確に行う構造にリセットしました -->
+                                    <div style="flex-grow: 1; width: 100%; min-height: 0;">
+                                        <div id="summary-container-d1" style="width: 100%; display: flex; flex-direction: column; line-height: 1.3;">
                                         <div class="summary-item-d1">■ 物件住所 / <span id="display-address"></span></div>
                                         <div class="summary-item-d1">■ 土地権利 / <span id="display-land-right"></span></div>
                                         <div class="summary-item-d1 only-kodate">■ 土地面積 / <span id="display-land-area"></span></div>
@@ -647,10 +648,11 @@
                         <label style="font-size: 13px; font-weight: bold; color: #1E2D3D;">所在階</label>
                         <label class="btn-check-label"><input type="checkbox" id="check-free-floor" onchange="toggleFreeInput('floor', this.checked)"> フリー入力</label>
                     </div>
+                    <!-- 💡 二つの入力枠（input）の width を 80px ➔ 120px に統一しました -->
                     <div id="standard-floor" style="display: flex; align-items: center; gap: 8px;">
-                        <input type="text" id="input-floor-val1" oninput="updateCombinedValue('floor')" onkeydown="if(event.key==='Enter') this.blur();" style="width: 80px; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; font-size: 14px; text-align: center;">
+                        <input type="text" id="input-floor-val1" oninput="updateCombinedValue('floor')" onkeydown="if(event.key==='Enter') this.blur();" style="width: 120px; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; font-size: 14px; text-align: center;">
                         <span style="font-size: 14px; font-weight: bold; color: #333;">階建</span>
-                        <input type="text" id="input-floor-val2" oninput="updateCombinedValue('floor')" onkeydown="if(event.key==='Enter') this.blur();" style="width: 80px; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; font-size: 14px; text-align: center;">
+                        <input type="text" id="input-floor-val2" oninput="updateCombinedValue('floor')" onkeydown="if(event.key==='Enter') this.blur();" style="width: 120px; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; font-size: 14px; text-align: center;">
                         <span style="font-size: 14px; font-weight: bold; color: #333;">階部分</span>
                     </div>
                     <input type="text" id="input-floor-free" oninput="updateCombinedValue('floor')" onkeydown="if(event.key==='Enter') this.blur();" placeholder="例）14階建7階部分" style="display: none; width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
@@ -679,14 +681,46 @@
 
                 <!-- 間取り -->
                 <div class="smart-item-card">
-                    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">間取り</label>
-                    <input type="text" id="input-layout" placeholder="例）〇LDK" onkeydown="if(event.key==='Enter') this.blur();" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 8px;">
+                        <label style="font-size: 13px; font-weight: bold; color: #1E2D3D;">間取り</label>
+                        <label class="btn-check-label"><input type="checkbox" id="check-free-layout" onchange="toggleFreeInput('layout', this.checked)"> フリー入力</label>
+                    </div>
+                    <!-- 💡 高さを 42px、selectのpaddingを 10px に揃えることでガタつきを根性から直します！ -->
+                    <div id="standard-layout" style="display: flex; align-items: center; gap: 8px;">
+                        <input type="text" id="input-layout-num" oninput="updateCombinedValue('layout')" onkeydown="if(event.key==='Enter') this.blur();" style="width: 120px; height: 42px; box-sizing: border-box; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; font-size: 14px; text-align: center;" placeholder="3">
+                        <select id="input-layout-type" onchange="updateCombinedValue('layout')" style="width: 120px; height: 42px; box-sizing: border-box; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; font-size: 14px; background-color: #fff; outline: none; cursor: pointer;">
+                            <option value="LDK">LDK</option>
+                            <option value="DK">DK</option>
+                            <option value="K">K</option>
+                            <option value="LK">LK</option>
+                            <option value="SLDK">SLDK</option>
+                        </select>
+                    </div>
+                    <input type="text" id="input-layout-free" oninput="updateCombinedValue('layout')" onkeydown="if(event.key==='Enter') this.blur();" placeholder="例）2LDK+S（納戸）" style="display: none; width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                    <input type="hidden" id="input-layout">
                 </div>
 
                 <!-- 建築年月 -->
                 <div class="smart-item-card">
-                    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">建築年月</label>
-                    <input type="text" id="input-build-date" placeholder="例）平成〇年〇月・20〇〇年〇月" onkeydown="if(event.key==='Enter') this.blur();" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 8px;">
+                        <label style="font-size: 13px; font-weight: bold; color: #1E2D3D;">建築年月</label>
+                        <label class="btn-check-label"><input type="checkbox" id="check-free-build-date" onchange="toggleFreeInput('build-date', this.checked)"> フリー入力</label>
+                    </div>
+                    <!-- 💡 プルダウン、年、月が美しく一直線に並ぶ構造に進化させました -->
+                    <div id="standard-build-date" style="display: flex; align-items: center; gap: 8px;">
+                        <select id="input-build-era" onchange="updateCombinedValue('build-date')" style="width: 120px; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; font-size: 14px; background-color: #fff; outline: none; cursor: pointer;">
+                            <option value="西暦">西暦</option>
+                            <option value="令和">令和</option>
+                            <option value="平成">平成</option>
+                            <option value="昭和">昭和</option>
+                        </select>
+                        <input type="text" id="input-build-year" oninput="updateCombinedValue('build-date')" onkeydown="if(event.key==='Enter') this.blur();" style="width: 100px; border: 1px solid #CFD8DC; border-radius: 4px; font-size: 14px; text-align: center;" placeholder="2026">
+                        <span style="font-size: 14px; font-weight: bold; color: #333;">年</span>
+                        <input type="text" id="input-build-month" oninput="updateCombinedValue('build-date')" onkeydown="if(event.key==='Enter') this.blur();" style="width: 80px; border: 1px solid #CFD8DC; border-radius: 4px; font-size: 14px; text-align: center;" placeholder="7">
+                        <span style="font-size: 14px; font-weight: bold; color: #333;">月</span>
+                    </div>
+                    <input type="text" id="input-build-date-free" oninput="updateCombinedValue('build-date')" onkeydown="if(event.key==='Enter') this.blur();" placeholder="例）不詳、または築年数不詳など" style="display: none; width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                    <input type="hidden" id="input-build-date">
                 </div>
 
                 <!-- 都市計画（戸建て） -->
@@ -746,20 +780,44 @@
 
                 <!-- 駐車場 -->
                 <div class="smart-item-card">
-                    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">駐車場</label>
-                    <input type="text" id="input-parking" placeholder="例）月々〇円〜〇円・空きなし等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 8px;">
+                        <label style="font-size: 13px; font-weight: bold; color: #1E2D3D;">駐車場</label>
+                        <label class="btn-check-label"><input type="checkbox" id="check-free-parking" onchange="toggleFreeInput('parking', this.checked)"> フリー入力</label>
+                    </div>
+                    <div id="standard-parking" style="display: flex; align-items: center; gap: 8px;">
+                        <input type="text" id="input-parking-val" oninput="updateCombinedValue('parking')" onkeydown="if(event.key==='Enter') this.blur();" style="width: 120px; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; font-size: 14px; text-align: right;" placeholder="9,000">
+                        <span style="font-size: 14px; font-weight: bold; color: #333;">円/月</span>
+                    </div>
+                    <input type="text" id="input-parking-free" oninput="updateCombinedValue('parking')" onkeydown="if(event.key==='Enter') this.blur();" placeholder="例）月々5,000円〜10,000円・空きなし等" style="display: none; width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                    <input type="hidden" id="input-parking">
                 </div>
 
                 <!-- バイク置き場（マンション） -->
                 <div class="only-mansion smart-item-card">
-                    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">バイク置き場</label>
-                    <input type="text" id="input-bike" placeholder="例）年間〇円〜〇円等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 8px;">
+                        <label style="font-size: 13px; font-weight: bold; color: #1E2D3D;">バイク置き場</label>
+                        <label class="btn-check-label"><input type="checkbox" id="check-free-bike" onchange="toggleFreeInput('bike', this.checked)"> フリー入力</label>
+                    </div>
+                    <div id="standard-bike" style="display: flex; align-items: center; gap: 8px;">
+                        <input type="text" id="input-bike-val" oninput="updateCombinedValue('bike')" onkeydown="if(event.key==='Enter') this.blur();" style="width: 120px; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; font-size: 14px; text-align: right;" placeholder="3,000">
+                        <span style="font-size: 14px; font-weight: bold; color: #333;">円/月</span>
+                    </div>
+                    <input type="text" id="input-bike-free" oninput="updateCombinedValue('bike')" onkeydown="if(event.key==='Enter') this.blur();" placeholder="例）空きあり（月額3,000円）" style="display: none; width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                    <input type="hidden" id="input-bike">
                 </div>
 
                 <!-- 駐輪場（マンション） -->
                 <div class="only-mansion smart-item-card">
-                    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">駐輪場</label>
-                    <input type="text" id="input-bicycle" placeholder="例）年間〇円〜〇円等" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 8px;">
+                        <label style="font-size: 13px; font-weight: bold; color: #1E2D3D;">駐輪場</label>
+                        <label class="btn-check-label"><input type="checkbox" id="check-free-bicycle" onchange="toggleFreeInput('bicycle', this.checked)"> フリー入力</label>
+                    </div>
+                    <div id="standard-bicycle" style="display: flex; align-items: center; gap: 8px;">
+                        <input type="text" id="input-bicycle-val" oninput="updateCombinedValue('bicycle')" onkeydown="if(event.key==='Enter') this.blur();" style="width: 120px; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; font-size: 14px; text-align: right;" placeholder="500">
+                        <span style="font-size: 14px; font-weight: bold; color: #333;">円/月</span>
+                    </div>
+                    <input type="text" id="input-bicycle-free" oninput="updateCombinedValue('bicycle')" onkeydown="if(event.key==='Enter') this.blur();" placeholder="例）ステッカー代200円/初回" style="display: none; width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                    <input type="hidden" id="input-bicycle">
                 </div>
 
                 <!-- 分譲会社（マンション） -->
@@ -801,14 +859,30 @@
 
                 <!-- 管理費（マンション） -->
                 <div class="only-mansion smart-item-card">
-                    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">管理費</label>
-                    <input type="text" id="input-admin-fee" placeholder="例）月額〇円" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 8px;">
+                        <label style="font-size: 13px; font-weight: bold; color: #1E2D3D;">管理費</label>
+                        <label class="btn-check-label"><input type="checkbox" id="check-free-admin-fee" onchange="toggleFreeInput('admin-fee', this.checked)"> フリー入力</label>
+                    </div>
+                    <div id="standard-admin-fee" style="display: flex; align-items: center; gap: 8px;">
+                        <input type="text" id="input-admin-fee-val" oninput="updateCombinedValue('admin-fee')" onkeydown="if(event.key==='Enter') this.blur();" style="width: 120px; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; font-size: 14px; text-align: right;" placeholder="10,000">
+                        <span style="font-size: 14px; font-weight: bold; color: #333;">円/月</span>
+                    </div>
+                    <input type="text" id="input-admin-fee-free" oninput="updateCombinedValue('admin-fee')" onkeydown="if(event.key==='Enter') this.blur();" placeholder="例）月額10,000円" style="display: none; width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                    <input type="hidden" id="input-admin-fee">
                 </div>
 
                 <!-- 修繕積立金（マンション） -->
                 <div class="only-mansion smart-item-card">
-                    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #1E2D3D;">修繕積立金</label>
-                    <input type="text" id="input-repair-fund" placeholder="例）月額〇円" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 8px;">
+                        <label style="font-size: 13px; font-weight: bold; color: #1E2D3D;">修繕積立金</label>
+                        <label class="btn-check-label"><input type="checkbox" id="check-free-repair-fund" onchange="toggleFreeInput('repair-fund', this.checked)"> フリー入力</label>
+                    </div>
+                    <div id="standard-repair-fund" style="display: flex; align-items: center; gap: 8px;">
+                        <input type="text" id="input-repair-fund-val" oninput="updateCombinedValue('repair-fund')" onkeydown="if(event.key==='Enter') this.blur();" style="width: 120px; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; font-size: 14px; text-align: right;" placeholder="15,000">
+                        <span style="font-size: 14px; font-weight: bold; color: #333;">円/月</span>
+                    </div>
+                    <input type="text" id="input-repair-fund-free" oninput="updateCombinedValue('repair-fund')" onkeydown="if(event.key==='Enter') this.blur();" placeholder="例）月額15,000円" style="display: none; width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px;">
+                    <input type="hidden" id="input-repair-fund">
                 </div>
 
                 <!-- その他費用（マンション） -->
