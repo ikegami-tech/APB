@@ -1227,6 +1227,7 @@ def generate_zumen(
     title: str = Form(""),
     price: str = Form(""),
     address: str = Form(""),
+    transport_line: str = Form(""), # 🌟 追加：路線名を受け取る
     transport_station: str = Form(""),
     transport_walk: str = Form(""),
     madori: str = Form(""),
@@ -1263,6 +1264,13 @@ def generate_zumen(
         from pptx.dml.color import RGBColor
         from pptx.enum.shapes import MSO_SHAPE
         from pptx.enum.text import PP_ALIGN, MSO_ANCHOR, MSO_AUTO_SIZE # 🌟ここに追加！
+        
+        # 🌟【バグ修正】パワポで「_x000D_」になるエラーを完全に防ぐため、改行コードのゴミ(\r)を強制排除！
+        full_summary = full_summary.replace('\r', '').replace('_x000D_', '')
+        title = title.replace('\r', '').replace('_x000D_', '')
+        address = address.replace('\r', '').replace('_x000D_', '')
+        transport_line = transport_line.replace('\r', '').replace('_x000D_', '') # 🌟 追加
+        
         print(f"🚀 【販売図面】デザイン{design_num}のパワポ生成を開始します...")
 
         # 1. パワポの土台を作成（横長スライド）
@@ -1354,10 +1362,14 @@ def generate_zumen(
             
             # タイトル
             tb_title = slide.shapes.add_textbox(Inches(0.3), Inches(4.2), Inches(2.6), Inches(0.8))
-            p_title = tb_title.text_frame.paragraphs[0]
+            tf_title = tb_title.text_frame
+            tf_title.vertical_anchor = MSO_ANCHOR.MIDDLE  # 🌟 追加：文字を上下の中央に美しく揃える！
+            tf_title.word_wrap = True  # 🌟 追加：枠の右端で自動的に折り返す
+            tf_title.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE  # 🌟 追加：文字が多すぎる場合は自動縮小
+            p_title = tf_title.paragraphs[0]
             p_title.text = title if title else "タイトルを入力"
             p_title.font.size = Pt(28)
-            p_title.font.name = "游明朝" # 🌟明朝体に指定
+            p_title.font.name = "游明朝"
             p_title.font.bold = True
             
             # 価格（Runを使って文字ごとにサイズを変える魔法）
@@ -1519,11 +1531,16 @@ def generate_zumen(
                     p = tf_info.paragraphs[0] if idx == 0 else tf_info.add_paragraph()
                     p.text = item_text
                     
-                    # 🌟 デザイン2用の設定（濃いグレー・枠に収まるサイズ）に戻します！
                     p.font.size = Pt(7.0) 
                     p.font.name = "游明朝"
-                    p.font.color.rgb = RGBColor(80, 80, 80) # 濃いグレーに戻す
+                    p.font.color.rgb = RGBColor(80, 80, 80) 
                     p.line_spacing = Pt(8.5)
+                    
+                    # 🌟【究極の整列魔法】パワポの裏側（XML）を直接操作してインデントを設定！
+                    indent_emu = int(Pt(7.0 * 8.5))
+                    pPr = p._p.get_or_add_pPr()
+                    pPr.set('marL', str(indent_emu))
+                    pPr.set('indent', str(-indent_emu))
             
             # 🌟 フッター位置はスライド内に収まる基本位置（6.65インチ）に戻す
             footer_y = Inches(6.65)
@@ -1552,6 +1569,8 @@ def generate_zumen(
             tb_title = slide.shapes.add_textbox(Inches(0.2), Inches(1.6), Inches(3.7), Inches(1.0))
             tf_title = tb_title.text_frame
             tf_title.vertical_anchor = MSO_ANCHOR.MIDDLE
+            tf_title.word_wrap = True  # 🌟 追加：枠の右端で自動的に折り返す
+            tf_title.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE  # 🌟 追加：文字が多すぎる場合は自動縮小
             p_title = tf_title.paragraphs[0]
             p_title.text = title if title else "タイトルを入力"
             p_title.font.size = Pt(22)
@@ -1719,10 +1738,15 @@ def generate_zumen(
                     
                     p.font.size = Pt(8.5)
                     p.font.name = "游明朝"
-                    # 🌟 ここを (255, 255, 255) の白文字に修正します！
                     p.font.color.rgb = RGBColor(255, 255, 255) 
                     p.line_spacing = Pt(12.0)
                     p.space_before = Pt(6.0)
+                    
+                    # 🌟【究極の整列魔法】パワポの裏側（XML）を直接操作してインデントを設定！
+                    indent_emu = int(Pt(8.5 * 8.5))
+                    pPr = p._p.get_or_add_pPr()
+                    pPr.set('marL', str(indent_emu))
+                    pPr.set('indent', str(-indent_emu))
                 
             # フッターの線の開始位置
             footer_y = Inches(6.65)
@@ -1763,18 +1787,49 @@ def generate_zumen(
             except: pass
 
             tb_title = slide.shapes.add_textbox(Inches(3.2), Inches(0.3), Inches(4.0), Inches(1.0))
-            p_title = tb_title.text_frame.paragraphs[0]
+            tf_title = tb_title.text_frame
+            tf_title.vertical_anchor = MSO_ANCHOR.MIDDLE  # 🌟 追加：文字を上下の中央に美しく揃える！
+            tf_title.word_wrap = True  # 🌟 追加：枠の右端で自動的に折り返す
+            tf_title.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE  # 🌟 追加：文字が多すぎる場合は自動縮小
+            p_title = tf_title.paragraphs[0]
             p_title.text = title if title else "タイトルを入力してください"
             p_title.font.size = Pt(24)
             p_title.font.bold = True
             p_title.alignment = PP_ALIGN.CENTER
             
-            tb_price = slide.shapes.add_textbox(Inches(7.3), Inches(0.4), Inches(2.5), Inches(0.8))
-            p_price = tb_price.text_frame.paragraphs[0]
-            p_price.text = f"販売価格 {price} 万円"
-            p_price.font.size = Pt(18)
-            p_price.font.bold = True
-            p_price.alignment = PP_ALIGN.RIGHT
+            # 🌟 修正：販売価格をWeb画面と同じように「縦並びのラベル」と「大きな金額」に分割して美しく配置
+            # 1. 「販売/価格」のラベル部分
+            tb_price_lbl = slide.shapes.add_textbox(Inches(6.8), Inches(0.55), Inches(0.6), Inches(0.6))
+            tf_lbl = tb_price_lbl.text_frame
+            tf_lbl.margin_top = tf_lbl.margin_bottom = tf_lbl.margin_left = tf_lbl.margin_right = 0
+            p_lbl = tf_lbl.paragraphs[0]
+            p_lbl.text = "販売\n価格"
+            p_lbl.font.size = Pt(11)
+            p_lbl.font.name = "游明朝"
+            p_lbl.font.color.rgb = RGBColor(100, 100, 100)
+            p_lbl.alignment = PP_ALIGN.RIGHT
+            p_lbl.line_spacing = Pt(13)
+
+            # 2. 「5,000 万円」の金額部分（文字ごとにサイズを変える魔法）
+            tb_price_val = slide.shapes.add_textbox(Inches(7.4), Inches(0.35), Inches(2.4), Inches(0.8))
+            tf_val = tb_price_val.text_frame
+            tf_val.margin_top = tf_val.margin_bottom = tf_val.margin_left = tf_val.margin_right = 0
+            tf_val.vertical_anchor = MSO_ANCHOR.MIDDLE
+            p_val = tf_val.paragraphs[0]
+            p_val.alignment = PP_ALIGN.RIGHT
+            
+            r_val = p_val.add_run()
+            r_val.text = price
+            r_val.font.size = Pt(40)  # 🌟 金額を特大に！
+            r_val.font.name = "游明朝"
+            r_val.font.bold = True
+            r_val.font.color.rgb = RGBColor(50, 50, 50)
+            
+            r_unit = p_val.add_run()
+            r_unit.text = " 万円"
+            r_unit.font.size = Pt(16) # 🌟 単位は小さく！
+            r_unit.font.name = "游明朝"
+            r_unit.font.color.rgb = RGBColor(50, 50, 50)
 
             line_h = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, Inches(1.4), Inches(10), Pt(2))
             line_h.fill.solid()
@@ -1793,11 +1848,38 @@ def generate_zumen(
             line_v.fill.fore_color.rgb = gray_line
             line_v.line.fill.background()
 
-            tb_acc = slide.shapes.add_textbox(Inches(7.3), Inches(1.5), Inches(2.5), Inches(0.6))
-            p_acc = tb_acc.text_frame.paragraphs[0]
-            p_acc.text = f"交通: {transport_station} 徒歩 {transport_walk} 分"
-            p_acc.font.size = Pt(12)
-            p_acc.alignment = PP_ALIGN.CENTER
+            # 🌟 修正：Web画面と同じように2段構えにし、駅名を大きく表示する魔法
+            tb_acc = slide.shapes.add_textbox(Inches(7.3), Inches(1.45), Inches(2.5), Inches(0.65))
+            tf_acc = tb_acc.text_frame
+            tf_acc.clear()
+            tf_acc.margin_top = tf_acc.margin_bottom = 0
+            tf_acc.vertical_anchor = MSO_ANCHOR.MIDDLE  # 🌟 追加：文字を上下の中央に美しく揃える！
+            
+            # 1行目：路線名
+            p_line = tf_acc.paragraphs[0]
+            p_line.text = transport_line if transport_line else "交通"
+            p_line.font.size = Pt(10)
+            p_line.font.color.rgb = RGBColor(100, 100, 100)
+            p_line.font.name = "游明朝"
+            p_line.alignment = PP_ALIGN.CENTER
+            
+            # 2行目：駅名と徒歩分数
+            p_sta = tf_acc.add_paragraph()
+            clean_station = transport_station.replace("「", "").replace("」", "")
+            
+            r_sta = p_sta.add_run()
+            r_sta.text = f"{clean_station} "
+            r_sta.font.size = Pt(18)
+            r_sta.font.bold = True
+            r_sta.font.color.rgb = RGBColor(80, 80, 80)
+            r_sta.font.name = "游明朝"
+            
+            r_walk = p_sta.add_run()
+            r_walk.text = f"徒歩 {transport_walk} 分"
+            r_walk.font.size = Pt(10)
+            r_walk.font.color.rgb = RGBColor(100, 100, 100)
+            r_walk.font.name = "游明朝"
+            p_sta.alignment = PP_ALIGN.CENTER
             
             line_acc = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(7.3), Inches(2.1), Inches(2.5), Pt(1))
             line_acc.fill.solid()
@@ -1824,10 +1906,12 @@ def generate_zumen(
             # まず、折り返しを考慮した「実質的な行数」を見積もる
             num_lines = 0
             for item_text in items:
-                if len(item_text) > 19: # 20文字以上は2行に折り返されると判定
-                    num_lines += 2
-                else:
-                    num_lines += 1
+                # 🌟 修正：ユーザーが入力した改行（\n）も1行として正確にカウントする
+                for line in item_text.split('\n'):
+                    if len(line) > 19: # 20文字以上は2行に折り返されると判定
+                        num_lines += 2
+                    else:
+                        num_lines += 1
 
             if num_lines == 0: num_lines = 1
             
@@ -1843,7 +1927,8 @@ def generate_zumen(
             
             # 余った隙間を割り出して、各項目の「間」に均等に振り分ける
             remaining_height = available_height_pt - total_text_height
-            space_between = remaining_height / len(items) if remaining_height > 0 else 0
+            # 🌟 修正：項目が0件の時にゼロ割りエラー（ZeroDivisionError）になるのを防ぐ安全ガードを追加！
+            space_between = remaining_height / len(items) if remaining_height > 0 and len(items) > 0 else 0
             
             for idx, item_text in enumerate(items):
                 p = tf_info.paragraphs[0] if idx == 0 else tf_info.add_paragraph()
@@ -1853,6 +1938,13 @@ def generate_zumen(
                 p.font.name = "游明朝"
                 p.font.color.rgb = RGBColor(80, 80, 80)
                 p.line_spacing = Pt(inner_line_spacing)
+                
+                # 🌟【究極の整列魔法】パワポの裏側（XML）を直接操作してインデントを設定！
+                # ※ 8.5の部分は文字幅です。もし「:」と文字の隙間が広すぎたり狭すぎる場合は、この数字を微調整してください
+                indent_emu = int(Pt(ppt_font_size * 8.5)) 
+                pPr = p._p.get_or_add_pPr()
+                pPr.set('marL', str(indent_emu))      # 2行目以降の開始位置(左余白)を設定
+                pPr.set('indent', str(-indent_emu))   # 1行目(項目名)だけ左に引き戻す
                 
                 # 🌟 等間隔に散らすために、項目と項目の間に計算した余白を挿入！
                 if idx > 0:
@@ -2129,9 +2221,11 @@ def generate_zumen(
                 rect = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, l, t, w, h)
                 rect.fill.solid()
                 if footer_design_num == "1":
-                    rect.fill.fore_color.rgb = bg_color if is_header else RGBColor(255,255,255)
-                    rect.line.color.rgb = RGBColor(255,255,255)
-                    tc = RGBColor(255,255,255) if is_header else RGBColor(0,0,0)
+                    # 🌟 修正：上段は青、下段は白（RGB(255,255,255)）にする！
+                    rect.fill.fore_color.rgb = bg_color if is_header else RGBColor(255, 255, 255)
+                    # 下段の枠線は白背景でも見えやすいように薄いグレーにする
+                    rect.line.color.rgb = RGBColor(255, 255, 255) if is_header else RGBColor(200, 200, 200)
+                    tc = RGBColor(255, 255, 255) if is_header else RGBColor(0, 0, 0)
                 elif footer_design_num == "2":
                     rect.fill.fore_color.rgb = top_border_color if is_header else RGBColor(255,255,255)
                     rect.line.color.rgb = top_border_color

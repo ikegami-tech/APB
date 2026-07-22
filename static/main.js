@@ -681,6 +681,7 @@ async function downloadPptx() {
         const titleText = document.getElementById('display-title' + (currentDesign === "1" ? "" : suffix))?.innerText || "";
         const priceText = document.getElementById('display-price' + suffix)?.innerText || "";
         const addressText = document.getElementById('display-address' + suffix)?.innerText || "";
+        const lineText = document.getElementById('display-line' + suffix)?.innerText || ""; // 🌟 追加：路線名を取得
         const stationText = document.getElementById('display-station' + suffix)?.innerText || "";
         const walkText = document.getElementById('display-walk' + suffix)?.innerText || "";
         const layoutText = document.getElementById('display-layout' + suffix)?.innerText || "";
@@ -693,6 +694,7 @@ async function downloadPptx() {
         formData.append("title", titleText);
         formData.append("price", priceText);
         formData.append("address", addressText);
+        formData.append("transport_line", lineText); // 🌟 追加：路線名をPythonへ送る
         formData.append("transport_station", stationText);
         formData.append("transport_walk", walkText);
         formData.append("madori", layoutText);
@@ -717,8 +719,17 @@ async function downloadPptx() {
         summaryItemNames.forEach(item => {
             const el = document.getElementById('display-' + item + suffix);
             if (el && el.innerText.trim() !== '' && el.parentNode && el.parentNode.style.display !== 'none') {
-                const text = el.parentNode.innerText.replace(/\r?\n/g, '').trim();
-                fullSummaryParts.push(text);
+                // ラベル（項目名）と値（入力内容）を分けて取得
+                let labelText = "";
+                if (el.parentNode.firstChild) {
+                    labelText = el.parentNode.firstChild.textContent.replace(/\r?\n/g, '').trim();
+                }
+                
+                // ゴミ(\r)を消して改行(\n)は残す
+                const valueText = el.innerText.replace(/\r/g, '').trim();
+                
+                // 🌟 修正：スペースでごまかさず、「タブ文字 (\t)」で美しく繋ぐ！
+                fullSummaryParts.push(labelText + "\t" + valueText);
             }
         });
         formData.append("full_summary", fullSummaryParts.join('|||'));
