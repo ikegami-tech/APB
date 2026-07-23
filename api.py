@@ -1786,16 +1786,29 @@ def generate_zumen(
             try: p_tenpo.font.shadow = True
             except: pass
 
-            tb_title = slide.shapes.add_textbox(Inches(3.2), Inches(0.3), Inches(4.0), Inches(1.0))
+            # 🌟 追加：タイトルの上部の飾り線（薄いグレー）
+            line_t_top = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(3.2), Inches(0.3), Inches(4.0), Pt(1.5))
+            line_t_top.fill.solid()
+            line_t_top.fill.fore_color.rgb = RGBColor(180, 180, 180)
+            line_t_top.line.fill.background()
+
+            # タイトルのテキストボックス（線の内側に収まるように高さを微調整）
+            tb_title = slide.shapes.add_textbox(Inches(3.2), Inches(0.35), Inches(4.0), Inches(0.9))
             tf_title = tb_title.text_frame
-            tf_title.vertical_anchor = MSO_ANCHOR.MIDDLE  # 🌟 追加：文字を上下の中央に美しく揃える！
-            tf_title.word_wrap = True  # 🌟 追加：枠の右端で自動的に折り返す
-            tf_title.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE  # 🌟 追加：文字が多すぎる場合は自動縮小
+            tf_title.vertical_anchor = MSO_ANCHOR.MIDDLE
+            tf_title.word_wrap = True
+            tf_title.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
             p_title = tf_title.paragraphs[0]
             p_title.text = title if title else "タイトルを入力してください"
             p_title.font.size = Pt(24)
             p_title.font.bold = True
             p_title.alignment = PP_ALIGN.CENTER
+            
+            # 🌟 追加：タイトル下部の飾り線（薄いグレー）
+            line_t_bottom = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(3.2), Inches(1.3), Inches(4.0), Pt(1.5))
+            line_t_bottom.fill.solid()
+            line_t_bottom.fill.fore_color.rgb = RGBColor(180, 180, 180)
+            line_t_bottom.line.fill.background()
             
             # 🌟 修正：販売価格をWeb画面と同じように「縦並びのラベル」と「大きな金額」に分割して美しく配置
             # 1. 「販売/価格」のラベル部分

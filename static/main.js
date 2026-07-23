@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // 🌟【追加】ログイン店舗に応じてフッターのロゴ画像を自動で切り替える
     const logoImages = document.querySelectorAll(".footer-logo-img");
     if (savedBranchKey && logoImages.length > 0) {
-        let logoSrc = "/static/logo.png"; // デフォルト（国分寺の既存ロゴ）
+        let logoSrc = ""; // 🌟 修正：デフォルト画像を空にしてエラーを防ぐ
         
         if (savedBranchKey === "練馬") {
             logoSrc = "/static/logo_nerima.png"; // ステップ1で配置した練馬ロゴ
@@ -290,7 +290,11 @@ function openModal(id) {
     else if (id === 'infoModal') {
         const dispEl = document.getElementById('display-price' + suffix);
         const inpEl = document.getElementById('input-price');
-        if (dispEl && inpEl) inpEl.value = dispEl.innerText;
+        if (dispEl && inpEl) {
+            let currentVal = dispEl.innerText;
+            // 🌟 修正：HTML側で数字制限をかけたので、モーダルを開く時は常に「純粋な数字」に戻してセットするだけ！
+            inpEl.value = currentVal.replace(/[^0-9]/g, '');
+        }
     } 
 // 交通アクセスモーダルの場合
     else if (id === 'accessModal') {
@@ -557,12 +561,40 @@ function saveTitle() {
     closeModal('titleModal');
     // setTimeout(window.syncDisplays, 50); ← これを消すことで連動をストップ
 }
-// 🌟 販売価格の保存処理（独立版に修正）
+// 🌟 販売価格の保存処理（自動カンマ＆億単位変換の魔法付き！）
 function saveInfo() {
-    const newPrice = document.getElementById('input-price').value;
+    let rawValue = document.getElementById('input-price').value.trim();
+    
+    // 全角数字で入力されても半角に直す（親切設計）
+    rawValue = rawValue.replace(/[０-９]/g, function(s) {
+        return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+    });
+
+    // 入力された文字の中から「数字だけ」を抜き出す
+    const numValue = parseInt(rawValue.replace(/[^0-9]/g, ''), 10);
+    
+    let formattedPrice = rawValue; // 「未定」や「相談」など数字以外の文字用
+    
+    // もし数字が入力されていれば、自動フォーマット発動！
+    if (!isNaN(numValue) && rawValue.match(/[0-9]/)) {
+        if (numValue >= 10000) {
+            // 10000（1億円）以上の場合（例：12800 ➔ 1億2,800）
+            const oku = Math.floor(numValue / 10000);
+            const man = numValue % 10000;
+            if (man === 0) {
+                formattedPrice = `${oku}億`;
+            } else {
+                formattedPrice = `${oku}億${man.toLocaleString()}`;
+            }
+        } else {
+            // 1億円未満の場合（例：5000 ➔ 5,000）
+            formattedPrice = numValue.toLocaleString();
+        }
+    }
+
     const suffix = getCurrentDesignSuffix();
     const displayEl = document.getElementById('display-price' + suffix);
-    if (displayEl) displayEl.innerText = newPrice;
+    if (displayEl) displayEl.innerText = formattedPrice;
     
     closeModal('infoModal');
 }
