@@ -646,7 +646,7 @@ window.saveImage = function() {
                 target.style.backgroundImage = `url(${imageUrl})`;
                 target.style.backgroundPosition = 'center';
                 target.style.backgroundRepeat = 'no-repeat';
-                target.style.color = 'transparent'; // 文字を消す
+                target.style.color = 'transparent'; // 枠中央の元の文字を消す
                 
                 if (window.currentImageTargetId.startsWith('icon')) {
                     target.style.backgroundSize = 'contain';
@@ -656,6 +656,47 @@ window.saveImage = function() {
                     target.style.padding = '0';
                 } else {
                     target.style.backgroundSize = 'cover';
+                    
+                    // 🌟 新規追加：Web画面上にも「画像1」等の透け感ラベルを自動生成する魔法
+                    if (window.currentImageTargetId !== 'tenpo') {
+                        // 古いラベルがあれば消す（上書き対応）
+                        const oldLabel = target.querySelector('.web-img-label');
+                        if (oldLabel) oldLabel.remove();
+
+                        // 表示する文字を判定
+                        let labelText = '';
+                        if (window.currentImageTargetId === 'madori') labelText = '間取り図';
+                        else if (window.currentImageTargetId === 'image1') labelText = '画像1';
+                        else if (window.currentImageTargetId === 'image2') labelText = '画像2';
+                        else if (window.currentImageTargetId === 'image3') labelText = '画像3';
+                        else if (window.currentImageTargetId === 'image4') labelText = '画像4';
+
+                        if (labelText) {
+                            const lbl = document.createElement('div');
+                            lbl.className = 'web-img-label';
+                            lbl.innerText = labelText;
+                            
+                            // 🌟 パワポと同じ「透けたブルーグレー背景＋白文字」のスタイルを適用
+                            lbl.style.cssText = `
+                                position: absolute;
+                                right: 0;
+                                bottom: 0;
+                                background-color: rgba(128, 154, 185, 0.9);
+                                color: #FFFFFF !important;
+                                font-size: 13px;
+                                padding: 4px 12px;
+                                font-family: '游ゴシック', 'Yu Gothic', sans-serif;
+                                border-radius: 4px 0 0 0;
+                                z-index: 10;
+                            `;
+                            
+                            // 親枠を基準にして右下に固定するため、positionをrelativeにする
+                            target.style.position = 'relative';
+                            target.style.overflow = 'hidden';
+                            
+                            target.appendChild(lbl);
+                        }
+                    }
                 }
             });
         }
@@ -674,7 +715,7 @@ window.saveImage = function() {
         }
     }
     
-    // 🌟 処理が終わったら、ファイル選択欄をリセットしてモーダルを自動で閉じる
+    // 処理が終わったら、ファイル選択欄をリセットしてモーダルを自動で閉じる
     fileInput.value = '';
     closeModal('imageModal');
 };

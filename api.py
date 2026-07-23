@@ -1332,12 +1332,66 @@ def generate_zumen(
                     # 枠の大きさに合わせて画像を自動リサイズして配置
                     slide.shapes.add_picture(tmp_path, left, top, width=width, height=height)
                     os.remove(tmp_path)
+                    
+                    # 🌟 追加：画像の右下に「画像1」などのラベル（キャプション）を配置する魔法
+                    lbl_w, lbl_h = Inches(0.8), Inches(0.25)
+                    lbl_l = left + width - lbl_w
+                    lbl_t = top + height - lbl_h
+                    
+                    lbl_bg = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, lbl_l, lbl_t, lbl_w, lbl_h)
+                    lbl_bg.fill.solid()
+                    lbl_bg.fill.fore_color.rgb = RGBColor(128, 154, 185) # 理想の画像に合わせたブルーグレー
+                    try: lbl_bg.fill.transparency = 0.1 # 10%だけ透けさせて背景の画像になじませる
+                    except: pass
+                    lbl_bg.line.fill.background() # 枠線は消す
+                    
+                    tf = lbl_bg.text_frame
+                    tf.margin_top = tf.margin_bottom = tf.margin_left = tf.margin_right = 0
+                    tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+                    p = tf.paragraphs[0]
+                    p.text = fallback_text # 「画像1」などのテキストをそのまま入れる
+                    p.font.size = Pt(10)
+                    p.font.color.rgb = RGBColor(255, 255, 255) # 白色
+                    p.font.name = "游ゴシック"
+                    p.alignment = PP_ALIGN.CENTER
+
                     return
                 except Exception as e:
                     print(f"画像配置エラー: {e}")
             
             # 画像がない場合やエラー時は今まで通りの色枠を出す
             add_color_box(left, top, width, height, fallback_text, bg_color, font_size) 
+# 🌟 追加：グラデーション背景を自動生成して滑らかにフェードさせる魔法の関数（フェード開始・終了位置の完全指定版！）
+        def add_gradient_box(left, top, w, h, color1, color2, start_pos=0.0, end_pos=1.0, horizontal=False):
+            import io
+            from PIL import Image, ImageDraw
+            img = Image.new('RGB', (300, 2) if horizontal else (2, 300))
+            draw = ImageDraw.Draw(img)
+            start_pixel = int(300 * start_pos)
+            end_pixel = int(300 * end_pos)
+            
+            for i in range(300):
+                if i <= start_pixel:
+                    # 指定した開始位置までは、color1（青）をベタ塗り
+                    r, g, b = color1
+                elif i >= end_pixel:
+                    # 指定した終了位置からは、color2（白）をベタ塗り
+                    r, g, b = color2
+                else:
+                    # その間だけを滑らかにフェードアウト！
+                    ratio = (i - start_pixel) / (end_pixel - start_pixel)
+                    r = int(color1[0] + (color2[0] - color1[0]) * ratio)
+                    g = int(color1[1] + (color2[1] - color1[1]) * ratio)
+                    b = int(color1[2] + (color2[2] - color1[2]) * ratio)
+                
+                if horizontal:
+                    draw.line([(i, 0), (i, 1)], fill=(r,g,b))
+                else:
+                    draw.line([(0, i), (1, i)], fill=(r,g,b))
+            img_io = io.BytesIO()
+            img.save(img_io, format='PNG')
+            img_io.seek(0)
+            slide.shapes.add_picture(img_io, left, top, width=w, height=h)
 
         # ==========================================
         # 🎨 レイアウト分岐処理
@@ -1761,8 +1815,36 @@ def generate_zumen(
 
         else:
             # ----------------------------------------------------
-            # 🟦 デザイン1（従来のもの）
+            # 🟦 デザイン1（最新：モダンな背景色分けレイアウト）
             # ----------------------------------------------------
+            
+            # 🌟 1. 上部の背景を「左端〜28%までは青」→「28%〜40%でスッと白に変化」→「右端まで白」のメリハリグラデーションに！
+            add_gradient_box(0, 0, Inches(10), Inches(1.4), (170, 200, 230), (250, 252, 255), start_pos=0.28, end_pos=0.40, horizontal=True)
+
+            # 🌟 2. 左の画像エリアを「上(明るい水色)から下(濃い水色)へのグラデーション」に
+            add_gradient_box(0, Inches(1.4), Inches(7.2), Inches(4.5), (228, 239, 248), (175, 200, 225), start_pos=0.0, end_pos=1.0, horizontal=False)
+
+            # 🌟 3. 下の設備エリアを「左(水色)から右(白)へのグラデーション」に
+            add_gradient_box(0, Inches(5.9), Inches(10), Inches(0.75), (230, 240, 250), (255, 255, 255), start_pos=0.0, end_pos=1.0, horizontal=True)
+
+            # 4. 右側の物件詳細用の白い角丸カード
+            bg_right = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(7.25), Inches(1.45), Inches(2.65), Inches(4.4))
+            bg_right.fill.solid()
+            bg_right.fill.fore_color.rgb = RGBColor(255, 255, 255)
+            bg_right.line.fill.background()
+            bg_right.adjustments[0] = 0.05 
+            
+            # 🌟 5. 白いカードに「ふんわりとした影（ドロップシャドウ）」をつけて高級感をアップ！
+            try:
+                bg_right.shadow.inherit = False
+                bg_right.shadow.color.rgb = RGBColor(0, 0, 0)
+                bg_right.shadow.alpha = 0.85     # 影の薄さ（15%の濃さ）
+                bg_right.shadow.blur_radius = Pt(10) # 影のぼかし具合
+                bg_right.shadow.distance = Pt(2)     # 影の落ちる距離
+                bg_right.shadow.angle = 45           # 影の角度（右下）
+            except:
+                pass 
+
             base_dir = os.path.dirname(__file__)
             tenpo_img_path = os.path.join(base_dir, "static", "tenpo.png")
             
@@ -1771,47 +1853,34 @@ def generate_zumen(
             else:
                 add_color_box(Inches(0.2), Inches(0.2), Inches(2.8), Inches(1.1), "店舗写真", RGBColor(235, 235, 235), 12)
             
-            # 🌟 ここに追加: 店舗写真の上に重なるテキストを描画する魔法
+            # 店舗写真の上に重なるテキスト
             tb_tenpo = slide.shapes.add_textbox(Inches(0.2), Inches(0.2), Inches(2.8), Inches(1.1))
             tf_tenpo = tb_tenpo.text_frame
-            tf_tenpo.vertical_anchor = MSO_ANCHOR.MIDDLE # 上下中央揃え
+            tf_tenpo.vertical_anchor = MSO_ANCHOR.MIDDLE
             p_tenpo = tf_tenpo.paragraphs[0]
             p_tenpo.text = "「住まい」のもっと先へ。"
             p_tenpo.font.size = Pt(14)
             p_tenpo.font.bold = True
-            p_tenpo.font.color.rgb = RGBColor(255, 255, 255) # 白文字
+            p_tenpo.font.color.rgb = RGBColor(255, 255, 255)
             p_tenpo.font.name = "游ゴシック"
-            p_tenpo.alignment = PP_ALIGN.CENTER # 左右中央揃え
-            # 文字を見やすくするための影をつける
+            p_tenpo.alignment = PP_ALIGN.CENTER
             try: p_tenpo.font.shadow = True
             except: pass
 
-            # 🌟 追加：タイトルの上部の飾り線（薄いグレー）
-            line_t_top = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(3.2), Inches(0.3), Inches(4.0), Pt(1.5))
-            line_t_top.fill.solid()
-            line_t_top.fill.fore_color.rgb = RGBColor(180, 180, 180)
-            line_t_top.line.fill.background()
-
-            # タイトルのテキストボックス（線の内側に収まるように高さを微調整）
+            # タイトル
             tb_title = slide.shapes.add_textbox(Inches(3.2), Inches(0.35), Inches(4.0), Inches(0.9))
             tf_title = tb_title.text_frame
             tf_title.vertical_anchor = MSO_ANCHOR.MIDDLE
             tf_title.word_wrap = True
             tf_title.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
             p_title = tf_title.paragraphs[0]
-            p_title.text = title if title else "タイトルを入力してください"
-            p_title.font.size = Pt(24)
+            p_title.text = title if title else "タイトルを入力"
+            p_title.font.size = Pt(26)
             p_title.font.bold = True
+            p_title.font.color.rgb = RGBColor(16, 51, 93) 
             p_title.alignment = PP_ALIGN.CENTER
             
-            # 🌟 追加：タイトル下部の飾り線（薄いグレー）
-            line_t_bottom = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(3.2), Inches(1.3), Inches(4.0), Pt(1.5))
-            line_t_bottom.fill.solid()
-            line_t_bottom.fill.fore_color.rgb = RGBColor(180, 180, 180)
-            line_t_bottom.line.fill.background()
-            
-            # 🌟 修正：販売価格をWeb画面と同じように「縦並びのラベル」と「大きな金額」に分割して美しく配置
-            # 1. 「販売/価格」のラベル部分
+            # 「販売/価格」のラベル
             tb_price_lbl = slide.shapes.add_textbox(Inches(6.8), Inches(0.55), Inches(0.6), Inches(0.6))
             tf_lbl = tb_price_lbl.text_frame
             tf_lbl.margin_top = tf_lbl.margin_bottom = tf_lbl.margin_left = tf_lbl.margin_right = 0
@@ -1823,7 +1892,7 @@ def generate_zumen(
             p_lbl.alignment = PP_ALIGN.RIGHT
             p_lbl.line_spacing = Pt(13)
 
-            # 2. 「5,000 万円」の金額部分（文字ごとにサイズを変える魔法）
+            # 金額部分
             tb_price_val = slide.shapes.add_textbox(Inches(7.4), Inches(0.35), Inches(2.4), Inches(0.8))
             tf_val = tb_price_val.text_frame
             tf_val.margin_top = tf_val.margin_bottom = tf_val.margin_left = tf_val.margin_right = 0
@@ -1833,28 +1902,23 @@ def generate_zumen(
             
             r_val = p_val.add_run()
             r_val.text = price
-            r_val.font.size = Pt(40)  # 🌟 金額を特大に！
+            r_val.font.size = Pt(40)
             r_val.font.name = "游明朝"
             r_val.font.bold = True
-            r_val.font.color.rgb = RGBColor(50, 50, 50)
+            r_val.font.color.rgb = RGBColor(16, 51, 93) 
             
             r_unit = p_val.add_run()
             r_unit.text = " 万円"
-            r_unit.font.size = Pt(16) # 🌟 単位は小さく！
+            r_unit.font.size = Pt(16)
             r_unit.font.name = "游明朝"
-            r_unit.font.color.rgb = RGBColor(50, 50, 50)
+            r_unit.font.color.rgb = RGBColor(16, 51, 93)
 
-            line_h = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, Inches(1.4), Inches(10), Pt(2))
-            line_h.fill.solid()
-            line_h.fill.fore_color.rgb = gray_line
-            line_h.line.fill.background()
-
-            # 🌟 変更（画像と間取り図をスマートに配置する魔法！）
-            add_smart_image(Inches(0.2), Inches(1.5), Inches(3.4), Inches(2.8), main_image, "画像1", box_color, 18)
-            add_smart_image(Inches(3.7), Inches(1.5), Inches(3.4), Inches(2.8), madori_image, "間取り図", box_color, 18)
-            add_smart_image(Inches(0.2), Inches(4.4), Inches(2.2), Inches(1.4), sub_image1, "画像2", box_color, 16)
-            add_smart_image(Inches(2.5), Inches(4.4), Inches(2.2), Inches(1.4), sub_image2, "画像3", box_color, 16)
-            add_smart_image(Inches(4.8), Inches(4.4), Inches(2.2), Inches(1.4), sub_image3, "画像4", box_color, 16)
+            # 🌟 5. 画像枠の代替色（画像がない時の空箱の色）を肌色から「真っ白（255,255,255）」に変更
+            add_smart_image(Inches(0.2), Inches(1.5), Inches(3.4), Inches(2.8), main_image, "画像1", RGBColor(255, 255, 255), 18)
+            add_smart_image(Inches(3.7), Inches(1.5), Inches(3.4), Inches(2.8), madori_image, "間取り図", RGBColor(255, 255, 255), 18)
+            add_smart_image(Inches(0.2), Inches(4.4), Inches(2.2), Inches(1.4), sub_image1, "画像2", RGBColor(255, 255, 255), 16)
+            add_smart_image(Inches(2.5), Inches(4.4), Inches(2.2), Inches(1.4), sub_image2, "画像3", RGBColor(255, 255, 255), 16)
+            add_smart_image(Inches(4.8), Inches(4.4), Inches(2.2), Inches(1.4), sub_image3, "画像4", RGBColor(255, 255, 255), 16)
 
             line_v = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(7.2), Inches(1.4), Pt(1), Inches(4.5))
             line_v.fill.solid()
@@ -2010,8 +2074,8 @@ def generate_zumen(
                     slide.shapes.add_picture(tmp_path, centered_left, centered_top, height=Inches(target_h_inches))
                     os.remove(tmp_path)
                 else:
-                    # 画像がない場合は今まで通りのピンク枠を出す
-                    add_color_box(current_left, current_top, Inches(1.2), Inches(0.4), "アイコン", pink_color, 11)
+                    # 🌟 修正：アイコン画像がない場合も、背景に合わせて真っ白な枠を出す
+                    add_color_box(current_left, current_top, Inches(1.2), Inches(0.4), "アイコン", RGBColor(255, 255, 255), 11)
 
             line_eq2 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, Inches(6.6), Inches(10), Pt(2))
             line_eq2.fill.solid()
