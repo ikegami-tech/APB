@@ -1818,11 +1818,11 @@ def generate_zumen(
             # 🟦 デザイン1（最新：モダンな背景色分けレイアウト）
             # ----------------------------------------------------
             
-            # 🌟 1. 上部の背景を「左端〜28%までは青」→「28%〜40%でスッと白に変化」→「右端まで白」のメリハリグラデーションに！
+            # 🌟 1. 上部の背景を、以前のしっかりした青色に戻し、28%〜40%で白へフェードアウト！
             add_gradient_box(0, 0, Inches(10), Inches(1.4), (170, 200, 230), (250, 252, 255), start_pos=0.28, end_pos=0.40, horizontal=True)
 
-            # 🌟 2. 左の画像エリアを「上(明るい水色)から下(濃い水色)へのグラデーション」に
-            add_gradient_box(0, Inches(1.4), Inches(7.2), Inches(4.5), (228, 239, 248), (175, 200, 225), start_pos=0.0, end_pos=1.0, horizontal=False)
+            # 🌟 2. 下の画像エリアも、上部と「全く同じ横グラデーション（幅も10インチ）」に広げることで、段差を完全に消しつつ画像間で美しくフェードさせます！
+            add_gradient_box(0, Inches(1.4), Inches(10), Inches(4.5), (170, 200, 230), (250, 252, 255), start_pos=0.28, end_pos=0.40, horizontal=True)
 
             # 🌟 3. 下の設備エリアを「左(水色)から右(白)へのグラデーション」に
             add_gradient_box(0, Inches(5.9), Inches(10), Inches(0.75), (230, 240, 250), (255, 255, 255), start_pos=0.0, end_pos=1.0, horizontal=True)
@@ -1866,6 +1866,18 @@ def generate_zumen(
             p_tenpo.alignment = PP_ALIGN.CENTER
             try: p_tenpo.font.shadow = True
             except: pass
+
+            # 🌟 追加：タイトルの上下に高級感のある飾り線を復活させる魔法
+            line_color = RGBColor(170, 200, 230) # 上品な薄いブルーグレー
+            line_top = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(3.2), Inches(0.25), Inches(4.0), Pt(1.5))
+            line_top.fill.solid()
+            line_top.fill.fore_color.rgb = line_color
+            line_top.line.fill.background()
+            
+            line_bottom = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(3.2), Inches(1.25), Inches(4.0), Pt(1.5))
+            line_bottom.fill.solid()
+            line_bottom.fill.fore_color.rgb = line_color
+            line_bottom.line.fill.background()
 
             # タイトル
             tb_title = slide.shapes.add_textbox(Inches(3.2), Inches(0.35), Inches(4.0), Inches(0.9))
