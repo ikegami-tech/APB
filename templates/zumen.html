@@ -90,7 +90,6 @@
                 </div>
                 
                 <div class="zumen-d1" id="zumen-layout-1">
-                    <!-- 🌟 1. タイトルエリアを以前の青色に戻す -->
                     <div class="zumen-d1-header" style="background: linear-gradient(to right, #AAC8E6 0%, #AAC8E6 28%, #FAFCFF 40%, #FAFCFF 100%); border-bottom: none; box-shadow: 0 3px 15px rgba(0,0,0,0.06); position: relative; z-index: 10;">
                         <div class="z-box" style="position: relative; width: 30%; flex-shrink: 0; height: 100%; background-color: #E8E8E8; background-image: url('/static/tenpo.png'); background-size: cover; background-position: center; background-repeat: no-repeat; color: transparent; border: none;" data-image-target="tenpo">
                             店舗写真（左上）
@@ -98,42 +97,51 @@
                                 「住まい」のもっと先へ。
                             </div>
                         </div>
-                        <!-- 🌟 修正：タイトルの上下に水色の飾り線を追加してスタイリッシュに！ -->
-                        <div style="width: 45%; flex-shrink: 1; text-align: center; font-size: 32px; font-style: italic; font-weight: bold; cursor: pointer; align-self: center; display: flex; align-items: center; justify-content: center; word-break: break-all; line-height: 1.2; padding: 15px 10px; margin: 8px 0; box-sizing: border-box; color: #10335D; border-top: 2px solid #AAC8E6; border-bottom: 2px solid #AAC8E6;" onclick="openModal('titleModal')">
-                            <span id="display-title">タイトル</span>
+                        
+                        <!-- 🌟 修正：height: 100%; を追加し、隣の店舗写真の高さに対して「ど真ん中」に揃える！ -->
+                        <div style="width: 45%; flex-shrink: 1; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="openModal('titleModal')">
+                            <div style="width: 85%; text-align: center; font-size: 32px; font-weight: bold; word-break: break-all; line-height: 1.2; padding: 12px 0; color: #10335D; font-family: '游明朝', 'Yu Mincho', serif; border-top: 2px solid #AAC8E6; border-bottom: 2px solid #AAC8E6;">
+                                <span id="display-title">タイトル</span>
+                            </div>
                         </div>
-                        <div style="width: 25%; flex-shrink: 0; text-align: right; cursor: pointer; padding-bottom: 10px; padding-right: 20px; color: #10335D;" onclick="openModal('infoModal')">
-                            <span style="font-size: 14px; display: inline-block; vertical-align: bottom; margin-bottom: 8px; margin-right: 10px; color: #555;">販売<br>価格</span>
-                            <span id="display-price" style="font-size: 46px; font-weight: bold; margin: 0 5px;">5,000</span>
-                            <span style="font-size: 20px; font-weight: bold;">万円</span>
+                        
+                        <!-- 🌟 修正：販売価格エリアの高さを100%にし、Flexboxで上下中央に美しく配置する！ -->
+                        <div style="width: 25%; flex-shrink: 0; height: 100%; display: flex; align-items: center; justify-content: flex-end; cursor: pointer; padding-right: 20px; box-sizing: border-box; color: #10335D; font-family: '游明朝', 'Yu Mincho', serif;" onclick="openModal('infoModal')">
+                            <div style="display: flex; align-items: flex-end;">
+                                <span style="font-size: 14px; display: inline-block; line-height: 1.2; margin-bottom: 8px; margin-right: 10px; color: #555; text-align: left;">販売<br>価格</span>
+                                <span id="display-price" style="font-size: 46px; font-weight: bold; margin: 0 5px; line-height: 1;">5,000</span>
+                                <span style="font-size: 20px; font-weight: bold; margin-bottom: 6px;">万円</span>
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- 🌟 2. ボディエリアもタイトルと全く同じ横グラデーションにして段差を消滅させる -->
                     <div class="zumen-d1-body" style="min-height: 0; background: linear-gradient(to right, #AAC8E6 0%, #AAC8E6 28%, #FAFCFF 40%, #FAFCFF 100%);">
                         <div class="zumen-d1-left" style="width: 72%; padding: 12px; box-sizing: border-box;">
                             <div style="display: flex; gap: 15px; height: 55%; margin-bottom: 12px;">
-                                <!-- 🌟 3. 画像枠を真っ白（#FFFFFF）に変更 -->
-                                <div class="z-box" style="flex: 1; border-radius: 6px; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); background-color: #FFFFFF;" onclick="openModal('imageModal')">画像1</div>
-                                <div class="z-box" style="flex: 1; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; border-radius: 6px; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); background-color: #FFFFFF;" onclick="alert('間取り図をアップロード')">間取り図</div>
+                                <!-- 🌟 修正：画像空枠の文字フォントを「游明朝」にし、パワポに合わせて文字を大きく -->
+                                <div class="z-box" style="flex: 1; border-radius: 6px; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); background-color: #FFFFFF; font-family: '游明朝', 'Yu Mincho', serif; color: #646464; font-size: 24px; display: flex; align-items: center; justify-content: center;" onclick="openModal('imageModal')">画像1</div>
+                                <div class="z-box" style="flex: 1; border-radius: 6px; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); background-color: #FFFFFF; font-family: '游明朝', 'Yu Mincho', serif; color: #646464; font-size: 24px; display: flex; align-items: center; justify-content: center;" onclick="alert('イメージ図をアップロード')">イメージ図</div>
                             </div>
                             <div style="display: flex; gap: 15px; height: calc(45% - 12px);">
-                                <div class="z-box" style="flex: 1; border-radius: 6px; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); background-color: #FFFFFF;" onclick="alert('サブ画像2')">画像2</div>
-                                <div class="z-box" style="flex: 1; border-radius: 6px; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); background-color: #FFFFFF;" onclick="alert('サブ画像3')">画像3</div>
-                                <div class="z-box" style="flex: 1; border-radius: 6px; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); background-color: #FFFFFF;" onclick="alert('サブ画像4')">画像4</div>
+                                <div class="z-box" style="flex: 1; border-radius: 6px; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); background-color: #FFFFFF; font-family: '游明朝', 'Yu Mincho', serif; color: #646464; font-size: 20px; display: flex; align-items: center; justify-content: center;" onclick="alert('サブ画像2')">画像2</div>
+                                <div class="z-box" style="flex: 1; border-radius: 6px; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); background-color: #FFFFFF; font-family: '游明朝', 'Yu Mincho', serif; color: #646464; font-size: 20px; display: flex; align-items: center; justify-content: center;" onclick="alert('サブ画像3')">画像3</div>
+                                <div class="z-box" style="flex: 1; border-radius: 6px; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); background-color: #FFFFFF; font-family: '游明朝', 'Yu Mincho', serif; color: #646464; font-size: 20px; display: flex; align-items: center; justify-content: center;" onclick="alert('サブ画像4')">画像4</div>
                             </div>
                         </div>
-                        <div class="zumen-d1-right" style="width: 26%; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; justify-content: space-between; min-height: 0; height: calc(100% - 24px); background-color: #FFF; border-radius: 8px; margin: 12px 12px 12px 0; padding: 12px; box-sizing: border-box; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-                            <div style="text-align: center; border-bottom: 1px solid #E0E0E0; padding: 5px 0; height: 75px; box-sizing: border-box; flex-shrink: 0; cursor: pointer;" onclick="openModal('accessModal')">
-                                <span style="font-size: 16px; color: #10335D; font-weight: bold;" id="display-line">交通</span><br>
-                                <span style="font-size: 24px; font-weight: bold; color: #333;" id="display-station">「最寄駅」</span> 
-                                <span style="font-size: 14px; color: #555;">徒歩 <span id="display-walk">〇</span> 分</span>
+                        <!-- 🌟 修正：右側のパネルをパワポに合わせて、角丸や影をなくし、左側に直線のグレー線を引く -->
+                        <div class="zumen-d1-right" style="width: 28%; flex-shrink: 0; display: flex; flex-direction: column; gap: 5px; justify-content: flex-start; min-height: 0; height: 100%; background-color: #FFF; border-radius: 0; margin: 0; padding: 12px 20px; box-sizing: border-box; box-shadow: none; border-left: 1px solid #787878;">
+                            <!-- 🌟 修正：交通アクセスの文字色とフォントを「游明朝」でパワポと完全に一致させる -->
+                            <div style="text-align: center; border-bottom: 1px solid #E0E0E0; padding: 5px 0; height: 75px; box-sizing: border-box; flex-shrink: 0; cursor: pointer; font-family: '游明朝', 'Yu Mincho', serif;" onclick="openModal('accessModal')">
+                                <span style="font-size: 14px; color: #646464;" id="display-line">交通</span><br>
+                                <span style="font-size: 24px; font-weight: bold; color: #505050;" id="display-station">「最寄駅」</span> 
+                                <span style="font-size: 13px; color: #646464;">徒歩 <span id="display-walk">〇</span> 分</span>
                             </div>
-                            <!-- 🚨 レイアウトを壊していた不要なコードはここから綺麗に消え去っています！ 🚨 -->
-                            <div class="z-box zumen-summary-box" style="flex-grow: 1; padding: 8px; cursor: pointer; display: flex; flex-direction: column; gap: 5px; background-color: transparent; min-height: 0;" onclick="openModal('summaryModal')">
-                                    <div style="font-size: 11px; font-weight: bold; border-bottom: 1px solid #777; padding-bottom: 2px; margin-bottom: 3px; flex-shrink: 0;">■ 物件詳細情報</div>
+                            <!-- 🌟 修正：上のpaddingを0にし、少しだけマージンをあけて上に寄せる -->
+                            <div class="z-box zumen-summary-box" style="flex-grow: 1; padding: 0 8px 8px 8px; margin-top: 5px; cursor: pointer; display: flex; flex-direction: column; gap: 5px; background-color: transparent; min-height: 0;" onclick="openModal('summaryModal')">
+                                    <div style="font-size: 11px; font-weight: bold; border-bottom: 1px solid #777; padding-bottom: 2px; margin-bottom: 3px; flex-shrink: 0; color: #333;">■ 物件詳細情報</div>
                                     <div style="flex-grow: 1; width: 100%; min-height: 0;">
-                                        <div id="summary-container-d1" style="width: 100%; display: flex; flex-direction: column; line-height: 1.3;">
+                                        <!-- 🌟 修正：物件詳細の中身のフォントを「游明朝」へ -->
+                                        <div id="summary-container-d1" style="width: 100%; display: flex; flex-direction: column; line-height: 1.3; font-family: '游明朝', 'Yu Mincho', serif; color: #505050;">
                                         <div class="summary-item-d1">■ 物件住所 / <span id="display-address"></span></div>
                                         <div class="summary-item-d1">■ 土地権利 / <span id="display-land-right"></span></div>
                                         <div class="summary-item-d1 only-kodate">■ 土地面積 / <span id="display-land-area"></span></div>
@@ -173,7 +181,8 @@
                     </div>
                     <!-- 🌟 4. 設備エリア全体を真っ白にし、アイコン枠の色も白に統一 -->
                     <div class="zumen-d1-equipment" style="display: flex; align-items: center; gap: 15px; height: 45px; margin: 3px 0; background: linear-gradient(to right, #E6F0FA, #FFFFFF); padding: 0 10px; box-sizing: border-box;">
-                        <div style="font-size: 13px; line-height: 1.2; font-weight: bold; width: 60px; text-align: center; flex-shrink: 0; color: #333;">物件<br>設備</div>
+                        <!-- 🌟 修正：「物件設備」のフォントを游明朝へ統一 -->
+                        <div style="font-size: 14px; line-height: 1.2; font-weight: bold; width: 60px; text-align: center; flex-shrink: 0; color: #333; font-family: '游明朝', 'Yu Mincho', serif;">物件<br>設備</div>
                         <div style="flex-grow: 1; display: flex; justify-content: space-between; height: 100%;">
                             <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #FFFFFF; border-radius: 4px; border: none;" onclick="openImageModal('icon1', '設備アイコン1')" data-image-target="icon1">アイコン</div>
                             <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #FFFFFF; border-radius: 4px; border: none;" onclick="openImageModal('icon2', '設備アイコン2')" data-image-target="icon2">アイコン</div>
@@ -198,14 +207,15 @@
                             <div class="foot-address" style="font-size: 9px; line-height: 1.2;">住所</div>
                         </div>
 
+                        <!-- 🌟 修正：JSが自動で書き換えられるように、foot-name, foot-mobile, foot-email という目印をつけました！ -->
                         <div style="width: 24%; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 18px; display: flex; flex-direction: column; justify-content: center; height: 100%;">
                             <div style="margin-bottom: 8px; display: flex; align-items: baseline;">
                                 <span style="font-size: 9px; margin-right: 6px;">担当</span>
-                                <strong style="font-size: 17px; letter-spacing: 1px; white-space: nowrap;">担当者名</strong>
+                                <strong class="foot-name" style="font-size: 17px; letter-spacing: 1px; white-space: nowrap;">担当者名</strong>
                             </div>
                             <div style="font-size: 9px; line-height: 1.5;">
-                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mobile.</span>携帯番号</div>
-                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mail.</span>メールアドレス</div>
+                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mobile.</span><span class="foot-mobile">携帯番号</span></div>
+                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mail.</span><span class="foot-email">メールアドレス</span></div>
                             </div>
                         </div>
 
@@ -342,14 +352,15 @@
                             <div class="foot-address" style="font-size: 9px; line-height: 1.2;">住所</div>
                         </div>
 
+                        <!-- 🌟 修正：JSが自動で書き換えられるように、foot-name, foot-mobile, foot-email という目印をつけました！ -->
                         <div style="width: 24%; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 18px; display: flex; flex-direction: column; justify-content: center; height: 100%;">
                             <div style="margin-bottom: 8px; display: flex; align-items: baseline;">
                                 <span style="font-size: 9px; margin-right: 6px;">担当</span>
-                                <strong style="font-size: 17px; letter-spacing: 1px; white-space: nowrap;">担当者名</strong>
+                                <strong class="foot-name" style="font-size: 17px; letter-spacing: 1px; white-space: nowrap;">担当者名</strong>
                             </div>
                             <div style="font-size: 9px; line-height: 1.5;">
-                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mobile.</span>携帯番号</div>
-                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mail.</span>メールアドレス</div>
+                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mobile.</span><span class="foot-mobile">携帯番号</span></div>
+                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mail.</span><span class="foot-email">メールアドレス</span></div>
                             </div>
                         </div>
 
@@ -483,14 +494,15 @@
                             <div class="foot-address" style="font-size: 9px; line-height: 1.2;">住所</div>
                         </div>
 
+                        <!-- 🌟 修正：JSが自動で書き換えられるように、foot-name, foot-mobile, foot-email という目印をつけました！ -->
                         <div style="width: 24%; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 18px; display: flex; flex-direction: column; justify-content: center; height: 100%;">
                             <div style="margin-bottom: 8px; display: flex; align-items: baseline;">
                                 <span style="font-size: 9px; margin-right: 6px;">担当</span>
-                                <strong style="font-size: 17px; letter-spacing: 1px; white-space: nowrap;">担当者名</strong>
+                                <strong class="foot-name" style="font-size: 17px; letter-spacing: 1px; white-space: nowrap;">担当者名</strong>
                             </div>
                             <div style="font-size: 9px; line-height: 1.5;">
-                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mobile.</span>携帯番号</div>
-                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mail.</span>メールアドレス</div>
+                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mobile.</span><span class="foot-mobile">携帯番号</span></div>
+                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mail.</span><span class="foot-email">メールアドレス</span></div>
                             </div>
                         </div>
 

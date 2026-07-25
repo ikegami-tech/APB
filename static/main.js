@@ -41,6 +41,15 @@ document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll('.foot-address').forEach(el => el.innerText = data.address);
     }
 
+    // 🌟 追加：ログインユーザー個人の情報（名前・携帯・メアド）をフッターに自動反映する魔法！
+    const savedUserName = localStorage.getItem("apb_user_name");
+    const savedUserMobile = localStorage.getItem("apb_user_mobile");
+    const savedUserEmail = localStorage.getItem("apb_user_email");
+
+    if (savedUserName) document.querySelectorAll('.foot-name').forEach(el => el.innerText = savedUserName);
+    if (savedUserMobile) document.querySelectorAll('.foot-mobile').forEach(el => el.innerText = savedUserMobile);
+    if (savedUserEmail) document.querySelectorAll('.foot-email').forEach(el => el.innerText = savedUserEmail);
+
 // 🌟【追加】ログイン店舗に応じてフッターのロゴ画像を自動で切り替える
     const logoImages = document.querySelectorAll(".footer-logo-img");
     if (savedBranchKey && logoImages.length > 0) {
@@ -85,7 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let modalTitle = "";
         
         if (html.includes('店舗写真')) { targetId = 'tenpo'; modalTitle = '店舗写真'; }
-        else if (html.includes('間取り図')) { targetId = 'madori'; modalTitle = '間取り図'; }
+        else if (html.includes('間取り図') || html.includes('イメージ図')) { targetId = 'madori'; modalTitle = 'イメージ図'; }
         else if (html.includes('画像1')) { targetId = 'image1'; modalTitle = '画像1'; }
         else if (html.includes('画像2')) { targetId = 'image2'; modalTitle = '画像2'; }
         else if (html.includes('画像3')) { targetId = 'image3'; modalTitle = '画像3'; }
@@ -153,6 +162,7 @@ async function handleLogin(event) {
             localStorage.setItem("branch_key", result.branch_key);
             localStorage.setItem("company_name", "株式会社 東宝ハウス" + result.branch_key);
             localStorage.setItem("apb_footer_design", result.footer_design_num);
+            localStorage.setItem("apb_user_mobile", result.mobile || ""); // 🌟 追加：携帯番号も記憶させる！
             
             alert(`ログイン成功！\nようこそ、${result.name} さん`);
             window.location.href = "/menu";
@@ -665,7 +675,7 @@ window.saveImage = function() {
 
                         // 表示する文字を判定
                         let labelText = '';
-                        if (window.currentImageTargetId === 'madori') labelText = '間取り図';
+                        if (window.currentImageTargetId === 'madori') labelText = 'イメージ図';
                         else if (window.currentImageTargetId === 'image1') labelText = '画像1';
                         else if (window.currentImageTargetId === 'image2') labelText = '画像2';
                         else if (window.currentImageTargetId === 'image3') labelText = '画像3';

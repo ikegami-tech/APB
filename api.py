@@ -71,6 +71,7 @@ class User(Base):
     password = Column(String(100), nullable=False)
     branch_key = Column(String(50), nullable=False)
     footer_design_num = Column(String(10), default="1")
+    mobile = Column(String(20), nullable=True) # 🌟 追加：携帯番号（ハイフン含むためStringで定義）
 # 🌟 ここに追加：帯（フッター）履歴テーブルの設計図
 from sqlalchemy import DateTime
 from datetime import datetime
@@ -136,7 +137,8 @@ def api_login(username: str = Form(...), password: str = Form(...)):
                 "email": user.email,
                 "name": user.name,
                 "branch_key": user.branch_key,
-                "footer_design_num": user.footer_design_num
+                "footer_design_num": user.footer_design_num,
+                "mobile": user.mobile if user.mobile else "" # 🌟 追加：携帯番号もフロントに返す！
             }
         else:
             return {"status": "error", "message": "メールアドレスまたはパスワードが間違っています。"}
@@ -1284,10 +1286,17 @@ def generate_zumen(
             # リクエストしてきたユーザーの情報を取得
             db_user = db.query(User).filter(User.email == user_email).first()
             
+            # 🌟 修正：店舗情報と一緒に、担当者個人の情報も引き出しておく
             if db_user:
                 target_branch = db_user.branch_key
+                user_name = db_user.name
+                user_mobile = db_user.mobile if db_user.mobile else "未登録"
+                user_email_disp = db_user.email
             else:
                 target_branch = branch_name
+                user_name = "担当者名"
+                user_mobile = "携帯番号"
+                user_email_disp = "メールアドレス"
 
             # 判定された店舗キーで店舗情報を取得
             db_branch = db.query(Branch).filter(Branch.branch_key == target_branch).first()
@@ -1317,42 +1326,110 @@ def generate_zumen(
             p.font.name = "游明朝"
             p.font.color.rgb = RGBColor(80, 80, 80)
             p.alignment = PP_ALIGN.CENTER
-           # 🌟🌟【新規追加】画像がアップロードされていれば写真を、なければ色枠を配置する賢い関数
+# 🌟🌟【究極版】画像をはみ出さないように美しく切り抜き、角丸＆影付きのスタンプにして配置する関数！
         def add_smart_image(left, top, width, height, upload_file, fallback_text, bg_color, font_size=14):
             if upload_file and upload_file.filename:
                 import tempfile
                 import os
+                from PIL import Image, ImageDraw
                 try:
-                    suffix = os.path.splitext(upload_file.filename)[1]
-                    if not suffix: suffix = ".png"
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-                        tmp.write(upload_file.file.read())
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
                         tmp_path = tmp.name
                     
-                    # 枠の大きさに合わせて画像を自動リサイズして配置
-                    slide.shapes.add_picture(tmp_path, left, top, width=width, height=height)
+                    with Image.open(upload_file.file) as img:
+                        img = img.convert("RGBA")
+                        # 🌟 枠の縦横比に合わせて画像を美しくトリミング (画像が変に伸び縮みするのを防ぎます)
+                        target_ratio = width / height
+                        img_ratio = img.width / img.height
+                        if img_ratio > target_ratio:
+                            new_w = int(img.height * target_ratio)
+                            offset = (img.width - new_w) // 2
+                            img = img.crop((offset, 0, offset + new_w, img.height))
+                        else:
+                            new_h = int(img.width / target_ratio)
+                            offset = (img.height - new_h) // 2
+                            img = img.crop((0, offset, img.width, offset + new_h))
+                        
+                        # 🌟 画像自体の角を直接丸く削り落とす魔法
+                        rad = int(min(img.size) * 0.03) # 丸み具合 (3%)
+                        mask = Image.new('L', img.size, 0)
+                        draw = ImageDraw.Draw(mask)
+                        
+                        # 四角と円を組み合わせて角丸の型抜きを作成
+                        draw.rectangle((rad, 0, img.width - rad, img.height), fill=255)
+                        draw.rectangle((0, rad, img.width, img.height - rad), fill=255)
+                        draw.pieslice((0, 0, rad * 2, rad * 2), 180, 270, fill=255)
+                        draw.pieslice((img.width - rad * 2, 0, img.width, rad * 2), 270, 360, fill=255)
+                        draw.pieslice((0, img.height - rad * 2, rad * 2, img.height), 90, 180, fill=255)
+                        draw.pieslice((img.width - rad * 2, img.height - rad * 2, img.width, img.height), 0, 90, fill=255)
+                        
+                        # 型抜きを適用して透過PNGとして一時保存
+                        img.putalpha(mask)
+                        img.save(tmp_path, format="PNG")
+                    
+                    # 🌟 角丸に削られた画像をスライドに直接配置
+                    pic = slide.shapes.add_picture(tmp_path, left, top, width=width, height=height)
                     os.remove(tmp_path)
                     
-                    # 🌟 追加：画像の右下に「画像1」などのラベル（キャプション）を配置する魔法
+                    # 🌟 影を追加 (画像の透過部分を認識するので、美しい角丸の影が落ちます！)
+                    try:
+                        pic.shadow.inherit = False
+                        pic.shadow.color.rgb = RGBColor(0, 0, 0)
+                        pic.shadow.alpha = 0.85
+                        pic.shadow.blur_radius = Pt(5)
+                        pic.shadow.distance = Pt(2)
+                        pic.shadow.angle = 45
+                    except: pass
+                    
+                    # 画像右下の「画像1」ラベル
                     lbl_w, lbl_h = Inches(0.8), Inches(0.25)
                     lbl_l = left + width - lbl_w
                     lbl_t = top + height - lbl_h
                     
-                    lbl_bg = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, lbl_l, lbl_t, lbl_w, lbl_h)
+                    # 🌟 修正：ラベル自体を「角丸四角形」にして、右下が尖って見えないようにする
+                    lbl_bg = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, lbl_l, lbl_t, lbl_w, lbl_h)
+                    lbl_bg.adjustments[0] = 0.15 # 🌟 ラベルの角を丸く削る
                     lbl_bg.fill.solid()
-                    lbl_bg.fill.fore_color.rgb = RGBColor(128, 154, 185) # 理想の画像に合わせたブルーグレー
-                    try: lbl_bg.fill.transparency = 0.1 # 10%だけ透けさせて背景の画像になじませる
+                    lbl_bg.fill.fore_color.rgb = RGBColor(128, 154, 185)
+                    try: lbl_bg.fill.transparency = 0.1
                     except: pass
-                    lbl_bg.line.fill.background() # 枠線は消す
+                    lbl_bg.line.fill.background()
                     
                     tf = lbl_bg.text_frame
                     tf.margin_top = tf.margin_bottom = tf.margin_left = tf.margin_right = 0
                     tf.vertical_anchor = MSO_ANCHOR.MIDDLE
                     p = tf.paragraphs[0]
-                    p.text = fallback_text # 「画像1」などのテキストをそのまま入れる
+                    p.text = fallback_text
                     p.font.size = Pt(10)
-                    p.font.color.rgb = RGBColor(255, 255, 255) # 白色
+                    p.font.color.rgb = RGBColor(255, 255, 255)
                     p.font.name = "游ゴシック"
+                    p.alignment = PP_ALIGN.CENTER
+                    return
+                except Exception as e:
+                    print(f"画像配置エラー: {e}")
+            
+                    # 画像がない場合は、角丸図形を置いて文字を入れる
+                    shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, left, top, width, height)
+                    shape.adjustments[0] = 0.03
+                    shape.line.fill.background()
+                    try:
+                        shape.shadow.inherit = False
+                        shape.shadow.color.rgb = RGBColor(0, 0, 0)
+                        shape.shadow.alpha = 0.85
+                        shape.shadow.blur_radius = Pt(5)
+                        shape.shadow.distance = Pt(2)
+                        shape.shadow.angle = 45
+                    except: pass
+                    shape.fill.solid()
+                    shape.fill.fore_color.rgb = bg_color
+                    tf = shape.text_frame
+                    tf.word_wrap = True
+                    tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+                    p = tf.paragraphs[0]
+                    p.text = fallback_text
+                    p.font.size = Pt(font_size)
+                    p.font.name = "游明朝"
+                    p.font.color.rgb = RGBColor(100, 100, 100)
                     p.alignment = PP_ALIGN.CENTER
 
                     return
@@ -1879,9 +1956,16 @@ def generate_zumen(
             line_bottom.fill.fore_color.rgb = line_color
             line_bottom.line.fill.background()
 
-            # タイトル
-            tb_title = slide.shapes.add_textbox(Inches(3.2), Inches(0.35), Inches(4.0), Inches(0.9))
+            # 🌟 修正：タイトルの位置を上の線(0.25)と下の線(1.25)の間にピッタリ合わせる！
+            tb_title = slide.shapes.add_textbox(Inches(3.2), Inches(0.25), Inches(4.0), Inches(1.0))
             tf_title = tb_title.text_frame
+            
+            # 🌟 追加：パワポ特有の「見えない余白」をゼロにして、ズレを完全に無くす魔法
+            tf_title.margin_top = 0
+            tf_title.margin_bottom = 0
+            tf_title.margin_left = 0
+            tf_title.margin_right = 0
+            
             tf_title.vertical_anchor = MSO_ANCHOR.MIDDLE
             tf_title.word_wrap = True
             tf_title.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
@@ -1927,7 +2011,7 @@ def generate_zumen(
 
             # 🌟 5. 画像枠の代替色（画像がない時の空箱の色）を肌色から「真っ白（255,255,255）」に変更
             add_smart_image(Inches(0.2), Inches(1.5), Inches(3.4), Inches(2.8), main_image, "画像1", RGBColor(255, 255, 255), 18)
-            add_smart_image(Inches(3.7), Inches(1.5), Inches(3.4), Inches(2.8), madori_image, "間取り図", RGBColor(255, 255, 255), 18)
+            add_smart_image(Inches(3.7), Inches(1.5), Inches(3.4), Inches(2.8), madori_image, "イメージ図", RGBColor(255, 255, 255), 18)
             add_smart_image(Inches(0.2), Inches(4.4), Inches(2.2), Inches(1.4), sub_image1, "画像2", RGBColor(255, 255, 255), 16)
             add_smart_image(Inches(2.5), Inches(4.4), Inches(2.2), Inches(1.4), sub_image2, "画像3", RGBColor(255, 255, 255), 16)
             add_smart_image(Inches(4.8), Inches(4.4), Inches(2.2), Inches(1.4), sub_image3, "画像4", RGBColor(255, 255, 255), 16)
@@ -2254,7 +2338,7 @@ def generate_zumen(
             r1.font.name = FONT_JPN
             
             r2 = p_p1.add_run()
-            r2.text = "担当者名"
+            r2.text = user_name # 🌟 修正：ログインユーザーの名前に置き換え
             r2.font.size = Pt(14)
             r2.font.bold = True
             r2.font.color.rgb = text_color_main
@@ -2270,7 +2354,7 @@ def generate_zumen(
             r_mob_lbl.font.name = FONT_ENG
             
             r_mob_val = p_p2.add_run()
-            r_mob_val.text = "携帯番号"
+            r_mob_val.text = user_mobile # 🌟 修正：ログインユーザーの携帯番号に置き換え
             r_mob_val.font.size = Pt(8.5)
             r_mob_val.font.bold = False
             r_mob_val.font.color.rgb = text_color_sub
@@ -2286,7 +2370,7 @@ def generate_zumen(
             r_mail_lbl.font.name = FONT_ENG
             
             r_mail_val = p_p3.add_run()
-            r_mail_val.text = "メールアドレス"
+            r_mail_val.text = user_email_disp # 🌟 修正：ログインユーザーのメアドに置き換え
             r_mail_val.font.size = Pt(8.5)
             r_mail_val.font.bold = False
             r_mail_val.font.color.rgb = text_color_sub
