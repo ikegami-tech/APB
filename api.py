@@ -1922,42 +1922,71 @@ def generate_zumen(
             except:
                 pass 
 
+            # 🌟 左上の領域（枠の幅を少し広げます）
+            box_left = Inches(0.2)
+            box_top = Inches(0.2)
+            box_w = Inches(3.5) # 🌟 枠幅を広げる（2.8 -> 3.5）
+            box_h = Inches(1.1)
+            
+            # 🌟 アイコン（3本矢印）の配置と色変換
             base_dir = os.path.dirname(__file__)
-            tenpo_img_path = os.path.join(base_dir, "static", "tenpo.png")
+            mark_img_path = os.path.join(base_dir, "static", "mark.png")
             
-            if os.path.exists(tenpo_img_path):
-                slide.shapes.add_picture(tenpo_img_path, Inches(0.2), Inches(0.2), width=Inches(2.8), height=Inches(1.1))
-            else:
-                add_color_box(Inches(0.2), Inches(0.2), Inches(2.8), Inches(1.1), "店舗写真", RGBColor(235, 235, 235), 12)
+            text_left = box_left
+            text_width = box_w
             
-            # 店舗写真の上に重なるテキスト
-            tb_tenpo = slide.shapes.add_textbox(Inches(0.2), Inches(0.2), Inches(2.8), Inches(1.1))
+            if os.path.exists(mark_img_path):
+                import tempfile
+                from PIL import Image
+                try:
+                    with Image.open(mark_img_path) as img:
+                        img = img.convert("RGBA")
+                        r, g, b, a = img.split()
+                        solid_color = Image.new("RGBA", img.size, (16, 51, 93, 255))
+                        navy_img = Image.composite(solid_color, Image.new("RGBA", img.size, (0,0,0,0)), a)
+                        
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
+                            navy_img.save(tmp.name, "PNG")
+                            tmp_path = tmp.name
+                            
+                    # 🌟 アイコンをさらに特大に（0.5インチから0.7インチへ）
+                    slide.shapes.add_picture(tmp_path, box_left + Inches(0.1), box_top + Inches(0.2), height=Inches(0.7))
+                    os.remove(tmp_path)
+                    
+                    # 大きくなったアイコンに合わせてテキストの開始位置をずらす
+                    text_left = box_left + Inches(0.9)
+                    text_width = box_w - Inches(0.9)
+                except Exception as e:
+                    print(f"アイコン配置エラー: {e}")
+
+            # 🌟 テキストの配置
+            tb_tenpo = slide.shapes.add_textbox(text_left, box_top, text_width, box_h)
             tf_tenpo = tb_tenpo.text_frame
             tf_tenpo.vertical_anchor = MSO_ANCHOR.MIDDLE
             p_tenpo = tf_tenpo.paragraphs[0]
             p_tenpo.text = "「住まい」のもっと先へ。"
-            p_tenpo.font.size = Pt(14)
+            p_tenpo.font.size = Pt(22)  # 🌟 文字をさらに特大に（Pt18からPt22へ）
             p_tenpo.font.bold = True
-            p_tenpo.font.color.rgb = RGBColor(255, 255, 255)
+            p_tenpo.font.color.rgb = RGBColor(16, 51, 93)
             p_tenpo.font.name = "游ゴシック"
-            p_tenpo.alignment = PP_ALIGN.CENTER
-            try: p_tenpo.font.shadow = True
-            except: pass
+            p_tenpo.alignment = PP_ALIGN.LEFT
 
             # 🌟 追加：タイトルの上下に高級感のある飾り線を復活させる魔法
             line_color = RGBColor(170, 200, 230) # 上品な薄いブルーグレー
-            line_top = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(3.2), Inches(0.25), Inches(4.0), Pt(1.5))
+            
+            # 🌟 ロゴと被らないように開始位置を右（3.7）にずらし、幅を調整（3.1）
+            line_top = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(3.7), Inches(0.25), Inches(3.1), Pt(1.5))
             line_top.fill.solid()
             line_top.fill.fore_color.rgb = line_color
             line_top.line.fill.background()
             
-            line_bottom = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(3.2), Inches(1.25), Inches(4.0), Pt(1.5))
+            line_bottom = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(3.7), Inches(1.25), Inches(3.1), Pt(1.5))
             line_bottom.fill.solid()
             line_bottom.fill.fore_color.rgb = line_color
             line_bottom.line.fill.background()
 
-            # 🌟 修正：タイトルの位置を上の線(0.25)と下の線(1.25)の間にピッタリ合わせる！
-            tb_title = slide.shapes.add_textbox(Inches(3.2), Inches(0.25), Inches(4.0), Inches(1.0))
+            # 🌟 タイトルのテキストボックスも同様に位置と幅を合わせる
+            tb_title = slide.shapes.add_textbox(Inches(3.7), Inches(0.25), Inches(3.1), Inches(1.0))
             tf_title = tb_title.text_frame
             
             # 🌟 追加：パワポ特有の「見えない余白」をゼロにして、ズレを完全に無くす魔法

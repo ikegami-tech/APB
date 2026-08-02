@@ -91,15 +91,21 @@
                 
                 <div class="zumen-d1" id="zumen-layout-1">
                     <div class="zumen-d1-header" style="background: linear-gradient(to right, #AAC8E6 0%, #AAC8E6 28%, #FAFCFF 40%, #FAFCFF 100%); border-bottom: none; box-shadow: 0 3px 15px rgba(0,0,0,0.06); position: relative; z-index: 10;">
-                        <div class="z-box" style="position: relative; width: 30%; flex-shrink: 0; height: 100%; background-color: #E8E8E8; background-image: url('/static/tenpo.png'); background-size: cover; background-position: center; background-repeat: no-repeat; color: transparent; border: none;" data-image-target="tenpo">
-                            店舗写真（左上）
-                            <div id="tenpo-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #FFFFFF; font-size: 1.4rem; font-weight: bold; font-family: '游ゴシック', sans-serif; white-space: nowrap; text-shadow: 0 0 5px #FFFFFF, 0 0 10px #FFFFFF, 0 0 15px #FFFFFF; letter-spacing: 0.05em; z-index: 10;">
+                        <!-- 🌟 左上固定エリア：見切れを防ぐため左揃え（flex-start）にし、左に余白を設けます -->
+                        <div style="width: 35%; flex-shrink: 0; height: 100%; background-color: transparent; display: flex; align-items: center; justify-content: flex-start; gap: 15px; border: none; box-sizing: border-box; padding-left: 20px;">
+                            
+                            <!-- 🌟 アイコンをさらに特大に（heightを38pxから50pxへ） -->
+                            <img src="/static/mark.png" style="height: 50px; width: auto; filter: brightness(0) invert(18%) sepia(34%) saturate(2035%) hue-rotate(193deg) brightness(96%) contrast(98%);" alt="アイコン">
+                            
+                            <!-- 🌟 テキストをさらに特大に（font-sizeを24pxから28pxへ） -->
+                            <div id="tenpo-text" style="color: #10335D; font-size: 28px; font-weight: bold; font-family: '游ゴシック', 'Yu Gothic', sans-serif; white-space: nowrap; letter-spacing: 0.05em; margin-top: 2px;">
                                 「住まい」のもっと先へ。
                             </div>
                         </div>
                         
                         <!-- 🌟 修正：height: 100%; を追加し、隣の店舗写真の高さに対して「ど真ん中」に揃える！ -->
-                        <div style="width: 45%; flex-shrink: 1; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="openModal('titleModal')">
+                        <!-- 🌟 タイトル枠の幅を40%にして全体のバランスを100%（35% + 40% + 25%）に整えます -->
+<div style="width: 40%; flex-shrink: 1; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="openModal('titleModal')">
                             <div style="width: 85%; text-align: center; font-size: 32px; font-weight: bold; word-break: break-all; line-height: 1.2; padding: 12px 0; color: #10335D; font-family: '游明朝', 'Yu Mincho', serif; border-top: 2px solid #AAC8E6; border-bottom: 2px solid #AAC8E6;">
                                 <span id="display-title">タイトル</span>
                             </div>

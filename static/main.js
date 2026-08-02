@@ -70,16 +70,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 🌟 ここに追加：保存されている個人のフッターデザインを自動適用する魔法
-    const savedFooterDesign = localStorage.getItem("apb_footer_design");
-    if (savedFooterDesign && savedFooterDesign !== "1") {
-        const footers = document.querySelectorAll('.zumen-d1-footer');
-        footers.forEach(footer => {
-            footer.classList.remove('footer-design-2', 'footer-design-3', 'footer-design-4');
-            if (savedFooterDesign === "2") footer.classList.add('footer-design-2');
-            if (savedFooterDesign === "3") footer.classList.add('footer-design-3');
-            // ※デザイン4（オリジナル画像）は画像データがないと復元できないため今回は除外
-        });
-    }
+    const savedFooterDesign = localStorage.getItem("apb_footer_design") || "1";
+    const footers = document.querySelectorAll('.zumen-d1-footer');
+    footers.forEach(footer => {
+        footer.classList.remove('footer-design-2', 'footer-design-3', 'footer-design-4');
+        if (savedFooterDesign === "2") footer.classList.add('footer-design-2');
+        if (savedFooterDesign === "3") footer.classList.add('footer-design-3');
+        
+        // 🌟 画面を開いた時にも着せ替え関数を実行！
+        if (savedFooterDesign !== "4" && typeof window.applyFooterStyles === 'function') {
+            window.applyFooterStyles(footer, savedFooterDesign);
+        }
+    });
 
     // APB用のドラッグ＆ドロップのセットアップ（要素が存在する場合のみ安全に実行）
     if (document.getElementById('apb-zumen')) setupDragAndDrop('apb-zumen');
@@ -1159,25 +1161,83 @@ window.autoResize = function(el) {
     el.style.height = 'auto'; // 一旦高さをリセット
     el.style.height = el.scrollHeight + 'px'; // 中身の文字の高さに合わせて枠を広げる
 };
-// ==========================================
+// 🌟 帯（フッター）のデザインに合わせて色や線を着せ替える最強の関数
+window.applyFooterStyles = function(footer, designNum) {
+    const logo = footer.querySelector('.footer-logo-img');
+    const borderTargets = Array.from(footer.children).filter(child => child.style.borderLeft);
+    const tableWrap = footer.querySelector('.foot-table-wrap');
+    const tableHead = footer.querySelector('.foot-table-head');
+    
+    if (designNum === "1") {
+        footer.style.backgroundColor = '#0A3260';
+        footer.style.color = '#FFF';
+        footer.style.borderTop = 'none';
+        if (logo) logo.style.filter = 'brightness(0) invert(1)'; // ロゴを白抜きに
+        
+        borderTargets.forEach(el => el.style.borderLeft = '1px solid rgba(255,255,255,0.4)');
+        if (tableWrap) tableWrap.style.border = '1px solid #FFF';
+        if (tableHead) {
+            tableHead.style.borderBottom = '1px solid #FFF';
+            tableHead.style.backgroundColor = 'transparent';
+            tableHead.style.color = '#FFF';
+            const headCell = tableHead.querySelector('.foot-table-cell');
+            if (headCell) headCell.style.borderRight = '1px solid #FFF';
+        }
+    } else if (designNum === "2") {
+        footer.style.backgroundColor = '#FFF';
+        footer.style.color = '#333';
+        footer.style.borderTop = '3px solid #0A3260';
+        if (logo) logo.style.filter = 'none'; // ロゴの白抜きを解除（元の色）
+        
+        borderTargets.forEach(el => el.style.borderLeft = '1px solid #CFD8DC');
+        if (tableWrap) tableWrap.style.border = '1px solid #0A3260';
+        if (tableHead) {
+            tableHead.style.borderBottom = '1px solid #0A3260';
+            tableHead.style.backgroundColor = '#0A3260';
+            tableHead.style.color = '#FFF';
+            const headCell = tableHead.querySelector('.foot-table-cell');
+            if (headCell) headCell.style.borderRight = '1px solid #FFF';
+        }
+    } else if (designNum === "3") {
+        footer.style.backgroundColor = '#F4F6F8';
+        footer.style.color = '#333';
+        footer.style.borderTop = 'none';
+        if (logo) logo.style.filter = 'none'; // ロゴの白抜きを解除
+        
+        borderTargets.forEach(el => el.style.borderLeft = 'none'); // 縦線を消す
+        if (tableWrap) tableWrap.style.border = '1px solid #CFD8DC';
+        if (tableHead) {
+            tableHead.style.borderBottom = '1px solid #CFD8DC';
+            tableHead.style.backgroundColor = '#E4E7EB';
+            tableHead.style.color = '#555';
+            const headCell = tableHead.querySelector('.foot-table-cell');
+            if (headCell) headCell.style.borderRight = '1px solid #CFD8DC';
+        }
+    }
+};
+
 // 🌟 帯（フッター）のデザイン即時変更処理
-// ==========================================
 window.selectFooterDesign = function(selected) {
-    // デザイン4（オリジナル画像）が選ばれた場合は、裏側にあるファイル選択画面を強制クリック！
     if (selected === "4") {
         document.getElementById('input-footer-image').click();
-    } 
-    // それ以外のデザインが選ばれた場合は、即座にCSSクラスを切り替えてモーダルを閉じる
-    else {
+    } else {
         const footers = document.querySelectorAll('.zumen-d1-footer');
         footers.forEach(footer => {
             footer.classList.remove('footer-design-2', 'footer-design-3', 'footer-design-4');
             footer.style.backgroundImage = 'none';
-            footer.style.borderTop = ''; // 元のスタイルに戻す
+            footer.style.borderTop = ''; 
             
             if (selected === "2") footer.classList.add('footer-design-2');
             if (selected === "3") footer.classList.add('footer-design-3');
+            
+            // 🌟 選択したデザインに合わせて着せ替え関数を実行！
+            if (typeof window.applyFooterStyles === 'function') {
+                window.applyFooterStyles(footer, selected);
+            }
         });
+        
+        // 選んだデザインをブラウザに記憶させる
+        localStorage.setItem("apb_footer_design", selected);
         closeModal('footerModal');
     }
 };
