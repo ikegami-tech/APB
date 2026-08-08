@@ -92,20 +92,20 @@
                 <div class="zumen-d1" id="zumen-layout-1">
                     <div class="zumen-d1-header" style="background: linear-gradient(to right, #AAC8E6 0%, #AAC8E6 28%, #FAFCFF 40%, #FAFCFF 100%); border-bottom: none; box-shadow: 0 3px 15px rgba(0,0,0,0.06); position: relative; z-index: 10;">
                         <!-- 🌟 左上固定エリア：見切れを防ぐため左揃え（flex-start）にし、左に余白を設けます -->
-                        <div style="width: 35%; flex-shrink: 0; height: 100%; background-color: transparent; display: flex; align-items: center; justify-content: flex-start; gap: 15px; border: none; box-sizing: border-box; padding-left: 20px;">
+                        <div style="width: 25%; flex-shrink: 0; height: 100%; background-color: transparent; display: flex; align-items: center; justify-content: flex-start; gap: 8px; border: none; box-sizing: border-box; padding-left: 20px;">
                             
-                            <!-- 🌟 アイコンをさらに特大に（heightを38pxから50pxへ） -->
-                            <img src="/static/mark.png" style="height: 50px; width: auto; filter: brightness(0) invert(18%) sepia(34%) saturate(2035%) hue-rotate(193deg) brightness(96%) contrast(98%);" alt="アイコン">
+                            <!-- 🌟 アイコンを約1/2のサイズに（heightを25pxへ） -->
+                            <img src="/static/mark.png" style="height: 25px; width: auto; filter: brightness(0) invert(18%) sepia(34%) saturate(2035%) hue-rotate(193deg) brightness(96%) contrast(98%);" alt="アイコン">
                             
-                            <!-- 🌟 テキストをさらに特大に（font-sizeを24pxから28pxへ） -->
-                            <div id="tenpo-text" style="color: #10335D; font-size: 28px; font-weight: bold; font-family: '游ゴシック', 'Yu Gothic', sans-serif; white-space: nowrap; letter-spacing: 0.05em; margin-top: 2px;">
+                            <!-- 🌟 テキストを約1/2のサイズに（font-sizeを14pxへ） -->
+                            <div id="tenpo-text" style="color: #10335D; font-size: 14px; font-weight: bold; font-family: '游ゴシック', 'Yu Gothic', sans-serif; white-space: nowrap; letter-spacing: 0.05em; margin-top: 2px;">
                                 「住まい」のもっと先へ。
                             </div>
                         </div>
                         
                         <!-- 🌟 修正：height: 100%; を追加し、隣の店舗写真の高さに対して「ど真ん中」に揃える！ -->
                         <!-- 🌟 タイトル枠の幅を40%にして全体のバランスを100%（35% + 40% + 25%）に整えます -->
-<div style="width: 40%; flex-shrink: 1; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="openModal('titleModal')">
+<div style="width: 50%; flex-shrink: 1; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="openModal('titleModal')">
                             <div style="width: 85%; text-align: center; font-size: 32px; font-weight: bold; word-break: break-all; line-height: 1.2; padding: 12px 0; color: #10335D; font-family: '游明朝', 'Yu Mincho', serif; border-top: 2px solid #AAC8E6; border-bottom: 2px solid #AAC8E6;">
                                 <span id="display-title">タイトル</span>
                             </div>
@@ -198,43 +198,44 @@
                             <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #FFFFFF; border-radius: 4px; border: none;" onclick="openImageModal('icon6', '設備アイコン6')" data-image-target="icon6">アイコン</div>
                         </div>
                     </div>
-                    <div class="zumen-d1-footer" onclick="openModal('footerModal')" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 25px; height: 14%; background-color: #0A3260; color: #FFF; box-sizing: border-box; font-family: 'Helvetica Neue', Arial, '游ゴシックMedium', sans-serif; cursor: pointer;">
+<div class="zumen-d1-footer" onclick="openModal('footerModal')" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 25px; height: 14%; background-color: #0A3260; color: #FFF; box-sizing: border-box; font-family: 'Helvetica Neue', Arial, '游ゴシックMedium', sans-serif; cursor: pointer;">
 
-                        <div style="width: 22%; display: flex; align-items: center; height: 100%;">
-                            <img class="footer-logo-img" src="" style="height: 80%; width: auto; object-fit: contain; transform: scale(1.4); transform-origin: left center; filter: brightness(0) invert(1);" alt="店舗ロゴ">
+                        <!-- 🌟 ロゴ枠（強制拡大の魔法を使って、枠のど真ん中にドカンと配置！） -->
+                        <div style="width: 25%; display: flex; align-items: center; justify-content: center; height: 100%;">
+                            <!-- 🌟 transform: scale(1.3) に倍率を少し下げて、程よい大きさに調整します -->
+                            <img class="footer-logo-img" src="" style="width: 90%; height: auto; object-fit: contain; filter: brightness(0) invert(1); transform: scale(1.3); transform-origin: center;" alt="店舗ロゴ">
                         </div>
 
-                        <div style="flex-grow: 1; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 18px; display: flex; flex-direction: column; justify-content: center; height: 100%;">
-                            <div style="font-size: 26px; font-weight: bold; letter-spacing: 1px; white-space: nowrap; line-height: 1; margin-bottom: 4px;">
-                                <span style="font-size: 11px; margin-right: 4px; font-weight: normal;">TEL.</span><span class="foot-tel">0120-384-700</span>
+                        <!-- 🌟 会社情報枠の文字サイズを整え、余白を調整する -->
+                        <!-- 🌟 会社情報枠（文字サイズをスッキリと統一！） -->
+                        <div style="flex-grow: 1; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 20px; display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 2px;">
+                            <div style="font-size: 14px; font-weight: bold; white-space: nowrap; line-height: 1.2;">
+                                <span style="font-weight: normal; margin-right: 6px;">TEL.</span><span class="foot-tel">0120-384-700</span>
                             </div>
-                            <div class="foot-license" style="font-size: 9px; white-space: nowrap; margin-bottom: 2px;">免許番号</div>
-                            <div class="foot-company" style="font-weight: bold; font-size: 14px; white-space: nowrap; letter-spacing: 1px;">会社名</div>
-                            <div class="foot-address" style="font-size: 9px; line-height: 1.2;">住所</div>
+                            <div class="foot-license" style="font-size: 12px; white-space: nowrap; line-height: 1.2;">免許番号</div>
+                            <div class="foot-company" style="font-size: 14px; font-weight: bold; white-space: nowrap; line-height: 1.2;">会社名</div>
+                            <div class="foot-address" style="font-size: 12px; line-height: 1.2;">住所</div>
                         </div>
 
-                        <!-- 🌟 修正：JSが自動で書き換えられるように、foot-name, foot-mobile, foot-email という目印をつけました！ -->
-                        <div style="width: 24%; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 18px; display: flex; flex-direction: column; justify-content: center; height: 100%;">
-                            <div style="margin-bottom: 8px; display: flex; align-items: baseline;">
-                                <span style="font-size: 9px; margin-right: 6px;">担当</span>
-                                <strong class="foot-name" style="font-size: 17px; letter-spacing: 1px; white-space: nowrap;">担当者名</strong>
+                        <!-- 🌟 担当者枠（文字サイズをスッキリと統一！） -->
+                        <div style="width: 28%; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 20px; display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 2px;">
+                            <div style="font-size: 14px; font-weight: bold; white-space: nowrap; line-height: 1.2;">
+                                <span style="font-weight: normal; margin-right: 6px;">担当</span><span class="foot-name">担当者名</span>
                             </div>
-                            <div style="font-size: 9px; line-height: 1.5;">
-                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mobile.</span><span class="foot-mobile">携帯番号</span></div>
-                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mail.</span><span class="foot-email">メールアドレス</span></div>
+                            <div style="font-size: 12px; line-height: 1.2;">
+                                <div style="white-space: nowrap; margin-bottom: 2px;"><span style="font-weight: normal; margin-right: 6px;">Mobile.</span><span class="foot-mobile">携帯番号</span></div>
+                                <div style="white-space: nowrap;"><span style="font-weight: normal; margin-right: 6px;">Mail.</span><span class="foot-email">メールアドレス</span></div>
                             </div>
                         </div>
 
-                        <div style="width: 15%; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 15px; display: flex; align-items: center; justify-content: flex-end; height: 100%;">
-                            <div class="foot-table-wrap" style="border: 1px solid #FFF; width: 100%; max-width: 140px; font-size: 9px; border-radius: 0; overflow: hidden;">
+                        <!-- 🌟 取引態様枠（幅を12%に最適化） -->
+                        <div style="width: 12%; border-left: 1px solid rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; height: 100%;">
+                            <div class="foot-table-wrap" style="border: 1px solid #FFF; width: 100%; max-width: 80px; font-size: 9px; border-radius: 0; overflow: hidden; cursor: pointer;" onclick="event.stopPropagation(); openModal('transactionModal')">
                                 <div class="foot-table-head" style="display: flex; text-align: center; border-bottom: 1px solid #FFF;">
-                                    <div class="foot-table-cell" style="flex: 1; border-right: 1px solid #FFF; padding: 4px 0; font-weight: bold;">取引態様</div>
-                                    <div style="flex: 1; padding: 4px 0; font-weight: bold;">手数料</div>
+                                    <div class="foot-table-cell" style="flex: 1; padding: 4px 0; font-weight: bold;">取引態様</div>
                                 </div>
-                                <!-- 🌟 修正：下段の背景を白（#FFF）にし、中央の区切り線を薄いグレーに変更 -->
-                                <div style="display: flex; height: 28px; background-color: #FFF; color: #333;">
-                                    <div class="foot-table-cell" style="flex: 1; border-right: 1px solid #CFD8DC;"></div>
-                                    <div style="flex: 1;"></div>
+                                <div style="display: flex; height: 28px; background-color: #FFF; color: #333; align-items: center; justify-content: center; font-size: 11px; font-weight: bold;">
+                                    <span class="display-transaction">媒介</span>
                                 </div>
                             </div>
                         </div>
@@ -370,16 +371,14 @@
                             </div>
                         </div>
 
+                        <!-- 🌟 取引態様を1列にし、クリックで変更できるようにする -->
                         <div style="width: 15%; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 15px; display: flex; align-items: center; justify-content: flex-end; height: 100%;">
-                            <div class="foot-table-wrap" style="border: 1px solid #FFF; width: 100%; max-width: 140px; font-size: 9px; border-radius: 0; overflow: hidden;">
+                            <div class="foot-table-wrap" style="border: 1px solid #FFF; width: 100%; max-width: 80px; font-size: 9px; border-radius: 0; overflow: hidden; cursor: pointer;" onclick="event.stopPropagation(); openModal('transactionModal')">
                                 <div class="foot-table-head" style="display: flex; text-align: center; border-bottom: 1px solid #FFF;">
-                                    <div class="foot-table-cell" style="flex: 1; border-right: 1px solid #FFF; padding: 4px 0; font-weight: bold;">取引態様</div>
-                                    <div style="flex: 1; padding: 4px 0; font-weight: bold;">手数料</div>
+                                    <div class="foot-table-cell" style="flex: 1; padding: 4px 0; font-weight: bold;">取引態様</div>
                                 </div>
-                                <!-- 🌟 修正：下段の背景を白（#FFF）にし、中央の区切り線を薄いグレーに変更 -->
-                                <div style="display: flex; height: 28px; background-color: #FFF; color: #333;">
-                                    <div class="foot-table-cell" style="flex: 1; border-right: 1px solid #CFD8DC;"></div>
-                                    <div style="flex: 1;"></div>
+                                <div style="display: flex; height: 28px; background-color: #FFF; color: #333; align-items: center; justify-content: center; font-size: 11px; font-weight: bold;">
+                                    <span class="display-transaction">媒介</span>
                                 </div>
                             </div>
                         </div>
@@ -512,16 +511,14 @@
                             </div>
                         </div>
 
+                        <!-- 🌟 取引態様を1列にし、クリックで変更できるようにする -->
                         <div style="width: 15%; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 15px; display: flex; align-items: center; justify-content: flex-end; height: 100%;">
-                            <div class="foot-table-wrap" style="border: 1px solid #FFF; width: 100%; max-width: 140px; font-size: 9px; border-radius: 0; overflow: hidden;">
+                            <div class="foot-table-wrap" style="border: 1px solid #FFF; width: 100%; max-width: 80px; font-size: 9px; border-radius: 0; overflow: hidden; cursor: pointer;" onclick="event.stopPropagation(); openModal('transactionModal')">
                                 <div class="foot-table-head" style="display: flex; text-align: center; border-bottom: 1px solid #FFF;">
-                                    <div class="foot-table-cell" style="flex: 1; border-right: 1px solid #FFF; padding: 4px 0; font-weight: bold;">取引態様</div>
-                                    <div style="flex: 1; padding: 4px 0; font-weight: bold;">手数料</div>
+                                    <div class="foot-table-cell" style="flex: 1; padding: 4px 0; font-weight: bold;">取引態様</div>
                                 </div>
-                                <!-- 🌟 修正：下段の背景を白（#FFF）にし、中央の区切り線を薄いグレーに変更 -->
-                                <div style="display: flex; height: 28px; background-color: #FFF; color: #333;">
-                                    <div class="foot-table-cell" style="flex: 1; border-right: 1px solid #CFD8DC;"></div>
-                                    <div style="flex: 1;"></div>
+                                <div style="display: flex; height: 28px; background-color: #FFF; color: #333; align-items: center; justify-content: center; font-size: 11px; font-weight: bold;">
+                                    <span class="display-transaction">媒介</span>
                                 </div>
                             </div>
                         </div>
@@ -1023,6 +1020,20 @@
             <button class="btn-cancel" style="margin: 0; padding: 10px 30px;" onclick="closeModal('footerModal')">キャンセル</button>
         </div>
         
+    </div>
+</div>
+<div id="transactionModal" class="modal">
+    <div class="modal-content">
+        <h3>🤝 取引態様の選択</h3>
+        <select id="input-transaction" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 20px;">
+            <option value="媒介" selected>媒介</option>
+            <option value="専任">専任</option>
+            <option value="専属">専属</option>
+        </select>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button style="background-color: #FA8A76; color: white; border: none; padding: 10px 30px; border-radius: 6px; cursor: pointer; font-weight: bold;" onclick="saveTransaction()">保存して反映</button>
+            <button class="btn-cancel" style="margin: 0; padding: 10px 20px;" onclick="closeModal('transactionModal')">キャンセル</button>
+        </div>
     </div>
 </div>
 <script src="/static/main.js"></script>

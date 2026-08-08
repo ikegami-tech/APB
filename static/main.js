@@ -554,6 +554,16 @@ function saveAccess() {
     
     closeModal('accessModal');
 }
+
+// 🌟 ここに追加：取引態様の保存処理
+function saveTransaction() {
+    const val = document.getElementById('input-transaction').value;
+    const elements = document.getElementsByClassName('display-transaction');
+    for(let i = 0; i < elements.length; i++) {
+        elements[i].innerText = val;
+    }
+    closeModal('transactionModal');
+}
 // 🌟 現在表示中のデザイン番号を取得する魔法（新規追加）
 function getCurrentDesignSuffix() {
     if (document.getElementById('zumen-layout-2') && !document.getElementById('zumen-layout-2').classList.contains('hidden')) {
@@ -788,6 +798,8 @@ async function downloadPptx() {
         formData.append("land_area", exclusiveAreaText);
         formData.append("building_area", balconyAreaText);
         formData.append("plan", zoningText);
+        // 🌟 ここに追加：モーダルで選んだ「取引態様」の値をPythonに送る！
+        formData.append("transaction_type", document.getElementById('input-transaction').value);
 
         // 🌟【新規追加】物件概要の全項目を画面から直接収集してひとまとめにする魔法
         let fullSummaryParts = [];

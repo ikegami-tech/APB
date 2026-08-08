@@ -1232,6 +1232,7 @@ def generate_zumen(
     transport_line: str = Form(""), # 🌟 追加：路線名を受け取る
     transport_station: str = Form(""),
     transport_walk: str = Form(""),
+    transaction_type: str = Form("媒介"), # 🌟 ここに1行追加します！
     madori: str = Form(""),
     age: str = Form(""),
     right: str = Form(""),
@@ -1382,7 +1383,7 @@ def generate_zumen(
                     except: pass
                     
                     # 画像右下の「画像1」ラベル
-                    lbl_w, lbl_h = Inches(0.8), Inches(0.25)
+                    lbl_w, lbl_h = Inches(0.9), Inches(0.28) # 🌟 枠のサイズを少し拡大
                     lbl_l = left + width - lbl_w
                     lbl_t = top + height - lbl_h
                     
@@ -1400,9 +1401,9 @@ def generate_zumen(
                     tf.vertical_anchor = MSO_ANCHOR.MIDDLE
                     p = tf.paragraphs[0]
                     p.text = fallback_text
-                    p.font.size = Pt(10)
+                    p.font.size = Pt(11) # 🌟 フォントサイズを拡大（10 -> 11）
                     p.font.color.rgb = RGBColor(255, 255, 255)
-                    p.font.name = "游ゴシック"
+                    p.font.name = "メイリオ" # 🌟 游ゴシックからメイリオに変更し、文字のバラつきを完全に防ぐ
                     p.alignment = PP_ALIGN.CENTER
                     return
                 except Exception as e:
@@ -1922,10 +1923,10 @@ def generate_zumen(
             except:
                 pass 
 
-            # 🌟 左上の領域（枠の幅を少し広げます）
-            box_left = Inches(0.2)
+            # 🌟 左上の領域（スライドの左端ギリギリまで寄せ、タイトルとの被りを防ぎます）
+            box_left = Inches(0.05)
             box_top = Inches(0.2)
-            box_w = Inches(3.5) # 🌟 枠幅を広げる（2.8 -> 3.5）
+            box_w = Inches(3.4) # タイトルが Inches(3.6) から始まるので、それまでに収まるように幅を制限
             box_h = Inches(1.1)
             
             # 🌟 アイコン（3本矢印）の配置と色変換
@@ -1949,13 +1950,13 @@ def generate_zumen(
                             navy_img.save(tmp.name, "PNG")
                             tmp_path = tmp.name
                             
-                    # 🌟 アイコンをさらに特大に（0.5インチから0.7インチへ）
-                    slide.shapes.add_picture(tmp_path, box_left + Inches(0.1), box_top + Inches(0.2), height=Inches(0.7))
+                    # 🌟 アイコンを約1/2のサイズに（heightを0.35インチへ）し、少し下に下げて中央に揃えます
+                    slide.shapes.add_picture(tmp_path, box_left, box_top + Inches(0.35), height=Inches(0.35))
                     os.remove(tmp_path)
                     
-                    # 大きくなったアイコンに合わせてテキストの開始位置をずらす
-                    text_left = box_left + Inches(0.9)
-                    text_width = box_w - Inches(0.9)
+                    # アイコンが小さくなった分、テキストの開始位置も左に寄せます
+                    text_left = box_left + Inches(0.4)
+                    text_width = box_w - Inches(0.4)
                 except Exception as e:
                     print(f"アイコン配置エラー: {e}")
 
@@ -1963,30 +1964,38 @@ def generate_zumen(
             tb_tenpo = slide.shapes.add_textbox(text_left, box_top, text_width, box_h)
             tf_tenpo = tb_tenpo.text_frame
             tf_tenpo.vertical_anchor = MSO_ANCHOR.MIDDLE
+            tf_tenpo.word_wrap = False # 🌟 改行させない
+            
+            # 🌟 パワポ特有の「見えない余白」をゼロにして、ズレを完全に無くす魔法
+            tf_tenpo.margin_top = 0
+            tf_tenpo.margin_bottom = 0
+            tf_tenpo.margin_left = 0
+            tf_tenpo.margin_right = 0
+
             p_tenpo = tf_tenpo.paragraphs[0]
             p_tenpo.text = "「住まい」のもっと先へ。"
-            p_tenpo.font.size = Pt(22)  # 🌟 文字をさらに特大に（Pt18からPt22へ）
+            p_tenpo.font.size = Pt(10)  # 🌟 フォントサイズを小さく上品に（Pt10へ）
             p_tenpo.font.bold = True
             p_tenpo.font.color.rgb = RGBColor(16, 51, 93)
             p_tenpo.font.name = "游ゴシック"
             p_tenpo.alignment = PP_ALIGN.LEFT
 
-            # 🌟 追加：タイトルの上下に高級感のある飾り線を復活させる魔法
+# 🌟 追加：タイトルの上下に高級感のある飾り線を復活させる魔法
             line_color = RGBColor(170, 200, 230) # 上品な薄いブルーグレー
             
-            # 🌟 ロゴと被らないように開始位置を右（3.7）にずらし、幅を調整（3.1）
-            line_top = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(3.7), Inches(0.25), Inches(3.1), Pt(1.5))
+            # 🌟 開始位置を思い切って左（2.6）に寄せ、幅を（4.1）に大幅拡大します！
+            line_top = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(2.6), Inches(0.25), Inches(4.1), Pt(1.5))
             line_top.fill.solid()
             line_top.fill.fore_color.rgb = line_color
             line_top.line.fill.background()
             
-            line_bottom = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(3.7), Inches(1.25), Inches(3.1), Pt(1.5))
+            line_bottom = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(2.6), Inches(1.25), Inches(4.1), Pt(1.5))
             line_bottom.fill.solid()
             line_bottom.fill.fore_color.rgb = line_color
             line_bottom.line.fill.background()
 
-            # 🌟 タイトルのテキストボックスも同様に位置と幅を合わせる
-            tb_title = slide.shapes.add_textbox(Inches(3.7), Inches(0.25), Inches(3.1), Inches(1.0))
+            # 🌟 タイトルのテキストボックスも同様に広げます
+            tb_title = slide.shapes.add_textbox(Inches(2.6), Inches(0.25), Inches(4.1), Inches(1.0))
             tf_title = tb_title.text_frame
             
             # 🌟 追加：パワポ特有の「見えない余白」をゼロにして、ズレを完全に無くす魔法
@@ -2286,15 +2295,15 @@ def generate_zumen(
                         tmp_logo_io = BytesIO()
                         white_img.save(tmp_logo_io, format="PNG")
                         tmp_logo_io.seek(0)
-                        # 🌟 左に引っ張って透明な余白を相殺し、左右の中央に配置
-                        slide.shapes.add_picture(tmp_logo_io, Inches(-0.05), footer_y - Inches(0.075), height=Inches(1.2))
+                        # 🌟 ロゴのY座標を上に持ち上げて（0.12 → 0.05）、上下の「ど真ん中」に美しく配置する
+                        slide.shapes.add_picture(tmp_logo_io, Inches(0.15), footer_y + Inches(0.05), width=Inches(2.5))
                 else:
-                    # 🌟 こちらも同様に修正
-                    slide.shapes.add_picture(logo_path, Inches(-0.05), footer_y - Inches(0.075), height=Inches(1.2))
+                    # 🌟 同様に配置
+                    slide.shapes.add_picture(logo_path, Inches(0.15), footer_y + Inches(0.05), width=Inches(2.5))
 
-            # 縦線1
+            # 🌟 縦線1 (ロゴと会社情報の間：幅を広げる)
             if line_color:
-                vl1 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(2.6), footer_y + Inches(0.15), Pt(1), Inches(0.75))
+                vl1 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(2.8), footer_y + Inches(0.15), Pt(1), Inches(0.75))
                 vl1.fill.solid()
                 vl1.fill.fore_color.rgb = line_color
                 vl1.line.fill.background()
@@ -2303,57 +2312,57 @@ def generate_zumen(
             FONT_ENG = "Arial"
             FONT_JPN = "游明朝"
 
-            # 会社情報（🌟太字を減らして抜け感を出す）
-            tb_comp = slide.shapes.add_textbox(Inches(2.7), footer_y + Inches(0.08), Inches(3.5), Inches(0.85))
+            # 🌟 会社情報（文字サイズをフラットに統一）
+            tb_comp = slide.shapes.add_textbox(Inches(2.9), footer_y + Inches(0.1), Inches(3.5), Inches(0.85))
             tf_comp = tb_comp.text_frame
             tf_comp.clear()
             tf_comp.margin_top = 0
             
             p1 = tf_comp.paragraphs[0]
             r1 = p1.add_run()
-            r1.text = "TEL."
+            r1.text = "TEL. "
             r1.font.size = Pt(11)
-            r1.font.bold = False # 🌟 細字にしてスタイリッシュに
             r1.font.color.rgb = text_color_sub
             r1.font.name = FONT_ENG
             
             r2 = p1.add_run()
-            r2.text = f" {branch.get('tel', '')}"
-            r2.font.size = Pt(24)
-            r2.font.bold = False # 🌟 あえて細字にして高級感を出す
+            r2.text = branch.get('tel', '')
+            r2.font.size = Pt(13)
+            r2.font.bold = True 
             r2.font.color.rgb = text_color_main
             r2.font.name = FONT_ENG
             
             p2 = tf_comp.add_paragraph()
+            p2.space_before = Pt(3)
             p2.text = branch.get("license", "免許番号")
-            p2.font.size = Pt(8)
-            p2.font.bold = False
+            p2.font.size = Pt(10)
             p2.font.color.rgb = text_color_sub
             p2.font.name = FONT_JPN
             
             p3 = tf_comp.add_paragraph()
+            p3.space_before = Pt(3)
             p3.text = branch.get('full_name', '')
             p3.font.size = Pt(13)
-            p3.font.bold = True # 会社名だけ太字
+            p3.font.bold = True 
             p3.font.color.rgb = text_color_main
             p3.font.name = FONT_JPN
             
             p4 = tf_comp.add_paragraph()
+            p4.space_before = Pt(3)
             p4.text = branch.get('address', '')
-            p4.font.size = Pt(8)
-            p4.font.bold = False
+            p4.font.size = Pt(10)
             p4.font.color.rgb = text_color_sub
             p4.font.name = FONT_JPN
 
-            # 縦線2
+            # 🌟 縦線2 (会社情報と担当者の間)
             if line_color:
-                vl2 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(6.0), footer_y + Inches(0.15), Pt(1), Inches(0.75))
+                vl2 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(6.3), footer_y + Inches(0.15), Pt(1), Inches(0.75))
                 vl2.fill.solid()
                 vl2.fill.fore_color.rgb = line_color
                 vl2.line.fill.background()
 
-            # 担当者情報（🌟美しく整列）
-            tb_person = slide.shapes.add_textbox(Inches(6.1), footer_y + Inches(0.15), Inches(2.0), Inches(0.75))
+            # 🌟 担当者情報（文字サイズをフラットに統一）
+            tb_person = slide.shapes.add_textbox(Inches(6.4), footer_y + Inches(0.1), Inches(2.3), Inches(0.85))
             tf_person = tb_person.text_frame
             tf_person.clear()
             tf_person.margin_top = 0
@@ -2361,61 +2370,56 @@ def generate_zumen(
             p_p1 = tf_person.paragraphs[0] 
             r1 = p_p1.add_run()
             r1.text = "担当 "
-            r1.font.size = Pt(9)
-            r1.font.bold = False
+            r1.font.size = Pt(11)
             r1.font.color.rgb = text_color_sub
             r1.font.name = FONT_JPN
             
             r2 = p_p1.add_run()
-            r2.text = user_name # 🌟 修正：ログインユーザーの名前に置き換え
-            r2.font.size = Pt(14)
+            r2.text = user_name 
+            r2.font.size = Pt(13)
             r2.font.bold = True
             r2.font.color.rgb = text_color_main
             r2.font.name = FONT_JPN
             
             p_p2 = tf_person.add_paragraph()
-            p_p2.space_before = Pt(4)
+            p_p2.space_before = Pt(3)
             r_mob_lbl = p_p2.add_run()
             r_mob_lbl.text = "Mobile. "
-            r_mob_lbl.font.size = Pt(8.5)
-            r_mob_lbl.font.bold = False
-            r_mob_lbl.font.color.rgb = text_color_main
+            r_mob_lbl.font.size = Pt(10)
+            r_mob_lbl.font.color.rgb = text_color_sub
             r_mob_lbl.font.name = FONT_ENG
             
             r_mob_val = p_p2.add_run()
-            r_mob_val.text = user_mobile # 🌟 修正：ログインユーザーの携帯番号に置き換え
-            r_mob_val.font.size = Pt(8.5)
-            r_mob_val.font.bold = False
-            r_mob_val.font.color.rgb = text_color_sub
-            r_mob_val.font.name = FONT_ENG # 数字なので英字フォント
+            r_mob_val.text = user_mobile 
+            r_mob_val.font.size = Pt(10)
+            r_mob_val.font.color.rgb = text_color_main
+            r_mob_val.font.name = FONT_ENG 
             
             p_p3 = tf_person.add_paragraph()
-            p_p3.space_before = Pt(1)
+            p_p3.space_before = Pt(3)
             r_mail_lbl = p_p3.add_run()
             r_mail_lbl.text = "Mail. "
-            r_mail_lbl.font.size = Pt(8.5)
-            r_mail_lbl.font.bold = False
-            r_mail_lbl.font.color.rgb = text_color_main
+            r_mail_lbl.font.size = Pt(10)
+            r_mail_lbl.font.color.rgb = text_color_sub
             r_mail_lbl.font.name = FONT_ENG
             
             r_mail_val = p_p3.add_run()
-            r_mail_val.text = user_email_disp # 🌟 修正：ログインユーザーのメアドに置き換え
-            r_mail_val.font.size = Pt(8.5)
-            r_mail_val.font.bold = False
-            r_mail_val.font.color.rgb = text_color_sub
+            r_mail_val.text = user_email_disp 
+            r_mail_val.font.size = Pt(10)
+            r_mail_val.font.color.rgb = text_color_main
             r_mail_val.font.name = FONT_ENG
 
-            # 縦線3
+            # 🌟 縦線3 (担当者と取引態様の間：右に寄せる)
             if line_color:
-                vl3 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(8.1), footer_y + Inches(0.15), Pt(1), Inches(0.75))
+                vl3 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(8.8), footer_y + Inches(0.15), Pt(1), Inches(0.75))
                 vl3.fill.solid()
                 vl3.fill.fore_color.rgb = line_color
                 vl3.line.fill.background()
 
-            # 取引態様・手数料の表
-            table_left = Inches(8.3)
-            table_top = footer_y + Inches(0.2)
-            col_w = Inches(0.8)
+            # 🌟 取引態様の表 (1列)
+            table_left = Inches(8.95)
+            table_top = footer_y + Inches(0.25)
+            col_w = Inches(0.9)
             row_h1 = Inches(0.25)
             row_h2 = Inches(0.35)
             
@@ -2423,9 +2427,7 @@ def generate_zumen(
                 rect = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, l, t, w, h)
                 rect.fill.solid()
                 if footer_design_num == "1":
-                    # 🌟 修正：上段は青、下段は白（RGB(255,255,255)）にする！
                     rect.fill.fore_color.rgb = bg_color if is_header else RGBColor(255, 255, 255)
-                    # 下段の枠線は白背景でも見えやすいように薄いグレーにする
                     rect.line.color.rgb = RGBColor(255, 255, 255) if is_header else RGBColor(200, 200, 200)
                     tc = RGBColor(255, 255, 255) if is_header else RGBColor(0, 0, 0)
                 elif footer_design_num == "2":
@@ -2446,13 +2448,11 @@ def generate_zumen(
                 p.text = text
                 p.font.size = Pt(9)
                 p.font.color.rgb = tc
-                p.font.name = FONT_JPN # 表の中も美しく統一
+                p.font.name = FONT_JPN
                 p.alignment = PP_ALIGN.CENTER
-
+                
             draw_cell(table_left, table_top, col_w, row_h1, "取引態様", True)
-            draw_cell(table_left + col_w, table_top, col_w, row_h1, "手数料", True)
-            draw_cell(table_left, table_top + row_h1, col_w, row_h2, "", False)
-            draw_cell(table_left + col_w, table_top + row_h1, col_w, row_h2, "", False)
+            draw_cell(table_left, table_top + row_h1, col_w, row_h2, transaction_type, False) # 🌟 選択した文字を反映
 
         # 6. 完成したPowerPointファイルをバイナリ化して返す
         from fastapi.responses import StreamingResponse
