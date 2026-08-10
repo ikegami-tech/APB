@@ -295,7 +295,8 @@ function openModal(id) {
         const dispEl = document.getElementById('display-title' + suffix);
         const inpEl = document.getElementById('input-title');
         if (dispEl && inpEl) {
-            inpEl.value = (dispEl.innerText !== 'タイトル' && dispEl.innerText !== 'タイトルを入力') ? dispEl.innerText : '';
+            // 🌟 「キャッチコピーを入力」も初期値として判定し、入力欄を空にする
+            inpEl.value = (dispEl.innerText !== 'タイトル' && dispEl.innerText !== 'タイトルを入力' && dispEl.innerText !== 'キャッチコピーを入力') ? dispEl.innerText : '';
         }
     } 
     // 販売価格モーダルの場合
@@ -310,24 +311,9 @@ function openModal(id) {
     } 
 // 交通アクセスモーダルの場合
     else if (id === 'accessModal') {
-        const lineDisp = document.getElementById('display-line' + suffix);
-        const lineInp = document.getElementById('input-line');
-        if (lineDisp && lineInp) {
-            lineInp.value = lineDisp.innerText !== '交通' ? lineDisp.innerText : '';
-            // 🌟 路線がセットされたら、裏で駅リストのプルダウンを自動生成する
-            if (typeof window.updateStations === 'function') window.updateStations();
-        }
-        
-        const stationDisp = document.getElementById('display-station' + suffix);
-        const stationInp = document.getElementById('input-station');
-        if (stationDisp && stationInp) {
-            const cleanText = stationDisp.innerText.replace(/[「」]/g, '');
-            stationInp.value = cleanText !== '最寄駅' ? cleanText : '';
-        }
-        
-        const walkDisp = document.getElementById('display-walk' + suffix);
-        const walkInp = document.getElementById('input-walk');
-        if (walkDisp && walkInp) walkInp.value = walkDisp.innerText !== '〇' ? walkDisp.innerText : '';
+        // ステップ1（路線数選択）を最初に表示する
+        document.getElementById('access-step-1').style.display = 'block';
+        document.getElementById('access-step-2').style.display = 'none';
     }
     // 🌟 追加：フッターモーダルを開くときに、DBから履歴を読み込む
     else if (id === 'footerModal') {
@@ -541,19 +527,109 @@ window.saveSummary = function() {
 }; // 👈 元々ある行
 
 
-// 🌟 交通アクセスの保存処理（独立版に修正）
-function saveAccess() {
-    const suffix = getCurrentDesignSuffix();
-    const lineEl = document.getElementById('display-line' + suffix);
-    const stationEl = document.getElementById('display-station' + suffix);
-    const walkEl = document.getElementById('display-walk' + suffix);
+// 🌟 追加：路線数を選択して入力枠を自動生成する魔法
+window.setAccessCount = function(num) {
+    document.getElementById('access-count').value = num;
+    const container = document.getElementById('access-routes-container');
+    container.innerHTML = '';
     
-    if (lineEl) lineEl.innerText = document.getElementById('input-line').value;
-    if (stationEl) stationEl.innerText = document.getElementById('input-station').value;
-    if (walkEl) walkEl.innerText = document.getElementById('input-walk').value;
+    for(let i=1; i<=num; i++) {
+        const lineVal = document.getElementById('access-line-'+i).value || '';
+        const stationVal = document.getElementById('access-station-'+i).value || '';
+        const walkVal = document.getElementById('access-walk-'+i).value || '';
+        
+        let html = `
+            <div style="margin-bottom: 15px; padding: 15px; border: 1px solid #E4E7EB; border-radius: 6px; background-color: #fcfcfc;">
+                <h4 style="margin: 0 0 10px 0; color: #1E2D3D; font-size: 14px; border-bottom: 2px solid #FA8A76; display: inline-block; padding-bottom: 2px;">📍 ${i}路線目</h4>
+                <label style="display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px;">路線</label>
+                <select id="input-line-${i}" style="width: 100%; padding: 8px; border: 1px solid #CFD8DC; border-radius: 4px; font-size: 13px; margin-bottom: 10px;" onchange="window.updateStationsMulti(${i})">
+                    <option value="">路線を選択してください</option>
+                </select>
+                <label style="display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px;">最寄駅</label>
+                <select id="input-station-${i}" style="width: 100%; padding: 8px; border: 1px solid #CFD8DC; border-radius: 4px; font-size: 13px; margin-bottom: 10px;">
+                    <option value="">先に路線を選択してください</option>
+                </select>
+                <label style="display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px;">駅距離 / 徒歩（分）</label>
+                <input type="text" id="input-walk-${i}" value="${walkVal}" placeholder="例）5" style="width: 100%; padding: 8px; border: 1px solid #CFD8DC; border-radius: 4px; font-size: 13px;">
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+        
+        const lineInp = document.getElementById(`input-line-${i}`);
+        kantoTrainData.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d.line;
+            opt.innerText = d.line;
+            if(d.line === lineVal) opt.selected = true;
+            lineInp.appendChild(opt);
+        });
+        window.updateStationsMulti(i, stationVal);
+    }
+    
+    document.getElementById('access-step-1').style.display = 'none';
+    document.getElementById('access-step-2').style.display = 'block';
+};
+
+window.updateStationsMulti = function(index, defaultStation = "") {
+    const lineInp = document.getElementById(`input-line-${index}`);
+    const stationInp = document.getElementById(`input-station-${index}`);
+    if (!lineInp || !stationInp) return;
+    
+    stationInp.innerHTML = '<option value="">駅を選択してください</option>';
+    const lineData = kantoTrainData.find(d => d.line === lineInp.value);
+    if (lineData) {
+        lineData.stations.forEach(station => {
+            const opt = document.createElement('option');
+            opt.value = station;
+            opt.innerText = station;
+            if(station === defaultStation) opt.selected = true;
+            stationInp.appendChild(opt);
+        });
+    }
+};
+
+// 🌟 交通アクセスの保存処理（複数路線・一括プレビュー書き換えの魔法！）
+window.saveAccess = function() {
+    const count = parseInt(document.getElementById('access-count').value);
+    for(let i=1; i<=count; i++) {
+        document.getElementById('access-line-'+i).value = document.getElementById('input-line-'+i).value;
+        document.getElementById('access-station-'+i).value = document.getElementById('input-station-'+i).value;
+        document.getElementById('access-walk-'+i).value = document.getElementById('input-walk-'+i).value;
+    }
+    
+    let htmlD1 = '', htmlD2 = '', htmlD3 = '';
+    if (count === 1) {
+        const l = document.getElementById('access-line-1').value || '交通';
+        const s = document.getElementById('access-station-1').value || '最寄駅';
+        const w = document.getElementById('access-walk-1').value || '〇';
+        
+        htmlD1 = `<div style="font-family: '游明朝', 'Yu Mincho', serif;"><span style="font-size: 14px; color: #646464;">${l}</span><br><span style="font-size: 24px; font-weight: bold; color: #505050;">「${s}」</span> <span style="font-size: 13px; color: #646464;">徒歩 ${w} 分</span></div>`;
+        htmlD2 = `<div style="position: absolute; top: -10px; left: 10px; font-size: 12px; color: #5499C7; background: #FFF; padding: 0 5px; letter-spacing: 2px;">A c c e s s</div><div><span style="font-size: 18px; color: #333;">${l}</span><span style="font-size: 28px; font-weight: bold; margin: 0 15px; color: #1E2D3D;">「${s}」</span><span style="font-size: 15px;">徒歩 ${w} 分</span></div>`;
+        htmlD3 = `<div style="writing-mode: vertical-rl; text-orientation: upright; padding: 5px; font-size: 11px; letter-spacing: 2px; display: flex; align-items: center; justify-content: center;">ACCESS</div><div style="flex: 1; display: flex; align-items: center; justify-content: center; font-size: 15px;"><span>${l}</span> <span style="font-size: 20px; font-weight: bold; margin: 0 8px;">「${s}」</span> 徒歩<span>${w}</span>分</div>`;
+    } else {
+        let d1_lines = [], d2_lines = [], d3_lines = [];
+        for(let i=1; i<=count; i++) {
+            const l = document.getElementById('access-line-'+i).value || '交通';
+            const s = document.getElementById('access-station-'+i).value || '最寄駅';
+            const w = document.getElementById('access-walk-'+i).value || '〇';
+            
+            d1_lines.push(`<div style="line-height: 1.2; margin-bottom: 3px;"><span style="font-size: 12px; color: #646464;">${l}</span> <span style="font-size: 16px; font-weight: bold; color: #505050;">「${s}」</span> <span style="font-size: 12px; color: #646464;">徒歩 ${w} 分</span></div>`);
+            d2_lines.push(`<div style="line-height: 1.2; margin-bottom: 3px;"><span style="font-size: 14px; color: #333;">${l}</span> <span style="font-size: 18px; font-weight: bold; margin: 0 8px; color: #1E2D3D;">「${s}」</span> <span style="font-size: 14px;">徒歩 ${w} 分</span></div>`);
+            d3_lines.push(`<div style="line-height: 1.2; margin-bottom: 3px;"><span>${l}</span> <span style="font-size: 15px; font-weight: bold; margin: 0 5px;">「${s}」</span> <span style="font-size: 12px;">徒歩${w}分</span></div>`);
+        }
+        htmlD1 = `<div style="display: flex; flex-direction: column; justify-content: center; height: 100%; font-family: '游明朝', 'Yu Mincho', serif;">` + d1_lines.join('') + `</div>`;
+        htmlD2 = `<div style="position: absolute; top: -10px; left: 10px; font-size: 12px; color: #5499C7; background: #FFF; padding: 0 5px; letter-spacing: 2px;">A c c e s s</div><div style="display: flex; flex-direction: column; justify-content: center; width: 100%;">` + d2_lines.join('') + `</div>`;
+        htmlD3 = `<div style="writing-mode: vertical-rl; text-orientation: upright; padding: 5px; font-size: 11px; letter-spacing: 2px; display: flex; align-items: center; justify-content: center;">ACCESS</div><div style="flex: 1; display: flex; flex-direction: column; justify-content: center; font-size: 12px; text-align: center;">` + d3_lines.join('') + `</div>`;
+    }
+    
+    // 全デザインのアクセス枠を強力に書き換える
+    const accessBtns = document.querySelectorAll('[onclick="openModal(\'accessModal\')"]');
+    if(accessBtns[0]) accessBtns[0].innerHTML = htmlD1;
+    if(accessBtns[1]) accessBtns[1].innerHTML = htmlD2;
+    if(accessBtns[2]) accessBtns[2].innerHTML = htmlD3;
     
     closeModal('accessModal');
-}
+};
 
 // 🌟 ここに追加：取引態様の保存処理
 function saveTransaction() {
@@ -776,9 +852,16 @@ async function downloadPptx() {
         const titleText = document.getElementById('display-title' + (currentDesign === "1" ? "" : suffix))?.innerText || "";
         const priceText = document.getElementById('display-price' + suffix)?.innerText || "";
         const addressText = document.getElementById('display-address' + suffix)?.innerText || "";
-        const lineText = document.getElementById('display-line' + suffix)?.innerText || ""; // 🌟 追加：路線名を取得
-        const stationText = document.getElementById('display-station' + suffix)?.innerText || "";
-        const walkText = document.getElementById('display-walk' + suffix)?.innerText || "";
+        const count = parseInt(document.getElementById('access-count')?.value || "1");
+        let lines = [], stations = [], walks = [];
+        for(let i=1; i<=count; i++) {
+            lines.push(document.getElementById('access-line-'+i)?.value || "");
+            stations.push(document.getElementById('access-station-'+i)?.value || "");
+            walks.push(document.getElementById('access-walk-'+i)?.value || "");
+        }
+        const lineText = lines.join("|||");
+        const stationText = stations.join("|||");
+        const walkText = walks.join("|||");
         const layoutText = document.getElementById('display-layout' + suffix)?.innerText || "";
         const buildDateText = document.getElementById('display-build-date' + suffix)?.innerText || "";
         const landRightText = document.getElementById('display-land-right' + suffix)?.innerText || "";

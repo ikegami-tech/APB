@@ -1902,8 +1902,11 @@ def generate_zumen(
             # 🌟 2. 下の画像エリアも、上部と「全く同じ横グラデーション（幅も10インチ）」に広げることで、段差を完全に消しつつ画像間で美しくフェードさせます！
             add_gradient_box(0, Inches(1.4), Inches(10), Inches(4.5), (170, 200, 230), (250, 252, 255), start_pos=0.28, end_pos=0.40, horizontal=True)
 
-            # 🌟 3. 下の設備エリアを「左(水色)から右(白)へのグラデーション」に
-            add_gradient_box(0, Inches(5.9), Inches(10), Inches(0.75), (230, 240, 250), (255, 255, 255), start_pos=0.0, end_pos=1.0, horizontal=True)
+            # 🌟 3. 下の設備エリアからスライド下端までを「真っ白」で完全に塗りつぶし、露出する影と線を消去！
+            bg_eq = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, Inches(5.9), Inches(10), Inches(1.6))
+            bg_eq.fill.solid()
+            bg_eq.fill.fore_color.rgb = RGBColor(255, 255, 255)
+            bg_eq.line.color.rgb = RGBColor(255, 255, 255)
 
             # 4. 右側の物件詳細用の白い角丸カード
             bg_right = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(7.25), Inches(1.45), Inches(2.65), Inches(4.4))
@@ -1923,10 +1926,10 @@ def generate_zumen(
             except:
                 pass 
 
-            # 🌟 左上の領域（スライドの左端ギリギリまで寄せ、タイトルとの被りを防ぎます）
-            box_left = Inches(0.05)
+            # 🌟 左上の領域（下の画像1・画像2の左端ラインとピッタリ揃える魔法！）
+            box_left = Inches(0.2)
             box_top = Inches(0.2)
-            box_w = Inches(3.4) # タイトルが Inches(3.6) から始まるので、それまでに収まるように幅を制限
+            box_w = Inches(2.3) # タイトルが Inches(2.6) から始まるので、干渉しないように幅を最適化
             box_h = Inches(1.1)
             
             # 🌟 アイコン（3本矢印）の配置と色変換
@@ -1950,13 +1953,13 @@ def generate_zumen(
                             navy_img.save(tmp.name, "PNG")
                             tmp_path = tmp.name
                             
-                    # 🌟 アイコンを約1/2のサイズに（heightを0.35インチへ）し、少し下に下げて中央に揃えます
-                    slide.shapes.add_picture(tmp_path, box_left, box_top + Inches(0.35), height=Inches(0.35))
+                    # 🌟 アイコンをさらに縮小（heightを0.25インチへ）し、中央に揃えるようにY座標も調整します
+                    slide.shapes.add_picture(tmp_path, box_left, box_top + Inches(0.4), height=Inches(0.25))
                     os.remove(tmp_path)
                     
-                    # アイコンが小さくなった分、テキストの開始位置も左に寄せます
-                    text_left = box_left + Inches(0.4)
-                    text_width = box_w - Inches(0.4)
+                    # アイコンがさらに小さくなった分、テキストの開始位置も少し左に寄せて間隔を整えます
+                    text_left = box_left + Inches(0.3)
+                    text_width = box_w - Inches(0.3)
                 except Exception as e:
                     print(f"アイコン配置エラー: {e}")
 
@@ -2059,38 +2062,73 @@ def generate_zumen(
             line_v.fill.fore_color.rgb = gray_line
             line_v.line.fill.background()
 
-            # 🌟 修正：Web画面と同じように2段構えにし、駅名を大きく表示する魔法
+            # 🌟 修正：交通アクセスを複数路線対応の最強描画システムに変更！
             tb_acc = slide.shapes.add_textbox(Inches(7.3), Inches(1.45), Inches(2.5), Inches(0.65))
             tf_acc = tb_acc.text_frame
             tf_acc.clear()
             tf_acc.margin_top = tf_acc.margin_bottom = 0
-            tf_acc.vertical_anchor = MSO_ANCHOR.MIDDLE  # 🌟 追加：文字を上下の中央に美しく揃える！
+            tf_acc.vertical_anchor = MSO_ANCHOR.MIDDLE
             
-            # 1行目：路線名
-            p_line = tf_acc.paragraphs[0]
-            p_line.text = transport_line if transport_line else "交通"
-            p_line.font.size = Pt(10)
-            p_line.font.color.rgb = RGBColor(100, 100, 100)
-            p_line.font.name = "游明朝"
-            p_line.alignment = PP_ALIGN.CENTER
+            # ||| で区切られたデータをリスト（配列）に復元
+            lines = transport_line.split("|||") if transport_line else ["交通"]
+            stations = transport_station.split("|||") if transport_station else ["最寄駅"]
+            walks = transport_walk.split("|||") if transport_walk else ["〇"]
             
-            # 2行目：駅名と徒歩分数
-            p_sta = tf_acc.add_paragraph()
-            clean_station = transport_station.replace("「", "").replace("」", "")
-            
-            r_sta = p_sta.add_run()
-            r_sta.text = f"{clean_station} "
-            r_sta.font.size = Pt(18)
-            r_sta.font.bold = True
-            r_sta.font.color.rgb = RGBColor(80, 80, 80)
-            r_sta.font.name = "游明朝"
-            
-            r_walk = p_sta.add_run()
-            r_walk.text = f"徒歩 {transport_walk} 分"
-            r_walk.font.size = Pt(10)
-            r_walk.font.color.rgb = RGBColor(100, 100, 100)
-            r_walk.font.name = "游明朝"
-            p_sta.alignment = PP_ALIGN.CENTER
+            # 要素数が合わないエラーを防ぐ安全処理
+            count = max(len(lines), len(stations), len(walks))
+            while len(lines) < count: lines.append("")
+            while len(stations) < count: stations.append("")
+            while len(walks) < count: walks.append("")
+
+            if count == 1:
+                # 🌟 1路線の場合は、今まで通り駅名を大きく2段で表示
+                p_line = tf_acc.paragraphs[0]
+                p_line.text = lines[0] if lines[0] else "交通"
+                p_line.font.size = Pt(10)
+                p_line.font.color.rgb = RGBColor(100, 100, 100)
+                p_line.font.name = "游明朝"
+                p_line.alignment = PP_ALIGN.CENTER
+                
+                p_sta = tf_acc.add_paragraph()
+                clean_station = stations[0].replace("「", "").replace("」", "")
+                r_sta = p_sta.add_run()
+                r_sta.text = f"「{clean_station}」 "
+                r_sta.font.size = Pt(18)
+                r_sta.font.bold = True
+                r_sta.font.color.rgb = RGBColor(80, 80, 80)
+                r_sta.font.name = "游明朝"
+                
+                r_walk = p_sta.add_run()
+                r_walk.text = f"徒歩 {walks[0]} 分"
+                r_walk.font.size = Pt(10)
+                r_walk.font.color.rgb = RGBColor(100, 100, 100)
+                r_walk.font.name = "游明朝"
+                p_sta.alignment = PP_ALIGN.CENTER
+            else:
+                # 🌟 2路線以上の場合は、WEB画面と同じように「1行ずつ」綺麗に表示
+                for i in range(count):
+                    p = tf_acc.paragraphs[0] if i == 0 else tf_acc.add_paragraph()
+                    p.alignment = PP_ALIGN.CENTER
+                    
+                    r_l = p.add_run()
+                    r_l.text = f"{lines[i]} "
+                    r_l.font.size = Pt(9)
+                    r_l.font.color.rgb = RGBColor(100, 100, 100)
+                    r_l.font.name = "游明朝"
+                    
+                    clean_station = stations[i].replace("「", "").replace("」", "")
+                    r_s = p.add_run()
+                    r_s.text = f"「{clean_station}」 "
+                    r_s.font.size = Pt(11)
+                    r_s.font.bold = True
+                    r_s.font.color.rgb = RGBColor(80, 80, 80)
+                    r_s.font.name = "游明朝"
+                    
+                    r_w = p.add_run()
+                    r_w.text = f"徒歩 {walks[i]} 分"
+                    r_w.font.size = Pt(9)
+                    r_w.font.color.rgb = RGBColor(100, 100, 100)
+                    r_w.font.name = "游明朝"
             
             line_acc = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(7.3), Inches(2.1), Inches(2.5), Pt(1))
             line_acc.fill.solid()
@@ -2211,16 +2249,15 @@ def generate_zumen(
                     # 🌟 修正：アイコン画像がない場合も、背景に合わせて真っ白な枠を出す
                     add_color_box(current_left, current_top, Inches(1.2), Inches(0.4), "アイコン", RGBColor(255, 255, 255), 11)
 
-            line_eq2 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, Inches(6.6), Inches(10), Pt(2))
-            line_eq2.fill.solid()
-            line_eq2.fill.fore_color.rgb = RGBColor(30, 45, 61)
-            line_eq2.line.fill.background()
+            
 
 # ==========================================
         # 🎨 共通フッターエリア（スマート・モダンフォント完全対応版！）
         # ==========================================
-        footer_y = Inches(6.45)
-        footer_h = Inches(1.05)
+        # 🌟 修正：上下左右に余白を持たせてスタイリッシュに浮かせるフローティングデザイン！
+        footer_margin_x = 0.15
+        footer_y = Inches(6.62)  # 設備エリアとの間に余白を作る
+        footer_h = Inches(0.8)   # 下部にも余白を残す高さ
 
         # 🌟 候補2：ラグジュアリー・クラシック用のフォント定義
         FONT_ENG = "Trebuchet MS"
@@ -2259,18 +2296,18 @@ def generate_zumen(
             with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
                 tmp.write(custom_footer_image.file.read())
                 tmp_path = tmp.name
-            slide.shapes.add_picture(tmp_path, 0, footer_y, width=Inches(10), height=footer_h)
+            slide.shapes.add_picture(tmp_path, Inches(footer_margin_x), footer_y, width=Inches(10 - footer_margin_x*2), height=footer_h)
             os.remove(tmp_path)
         else:
-            # 帯の背景
-            bg_shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, footer_y, Inches(10), footer_h)
+            # 🌟 帯の背景 (左右に余白を作り、浮かせる！)
+            bg_shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(footer_margin_x), footer_y, Inches(10 - footer_margin_x*2), footer_h)
             bg_shape.fill.solid()
             bg_shape.fill.fore_color.rgb = bg_color
             bg_shape.line.fill.background()
             
             # 上のボーダー線
             if top_border_color:
-                top_line = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, footer_y, Inches(10), Pt(2))
+                top_line = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(footer_margin_x), footer_y, Inches(10 - footer_margin_x*2), Pt(2))
                 top_line.fill.solid()
                 top_line.fill.fore_color.rgb = top_border_color
                 top_line.line.fill.background()
@@ -2295,15 +2332,15 @@ def generate_zumen(
                         tmp_logo_io = BytesIO()
                         white_img.save(tmp_logo_io, format="PNG")
                         tmp_logo_io.seek(0)
-                        # 🌟 ロゴのY座標を上に持ち上げて（0.12 → 0.05）、上下の「ど真ん中」に美しく配置する
-                        slide.shapes.add_picture(tmp_logo_io, Inches(0.15), footer_y + Inches(0.05), width=Inches(2.5))
+                        # 🌟 ロゴを左に寄せる
+                        slide.shapes.add_picture(tmp_logo_io, Inches(0.25), footer_y + Inches(0.05), width=Inches(2.0))
                 else:
                     # 🌟 同様に配置
-                    slide.shapes.add_picture(logo_path, Inches(0.15), footer_y + Inches(0.05), width=Inches(2.5))
+                    slide.shapes.add_picture(logo_path, Inches(0.25), footer_y + Inches(0.05), width=Inches(2.0))
 
-            # 🌟 縦線1 (ロゴと会社情報の間：幅を広げる)
+            # 🌟 縦線1 (ロゴの右側)
             if line_color:
-                vl1 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(2.8), footer_y + Inches(0.15), Pt(1), Inches(0.75))
+                vl1 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(2.35), footer_y + Inches(0.12), Pt(1), Inches(0.56))
                 vl1.fill.solid()
                 vl1.fill.fore_color.rgb = line_color
                 vl1.line.fill.background()
@@ -2312,116 +2349,100 @@ def generate_zumen(
             FONT_ENG = "Arial"
             FONT_JPN = "游明朝"
 
-            # 🌟 会社情報（文字サイズをフラットに統一）
-            tb_comp = slide.shapes.add_textbox(Inches(2.9), footer_y + Inches(0.1), Inches(3.5), Inches(0.85))
+# 🌟 会社情報（文字サイズを9.5に落とし、行間を詰めて細い帯にジャストフィットさせる！）
+            tb_comp = slide.shapes.add_textbox(Inches(2.45), footer_y + Inches(0.02), Inches(3.7), Inches(0.75))
             tf_comp = tb_comp.text_frame
             tf_comp.clear()
             tf_comp.margin_top = 0
+            tf_comp.word_wrap = False
+            tf_comp.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
             
             p1 = tf_comp.paragraphs[0]
             r1 = p1.add_run()
-            r1.text = "TEL. "
-            r1.font.size = Pt(11)
-            r1.font.color.rgb = text_color_sub
+            r1.text = f"TEL. {branch.get('tel', '')}"
+            r1.font.size = Pt(9.5)
+            r1.font.bold = True
+            r1.font.color.rgb = text_color_main
             r1.font.name = FONT_ENG
             
-            r2 = p1.add_run()
-            r2.text = branch.get('tel', '')
-            r2.font.size = Pt(13)
-            r2.font.bold = True 
-            r2.font.color.rgb = text_color_main
-            r2.font.name = FONT_ENG
-            
             p2 = tf_comp.add_paragraph()
-            p2.space_before = Pt(3)
+            p2.space_before = Pt(1.5)  # 行間を3pt -> 1.5ptに詰める
             p2.text = branch.get("license", "免許番号")
-            p2.font.size = Pt(10)
-            p2.font.color.rgb = text_color_sub
+            p2.font.size = Pt(9.5)
+            p2.font.bold = True
+            p2.font.color.rgb = text_color_main
             p2.font.name = FONT_JPN
             
             p3 = tf_comp.add_paragraph()
-            p3.space_before = Pt(3)
+            p3.space_before = Pt(1.5)  # 行間を詰める
             p3.text = branch.get('full_name', '')
-            p3.font.size = Pt(13)
+            p3.font.size = Pt(9.5)
             p3.font.bold = True 
             p3.font.color.rgb = text_color_main
             p3.font.name = FONT_JPN
             
             p4 = tf_comp.add_paragraph()
-            p4.space_before = Pt(3)
+            p4.space_before = Pt(1.5)  # 行間を詰める
             p4.text = branch.get('address', '')
-            p4.font.size = Pt(10)
-            p4.font.color.rgb = text_color_sub
+            p4.font.size = Pt(9.5)
+            p4.font.bold = True
+            p4.font.color.rgb = text_color_main
             p4.font.name = FONT_JPN
 
             # 🌟 縦線2 (会社情報と担当者の間)
             if line_color:
-                vl2 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(6.3), footer_y + Inches(0.15), Pt(1), Inches(0.75))
+                vl2 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(6.25), footer_y + Inches(0.12), Pt(1), Inches(0.56))
                 vl2.fill.solid()
                 vl2.fill.fore_color.rgb = line_color
                 vl2.line.fill.background()
 
-            # 🌟 担当者情報（文字サイズをフラットに統一）
-            tb_person = slide.shapes.add_textbox(Inches(6.4), footer_y + Inches(0.1), Inches(2.3), Inches(0.85))
+            # 🌟 担当者情報（こちらも同様に文字サイズと行間を最適化！）
+            tb_person = slide.shapes.add_textbox(Inches(6.35), footer_y + Inches(0.08), Inches(2.4), Inches(0.65))
             tf_person = tb_person.text_frame
             tf_person.clear()
             tf_person.margin_top = 0
+            tf_person.word_wrap = False
+            tf_person.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
             
             p_p1 = tf_person.paragraphs[0] 
             r1 = p_p1.add_run()
-            r1.text = "担当 "
-            r1.font.size = Pt(11)
-            r1.font.color.rgb = text_color_sub
+            r1.text = f"担当 {user_name}"
+            r1.font.size = Pt(9.5)
+            r1.font.bold = True
+            r1.font.color.rgb = text_color_main
             r1.font.name = FONT_JPN
             
-            r2 = p_p1.add_run()
-            r2.text = user_name 
-            r2.font.size = Pt(13)
-            r2.font.bold = True
-            r2.font.color.rgb = text_color_main
-            r2.font.name = FONT_JPN
-            
             p_p2 = tf_person.add_paragraph()
-            p_p2.space_before = Pt(3)
-            r_mob_lbl = p_p2.add_run()
-            r_mob_lbl.text = "Mobile. "
-            r_mob_lbl.font.size = Pt(10)
-            r_mob_lbl.font.color.rgb = text_color_sub
-            r_mob_lbl.font.name = FONT_ENG
-            
-            r_mob_val = p_p2.add_run()
-            r_mob_val.text = user_mobile 
-            r_mob_val.font.size = Pt(10)
-            r_mob_val.font.color.rgb = text_color_main
-            r_mob_val.font.name = FONT_ENG 
+            p_p2.space_before = Pt(1.5)  # 行間を詰める
+            r_mob = p_p2.add_run()
+            r_mob.text = f"Mobile. {user_mobile}"
+            r_mob.font.size = Pt(9.5)
+            r_mob.font.bold = True
+            r_mob.font.color.rgb = text_color_main
+            r_mob.font.name = FONT_ENG
             
             p_p3 = tf_person.add_paragraph()
-            p_p3.space_before = Pt(3)
-            r_mail_lbl = p_p3.add_run()
-            r_mail_lbl.text = "Mail. "
-            r_mail_lbl.font.size = Pt(10)
-            r_mail_lbl.font.color.rgb = text_color_sub
-            r_mail_lbl.font.name = FONT_ENG
-            
-            r_mail_val = p_p3.add_run()
-            r_mail_val.text = user_email_disp 
-            r_mail_val.font.size = Pt(10)
-            r_mail_val.font.color.rgb = text_color_main
-            r_mail_val.font.name = FONT_ENG
+            p_p3.space_before = Pt(1.5)  # 行間を詰める
+            r_mail = p_p3.add_run()
+            r_mail.text = f"Mail. {user_email_disp}"
+            r_mail.font.size = Pt(9.5)
+            r_mail.font.bold = True
+            r_mail.font.color.rgb = text_color_main
+            r_mail.font.name = FONT_ENG
 
-            # 🌟 縦線3 (担当者と取引態様の間：右に寄せる)
+            # 🌟 縦線3 (取引態様と被らない安全な位置に戻す！)
             if line_color:
-                vl3 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(8.8), footer_y + Inches(0.15), Pt(1), Inches(0.75))
+                vl3 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(8.85), footer_y + Inches(0.12), Pt(1), Inches(0.56))
                 vl3.fill.solid()
                 vl3.fill.fore_color.rgb = line_color
                 vl3.line.fill.background()
 
-            # 🌟 取引態様の表 (1列)
+            # 🌟 取引態様の表 (被らない位置に調整)
             table_left = Inches(8.95)
-            table_top = footer_y + Inches(0.25)
-            col_w = Inches(0.9)
-            row_h1 = Inches(0.25)
-            row_h2 = Inches(0.35)
+            table_top = footer_y + Inches(0.15)
+            col_w = Inches(0.75)
+            row_h1 = Inches(0.2)
+            row_h2 = Inches(0.3)
             
             def draw_cell(l, t, w, h, text, is_header):
                 rect = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, l, t, w, h)

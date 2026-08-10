@@ -107,7 +107,7 @@
                         <!-- 🌟 タイトル枠の幅を40%にして全体のバランスを100%（35% + 40% + 25%）に整えます -->
 <div style="width: 50%; flex-shrink: 1; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="openModal('titleModal')">
                             <div style="width: 85%; text-align: center; font-size: 32px; font-weight: bold; word-break: break-all; line-height: 1.2; padding: 12px 0; color: #10335D; font-family: '游明朝', 'Yu Mincho', serif; border-top: 2px solid #AAC8E6; border-bottom: 2px solid #AAC8E6;">
-                                <span id="display-title">タイトル</span>
+                                <span id="display-title">キャッチコピーを入力</span>
                             </div>
                         </div>
                         
@@ -185,50 +185,46 @@
                             </div>
                         </div>
                     </div>
-                    <!-- 🌟 4. 設備エリア全体を真っ白にし、アイコン枠の色も白に統一 -->
-                    <div class="zumen-d1-equipment" style="display: flex; align-items: center; gap: 15px; height: 45px; margin: 3px 0; background: linear-gradient(to right, #E6F0FA, #FFFFFF); padding: 0 10px; box-sizing: border-box;">
+                    <!-- 🌟 4. 設備エリア全体を真っ白にし、アイコン枠の色も白に統一（不要な下線を強制消去！） -->
+                    <div class="zumen-d1-equipment" style="display: flex; align-items: center; gap: 15px; height: 45px; margin: 3px 0; background-color: #FFFFFF; padding: 0 10px; box-sizing: border-box; border-bottom: none !important;">
                         <!-- 🌟 修正：「物件設備」のフォントを游明朝へ統一 -->
                         <div style="font-size: 14px; line-height: 1.2; font-weight: bold; width: 60px; text-align: center; flex-shrink: 0; color: #333; font-family: '游明朝', 'Yu Mincho', serif;">物件<br>設備</div>
                         <div style="flex-grow: 1; display: flex; justify-content: space-between; height: 100%;">
-                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #FFFFFF; border-radius: 4px; border: none;" onclick="openImageModal('icon1', '設備アイコン1')" data-image-target="icon1">アイコン</div>
-                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #FFFFFF; border-radius: 4px; border: none;" onclick="openImageModal('icon2', '設備アイコン2')" data-image-target="icon2">アイコン</div>
-                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #FFFFFF; border-radius: 4px; border: none;" onclick="openImageModal('icon3', '設備アイコン3')" data-image-target="icon3">アイコン</div>
-                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #FFFFFF; border-radius: 4px; border: none;" onclick="openImageModal('icon4', '設備アイコン4')" data-image-target="icon4">アイコン</div>
-                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #FFFFFF; border-radius: 4px; border: none;" onclick="openImageModal('icon5', '設備アイコン5')" data-image-target="icon5">アイコン</div>
-                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #FFFFFF; border-radius: 4px; border: none;" onclick="openImageModal('icon6', '設備アイコン6')" data-image-target="icon6">アイコン</div>
+                            <!-- 🌟 枠線を「none」から「薄いグレーの線（1px solid #E0E0E0）」に変更して常時表示さccせる -->
+                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #FFFFFF; border-radius: 4px; border: 1px solid #E0E0E0;" onclick="openImageModal('icon1', '設備アイコン1')" data-image-target="icon1">アイコン</div>
+                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #FFFFFF; border-radius: 4px; border: 1px solid #E0E0E0;" onclick="openImageModal('icon2', '設備アイコン2')" data-image-target="icon2">アイコン</div>
+                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #FFFFFF; border-radius: 4px; border: 1px solid #E0E0E0;" onclick="openImageModal('icon3', '設備アイコン3')" data-image-target="icon3">アイコン</div>
+                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #FFFFFF; border-radius: 4px; border: 1px solid #E0E0E0;" onclick="openImageModal('icon4', '設備アイコン4')" data-image-target="icon4">アイコン</div>
+                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #FFFFFF; border-radius: 4px; border: 1px solid #E0E0E0;" onclick="openImageModal('icon5', '設備アイコン5')" data-image-target="icon5">アイコン</div>
+                            <div class="z-box" style="flex: 1; max-width: 14%; font-size: 12px; background-color: #FFFFFF; border-radius: 4px; border: 1px solid #E0E0E0;" onclick="openImageModal('icon6', '設備アイコン6')" data-image-target="icon6">アイコン</div>
                         </div>
                     </div>
-<div class="zumen-d1-footer" onclick="openModal('footerModal')" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 25px; height: 14%; background-color: #0A3260; color: #FFF; box-sizing: border-box; font-family: 'Helvetica Neue', Arial, '游ゴシックMedium', sans-serif; cursor: pointer;">
+<!-- 🌟 修正：上下左右に余白（margin）を設けてスタイリッシュに浮かせる！ -->
+                    <div class="zumen-d1-footer" onclick="openModal('footerModal')" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; height: 12.5%; margin: 8px 12px 10px 12px; width: calc(100% - 24px); border-radius: 2px; background-color: #0A3260; color: #FFF; box-sizing: border-box; font-family: 'Helvetica Neue', Arial, '游ゴシックMedium', sans-serif; cursor: pointer;">
 
-                        <!-- 🌟 ロゴ枠（強制拡大の魔法を使って、枠のど真ん中にドカンと配置！） -->
+                        <!-- 🌟 ロゴ枠（幅を25%に戻し、画像を直接拡大してど真ん中に配置！） -->
                         <div style="width: 25%; display: flex; align-items: center; justify-content: center; height: 100%;">
-                            <!-- 🌟 transform: scale(1.3) に倍率を少し下げて、程よい大きさに調整します -->
-                            <img class="footer-logo-img" src="" style="width: 90%; height: auto; object-fit: contain; filter: brightness(0) invert(1); transform: scale(1.3); transform-origin: center;" alt="店舗ロゴ">
+                            <img class="footer-logo-img" src="" style="height: 85%; width: auto; object-fit: contain; filter: brightness(0) invert(1); transform: scale(1.4); transform-origin: center;" alt="店舗ロゴ">
                         </div>
 
-                        <!-- 🌟 会社情報枠の文字サイズを整え、余白を調整する -->
-                        <!-- 🌟 会社情報枠（文字サイズをスッキリと統一！） -->
-                        <div style="flex-grow: 1; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 20px; display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 2px;">
-                            <div style="font-size: 14px; font-weight: bold; white-space: nowrap; line-height: 1.2;">
-                                <span style="font-weight: normal; margin-right: 6px;">TEL.</span><span class="foot-tel">0120-384-700</span>
-                            </div>
-                            <div class="foot-license" style="font-size: 12px; white-space: nowrap; line-height: 1.2;">免許番号</div>
-                            <div class="foot-company" style="font-size: 14px; font-weight: bold; white-space: nowrap; line-height: 1.2;">会社名</div>
-                            <div class="foot-address" style="font-size: 12px; line-height: 1.2;">住所</div>
+                        <!-- 🌟 会社情報枠（はみ出す場合は絶対に改行せず「...」で省略！） -->
+                        <div style="flex-grow: 1; min-width: 0; border-left: 1px solid rgba(255,255,255,0.4); padding: 0 15px; display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 2px;">
+                            <div style="font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">TEL. <span class="foot-tel">0120-384-700</span></div>
+                            <div class="foot-license" style="font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">免許番号</div>
+                            <div class="foot-company" style="font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">会社名</div>
+                            <div class="foot-address" style="font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">住所</div>
                         </div>
 
-                        <!-- 🌟 担当者枠（文字サイズをスッキリと統一！） -->
-                        <div style="width: 28%; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 20px; display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 2px;">
-                            <div style="font-size: 14px; font-weight: bold; white-space: nowrap; line-height: 1.2;">
-                                <span style="font-weight: normal; margin-right: 6px;">担当</span><span class="foot-name">担当者名</span>
-                            </div>
-                            <div style="font-size: 12px; line-height: 1.2;">
-                                <div style="white-space: nowrap; margin-bottom: 2px;"><span style="font-weight: normal; margin-right: 6px;">Mobile.</span><span class="foot-mobile">携帯番号</span></div>
-                                <div style="white-space: nowrap;"><span style="font-weight: normal; margin-right: 6px;">Mail.</span><span class="foot-email">メールアドレス</span></div>
+                        <!-- 🌟 担当者枠（幅を28%に縮め、右の無駄な余白を削減してバランスを整える！） -->
+                        <div style="width: 28%; min-width: 0; border-left: 1px solid rgba(255,255,255,0.4); padding: 0 15px; display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 2px;">
+                            <div style="font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">担当 <span class="foot-name">担当者名</span></div>
+                            <div style="font-size: 13px; font-weight: bold; line-height: 1.2; display: flex; flex-direction: column; gap: 2px;">
+                                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Mobile. <span class="foot-mobile">携帯番号</span></div>
+                                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Mail. <span class="foot-email">メールアドレス</span></div>
                             </div>
                         </div>
 
-                        <!-- 🌟 取引態様枠（幅を12%に最適化） -->
+                        <!-- 🌟 取引態様枠 -->
                         <div style="width: 12%; border-left: 1px solid rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; height: 100%;">
                             <div class="foot-table-wrap" style="border: 1px solid #FFF; width: 100%; max-width: 80px; font-size: 9px; border-radius: 0; overflow: hidden; cursor: pointer;" onclick="event.stopPropagation(); openModal('transactionModal')">
                                 <div class="foot-table-head" style="display: flex; text-align: center; border-bottom: 1px solid #FFF;">
@@ -251,7 +247,7 @@
                             
                             <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-top: 10px;">
                                 <div style="font-size: 32px; font-weight: bold; cursor: pointer; line-height: 1.2; flex-grow: 1;" onclick="openModal('titleModal')">
-                                    <span id="display-title-d2">タイトル</span>
+                                    <span id="display-title-d2">キャッチコピーを入力</span>
                                 </div>
                                 <div style="display: flex; align-items: flex-end; gap: 5px; cursor: pointer; flex-shrink: 0;" onclick="openModal('infoModal')">
                                     <div style="font-size: 10px; color: #555; text-align: right; margin-bottom: 6px;"><span>販売</span><br><span>価格</span></div>
@@ -344,35 +340,33 @@
                         </div>
                     </div>
 
-                    <div class="zumen-d1-footer" onclick="openModal('footerModal')" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 25px; height: 14%; background-color: #0A3260; color: #FFF; box-sizing: border-box; font-family: 'Helvetica Neue', Arial, '游ゴシックMedium', sans-serif; cursor: pointer;">
+<!-- 🌟 修正：上下左右に余白（margin）を設けてスタイリッシュに浮かせる！ -->
+                    <div class="zumen-d1-footer" onclick="openModal('footerModal')" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; height: 12.5%; margin: 8px 12px 10px 12px; width: calc(100% - 24px); border-radius: 2px; background-color: #0A3260; color: #FFF; box-sizing: border-box; font-family: 'Helvetica Neue', Arial, '游ゴシックMedium', sans-serif; cursor: pointer;">
 
-                        <div style="width: 22%; display: flex; align-items: center; height: 100%;">
-                            <img class="footer-logo-img" src="" style="height: 80%; width: auto; object-fit: contain; transform: scale(1.4); transform-origin: left center; filter: brightness(0) invert(1);" alt="店舗ロゴ">
+                        <!-- 🌟 ロゴ枠（幅を25%に戻し、画像を直接拡大してど真ん中に配置！） -->
+                        <div style="width: 25%; display: flex; align-items: center; justify-content: center; height: 100%;">
+                            <img class="footer-logo-img" src="" style="height: 85%; width: auto; object-fit: contain; filter: brightness(0) invert(1); transform: scale(1.4); transform-origin: center;" alt="店舗ロゴ">
                         </div>
 
-                        <div style="flex-grow: 1; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 18px; display: flex; flex-direction: column; justify-content: center; height: 100%;">
-                            <div style="font-size: 26px; font-weight: bold; letter-spacing: 1px; white-space: nowrap; line-height: 1; margin-bottom: 4px;">
-                                <span style="font-size: 11px; margin-right: 4px; font-weight: normal;">TEL.</span><span class="foot-tel">0120-384-700</span>
-                            </div>
-                            <div class="foot-license" style="font-size: 9px; white-space: nowrap; margin-bottom: 2px;">免許番号</div>
-                            <div class="foot-company" style="font-weight: bold; font-size: 14px; white-space: nowrap; letter-spacing: 1px;">会社名</div>
-                            <div class="foot-address" style="font-size: 9px; line-height: 1.2;">住所</div>
+                        <!-- 🌟 会社情報枠（はみ出す場合は絶対に改行せず「...」で省略！） -->
+                        <div style="flex-grow: 1; min-width: 0; border-left: 1px solid rgba(255,255,255,0.4); padding: 0 15px; display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 2px;">
+                            <div style="font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">TEL. <span class="foot-tel">0120-384-700</span></div>
+                            <div class="foot-license" style="font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">免許番号</div>
+                            <div class="foot-company" style="font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">会社名</div>
+                            <div class="foot-address" style="font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">住所</div>
                         </div>
 
-                        <!-- 🌟 修正：JSが自動で書き換えられるように、foot-name, foot-mobile, foot-email という目印をつけました！ -->
-                        <div style="width: 24%; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 18px; display: flex; flex-direction: column; justify-content: center; height: 100%;">
-                            <div style="margin-bottom: 8px; display: flex; align-items: baseline;">
-                                <span style="font-size: 9px; margin-right: 6px;">担当</span>
-                                <strong class="foot-name" style="font-size: 17px; letter-spacing: 1px; white-space: nowrap;">担当者名</strong>
-                            </div>
-                            <div style="font-size: 9px; line-height: 1.5;">
-                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mobile.</span><span class="foot-mobile">携帯番号</span></div>
-                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mail.</span><span class="foot-email">メールアドレス</span></div>
+                        <!-- 🌟 担当者枠（幅を28%に縮め、右の無駄な余白を削減してバランスを整える！） -->
+                        <div style="width: 28%; min-width: 0; border-left: 1px solid rgba(255,255,255,0.4); padding: 0 15px; display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 2px;">
+                            <div style="font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">担当 <span class="foot-name">担当者名</span></div>
+                            <div style="font-size: 13px; font-weight: bold; line-height: 1.2; display: flex; flex-direction: column; gap: 2px;">
+                                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Mobile. <span class="foot-mobile">携帯番号</span></div>
+                                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Mail. <span class="foot-email">メールアドレス</span></div>
                             </div>
                         </div>
 
-                        <!-- 🌟 取引態様を1列にし、クリックで変更できるようにする -->
-                        <div style="width: 15%; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 15px; display: flex; align-items: center; justify-content: flex-end; height: 100%;">
+                        <!-- 🌟 取引態様枠 -->
+                        <div style="width: 12%; border-left: 1px solid rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; height: 100%;">
                             <div class="foot-table-wrap" style="border: 1px solid #FFF; width: 100%; max-width: 80px; font-size: 9px; border-radius: 0; overflow: hidden; cursor: pointer;" onclick="event.stopPropagation(); openModal('transactionModal')">
                                 <div class="foot-table-head" style="display: flex; text-align: center; border-bottom: 1px solid #FFF;">
                                     <div class="foot-table-cell" style="flex: 1; padding: 4px 0; font-weight: bold;">取引態様</div>
@@ -395,7 +389,7 @@
                             </div>
                             <div style="display: flex; height: 16%; background-color: #56B4CB; color: #FFF; user-select: none; -webkit-user-select: none;">
                                 <div style="flex: 1; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: bold; cursor: pointer; padding: 5px 10px; word-break: break-all; line-height: 1.2;" onclick="openModal('titleModal')">
-                                    <span id="display-title-d3">タイトル</span>
+                                    <span id="display-title-d3">キャッチコピーを入力</span>
                                 </div>
                                 <div style="width: 45%; display: flex; border-left: 1px solid #FFF; cursor: pointer;" onclick="openModal('accessModal')">
                                     <div style="writing-mode: vertical-rl; text-orientation: upright; padding: 5px; font-size: 11px; letter-spacing: 2px; display: flex; align-items: center; justify-content: center;">ACCESS</div>
@@ -484,35 +478,33 @@
                         </div>
                     </div>
                     
-                    <div class="zumen-d1-footer" onclick="openModal('footerModal')" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 25px; height: 14%; background-color: #0A3260; color: #FFF; box-sizing: border-box; font-family: 'Helvetica Neue', Arial, '游ゴシックMedium', sans-serif; cursor: pointer;">
+<!-- 🌟 修正：上下左右に余白（margin）を設けてスタイリッシュに浮かせる！ -->
+                    <div class="zumen-d1-footer" onclick="openModal('footerModal')" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; height: 12.5%; margin: 8px 12px 10px 12px; width: calc(100% - 24px); border-radius: 2px; background-color: #0A3260; color: #FFF; box-sizing: border-box; font-family: 'Helvetica Neue', Arial, '游ゴシックMedium', sans-serif; cursor: pointer;">
 
-                        <div style="width: 22%; display: flex; align-items: center; height: 100%;">
-                            <img class="footer-logo-img" src="" style="height: 80%; width: auto; object-fit: contain; transform: scale(1.4); transform-origin: left center; filter: brightness(0) invert(1);" alt="店舗ロゴ">
+                        <!-- 🌟 ロゴ枠（幅を25%に戻し、画像を直接拡大してど真ん中に配置！） -->
+                        <div style="width: 25%; display: flex; align-items: center; justify-content: center; height: 100%;">
+                            <img class="footer-logo-img" src="" style="height: 85%; width: auto; object-fit: contain; filter: brightness(0) invert(1); transform: scale(1.4); transform-origin: center;" alt="店舗ロゴ">
                         </div>
 
-                        <div style="flex-grow: 1; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 18px; display: flex; flex-direction: column; justify-content: center; height: 100%;">
-                            <div style="font-size: 26px; font-weight: bold; letter-spacing: 1px; white-space: nowrap; line-height: 1; margin-bottom: 4px;">
-                                <span style="font-size: 11px; margin-right: 4px; font-weight: normal;">TEL.</span><span class="foot-tel">0120-384-700</span>
-                            </div>
-                            <div class="foot-license" style="font-size: 9px; white-space: nowrap; margin-bottom: 2px;">免許番号</div>
-                            <div class="foot-company" style="font-weight: bold; font-size: 14px; white-space: nowrap; letter-spacing: 1px;">会社名</div>
-                            <div class="foot-address" style="font-size: 9px; line-height: 1.2;">住所</div>
+                        <!-- 🌟 会社情報枠（はみ出す場合は絶対に改行せず「...」で省略！） -->
+                        <div style="flex-grow: 1; min-width: 0; border-left: 1px solid rgba(255,255,255,0.4); padding: 0 15px; display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 2px;">
+                            <div style="font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">TEL. <span class="foot-tel">0120-384-700</span></div>
+                            <div class="foot-license" style="font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">免許番号</div>
+                            <div class="foot-company" style="font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">会社名</div>
+                            <div class="foot-address" style="font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">住所</div>
                         </div>
 
-                        <!-- 🌟 修正：JSが自動で書き換えられるように、foot-name, foot-mobile, foot-email という目印をつけました！ -->
-                        <div style="width: 24%; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 18px; display: flex; flex-direction: column; justify-content: center; height: 100%;">
-                            <div style="margin-bottom: 8px; display: flex; align-items: baseline;">
-                                <span style="font-size: 9px; margin-right: 6px;">担当</span>
-                                <strong class="foot-name" style="font-size: 17px; letter-spacing: 1px; white-space: nowrap;">担当者名</strong>
-                            </div>
-                            <div style="font-size: 9px; line-height: 1.5;">
-                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mobile.</span><span class="foot-mobile">携帯番号</span></div>
-                                <div style="white-space: nowrap;"><span style="font-weight: bold; margin-right: 4px;">Mail.</span><span class="foot-email">メールアドレス</span></div>
+                        <!-- 🌟 担当者枠（幅を28%に縮め、右の無駄な余白を削減してバランスを整える！） -->
+                        <div style="width: 28%; min-width: 0; border-left: 1px solid rgba(255,255,255,0.4); padding: 0 15px; display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 2px;">
+                            <div style="font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">担当 <span class="foot-name">担当者名</span></div>
+                            <div style="font-size: 13px; font-weight: bold; line-height: 1.2; display: flex; flex-direction: column; gap: 2px;">
+                                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Mobile. <span class="foot-mobile">携帯番号</span></div>
+                                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Mail. <span class="foot-email">メールアドレス</span></div>
                             </div>
                         </div>
 
-                        <!-- 🌟 取引態様を1列にし、クリックで変更できるようにする -->
-                        <div style="width: 15%; border-left: 1px solid rgba(255,255,255,0.4); padding-left: 15px; display: flex; align-items: center; justify-content: flex-end; height: 100%;">
+                        <!-- 🌟 取引態様枠 -->
+                        <div style="width: 12%; border-left: 1px solid rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; height: 100%;">
                             <div class="foot-table-wrap" style="border: 1px solid #FFF; width: 100%; max-width: 80px; font-size: 9px; border-radius: 0; overflow: hidden; cursor: pointer;" onclick="event.stopPropagation(); openModal('transactionModal')">
                                 <div class="foot-table-head" style="display: flex; text-align: center; border-bottom: 1px solid #FFF;">
                                     <div class="foot-table-cell" style="flex: 1; padding: 4px 0; font-weight: bold;">取引態様</div>
@@ -536,10 +528,11 @@
         </div> </main>
 <div id="titleModal" class="modal">
     <div class="modal-content">
-        <h3>✏️ タイトルの編集</h3>
-        <input type="text" id="input-title" value="" placeholder="例）新築分譲住宅" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 20px;">
+        <h3>✏️ キャッチコピーの編集</h3>
+        <!-- 🌟 プレースホルダーをセールス文句の例に変更！ -->
+        <input type="text" id="input-title" value="" placeholder="例）南向き・日当たり良好！広々ルーフバルコニー付きの邸宅" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 20px;">
         <div style="display: flex; justify-content: flex-end; gap: 10px;">
-            <button style="background-color: #FA8A76; color: white; border: none; padding: 10px 30px; border-radius: 6px; cursor: pointer; font-weight: bold;" onclick="saveTitle()">保存して送信</button>
+            <button style="background-color: #FA8A76; color: white; border: none; padding: 10px 30px; border-radius: 6px; cursor: pointer; font-weight: bold;" onclick="saveTitle()">保存して反映</button>
             <button class="btn-cancel" style="margin: 0; padding: 10px 20px;" onclick="closeModal('titleModal')">キャンセル</button>
         </div>
     </div>
@@ -573,26 +566,40 @@
         </div>
     </div>
 </div>
+<!-- 🌟 交通アクセスの編集モーダル（複数路線対応の2段階パネル！） -->
 <div id="accessModal" class="modal">
-    <div class="modal-content">
+    <!-- データ保存用の隠しポケット -->
+    <input type="hidden" id="access-count" value="1">
+    <input type="hidden" id="access-line-1" value=""><input type="hidden" id="access-station-1" value=""><input type="hidden" id="access-walk-1" value="">
+    <input type="hidden" id="access-line-2" value=""><input type="hidden" id="access-station-2" value=""><input type="hidden" id="access-walk-2" value="">
+    <input type="hidden" id="access-line-3" value=""><input type="hidden" id="access-station-3" value=""><input type="hidden" id="access-walk-3" value="">
+
+    <div class="modal-content" style="max-width: 550px;">
         <h3>🚆 交通アクセスの編集</h3>
         
-        <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #1E2D3D;">路線</label>
-        <select id="input-line" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 15px;" onchange="window.updateStations()">
-            <option value="">路線を選択してください</option>
-        </select>
-        
-        <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #1E2D3D;">最寄駅</label>
-        <select id="input-station" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 15px;">
-            <option value="">先に路線を選択してください</option>
-        </select>
-        
-        <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #1E2D3D;">駅距離 / 徒歩（分）</label>
-        <input type="text" id="input-walk" value="" placeholder="例）5" style="width: 100%; padding: 10px; border: 1px solid #CFD8DC; border-radius: 4px; box-sizing: border-box; font-size: 14px; margin-bottom: 20px;">
-        
-        <div style="display: flex; justify-content: flex-end; gap: 10px;">
-            <button style="background-color: #FA8A76; color: white; border: none; padding: 10px 30px; border-radius: 6px; cursor: pointer; font-weight: bold;" onclick="saveAccess()">保存して反映</button>
-            <button class="btn-cancel" style="margin: 0; padding: 10px 20px;" onclick="closeModal('accessModal')">キャンセル</button>
+        <!-- ステップ1：路線数の選択 -->
+        <div id="access-step-1">
+            <label style="display: block; font-size: 14px; font-weight: bold; margin-bottom: 15px; color: #1E2D3D;">最寄りの沿線の数を指定してください</label>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button type="button" style="flex: 1; padding: 15px; background: #f0f4f8; border: 1px solid #CFD8DC; border-radius: 6px; color: #333; cursor: pointer; font-weight: bold;" onclick="window.setAccessCount(1)">1路線</button>
+                <button type="button" style="flex: 1; padding: 15px; background: #f0f4f8; border: 1px solid #CFD8DC; border-radius: 6px; color: #333; cursor: pointer; font-weight: bold;" onclick="window.setAccessCount(2)">2路線</button>
+                <button type="button" style="flex: 1; padding: 15px; background: #f0f4f8; border: 1px solid #CFD8DC; border-radius: 6px; color: #333; cursor: pointer; font-weight: bold;" onclick="window.setAccessCount(3)">3路線</button>
+            </div>
+            <div style="display: flex; justify-content: flex-end;">
+                <button class="btn-cancel" style="margin: 0; padding: 10px 20px;" onclick="closeModal('accessModal')">キャンセル</button>
+            </div>
+        </div>
+
+        <!-- ステップ2：路線の入力（ボタンを押すと自動で展開します） -->
+        <div id="access-step-2" style="display: none;">
+            <div id="access-routes-container" style="max-height: 50vh; overflow-y: auto; padding-right: 10px;">
+                <!-- ここにJSで枠が追加されます -->
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button class="btn-cancel" style="margin: 0; padding: 10px 20px;" onclick="document.getElementById('access-step-2').style.display='none'; document.getElementById('access-step-1').style.display='block';">◀ 戻る</button>
+                <button style="background-color: #FA8A76; color: white; border: none; padding: 10px 30px; border-radius: 6px; cursor: pointer; font-weight: bold;" onclick="saveAccess()">保存して反映</button>
+            </div>
         </div>
     </div>
 </div>
