@@ -497,30 +497,55 @@ window.saveSummary = function() {
             }
         }
     }
-// 🌟 デザイン1：はみ出したら自動で2段表示に切り替える＆縮小する最強魔法
+// 🌟 デザイン1：項目数から逆算して、絶対に枠に収まるサイズへ一発で縮小する最強魔法！
     if (suffix === '') {
         const container = document.getElementById('summary-container-d1');
+        
         if (container) {
+            container.style.display = 'block'; 
             container.style.columnCount = '1';
-            const items = container.querySelectorAll('.summary-item-d1');
-            items.forEach(el => el.style.fontSize = '11px');
+
+            const items = Array.from(container.querySelectorAll('.summary-item-d1'));
             
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    // 🌟 修正：コラム（段組み）は下にではなく右に溢れるので、scrollWidth（横幅）で判定します！
-                    if (container.scrollWidth > container.clientWidth + 2) {
-                        container.style.columnCount = '2';
-                        
-                        requestAnimationFrame(() => {
-                            // 🌟 2段にしてもさらに右に溢れるなら、文字を小さくして収める
-                            if (container.scrollWidth > container.clientWidth + 2) {
-                                items.forEach(el => el.style.fontSize = '9.5px');
-                            }
-                        });
-                    }
-                });
+            // 🌟 改行させずに1行で表示し、横にはみ出た分は「...」で省略して見た目を守る！
+            items.forEach(el => {
+                el.style.whiteSpace = 'nowrap';
+                el.style.overflow = 'hidden';
+                el.style.textOverflow = 'ellipsis';
+            });
+
+            // 実際に表示されている項目だけを抽出
+            const visibleItems = items.filter(el => el.style.display !== 'none');
+            const count = visibleItems.length;
+
+            // 🌟 DOMの高さ計算に依存せず、項目数で確実にフォントサイズを絞る！（絶対に失敗しない方法）
+            let fontSize = '11px';
+            let lineHeight = '1.3';
+            
+            if (count > 25) {
+                fontSize = '7.5px';
+                lineHeight = '1.1';
+            } else if (count > 19) {
+                fontSize = '8.5px';
+                lineHeight = '1.15';
+            } else if (count > 14) {
+                fontSize = '9.5px';
+                lineHeight = '1.2';
+            } else if (count > 10) {
+                fontSize = '10px';
+                lineHeight = '1.25';
+            }
+
+            visibleItems.forEach(el => {
+                el.style.fontSize = fontSize;
+                el.style.lineHeight = lineHeight;
             });
         }
+    }
+
+    // 🌟 ここに追加：物件概要を保存した瞬間に左上のハイライトも即座に更新！
+    if (typeof window.updateHighlightPreview === 'function') {
+        window.updateHighlightPreview();
     }
 
     closeModal('summaryModal'); // 👈 元々ある行
@@ -1531,6 +1556,22 @@ window.updateCombinedValue = function(targetId) {
                 // 西暦なら「2026年7月」、和暦なら「令和8年7月」のように綺麗に組み立てます
                 res = (era === '西暦' ? '' : era) + year + "年" + month + "月";
             }
+        } else if (targetId === 'layout') {
+            // 🌟 修正：間取りの処理を追加！
+            let num = document.getElementById('input-layout-num').value.trim();
+            let type = document.getElementById('input-layout-type').value;
+            if (num) res = num + type;
+        } else if (targetId === 'floor') {
+            // 🌟 修正：所在階の処理を追加！
+            let val1 = document.getElementById('input-floor-val1').value.trim();
+            let val2 = document.getElementById('input-floor-val2').value.trim();
+            if (val1 || val2) {
+                res = (val1 ? val1 + "階建" : "") + (val2 ? val2 + "階部分" : "");
+            }
+        } else if (['parking', 'bike', 'bicycle', 'admin-fee', 'repair-fund'].includes(targetId)) {
+            // 🌟 修正：月額費用系（駐車場や管理費など）の処理を一括追加！
+            let val = document.getElementById('input-' + targetId + '-val').value.trim();
+            if (val) res = val + "円/月";
         }
     }
     hiddenInput.value = res;
@@ -1667,4 +1708,60 @@ window.adjustDesign1FontSize = function() {
             }
         }
     }
+};
+// ==========================================
+// 🌟 追加：物件詳細が更新されたら、左上のハイライトも同期する魔法
+// ==========================================
+window.updateHighlightPreview = function() {
+    const suffix = getCurrentDesignSuffix();
+    if (suffix !== '') return; // デザイン1の時だけ処理する
+
+    const layout = document.getElementById('display-layout')?.innerText || '';
+    const exclusiveArea = document.getElementById('display-exclusive-area')?.innerText || '';
+    const buildingArea = document.getElementById('display-building-area')?.innerText || '';
+    const address = document.getElementById('display-address')?.innerText || '';
+    
+    // 🌟 追加：建築年月と階数を抽出
+    const buildDate = document.getElementById('display-build-date')?.innerText || '';
+    const floor = document.getElementById('display-floor')?.innerText || '';
+    
+    let buildText = '建築年月未設定';
+    if (buildDate && buildDate !== '---') buildText = buildDate;
+    
+    let floorText = '';
+    if (floor && floor !== '---') {
+        // 🌟 「◯階建◯階部分」から「◯階」だけをスマートに抽出する！
+        const matchPart = floor.match(/(\d+)階部分/);
+        if (matchPart) {
+            floorText = ' / ' + matchPart[1] + '階';
+        } else {
+            const matchFloor = floor.match(/(\d+)階/);
+            if (matchFloor) {
+                floorText = ' / ' + matchFloor[0];
+            } else {
+                floorText = ' / ' + floor;
+            }
+        }
+    }
+
+    // 面積の判定（マンションなら専有、戸建てなら建物）
+    let area = '面積未定';
+    if (exclusiveArea && exclusiveArea !== '---' && exclusiveArea !== '') area = exclusiveArea;
+    else if (buildingArea && buildingArea !== '---' && buildingArea !== '') area = buildingArea;
+
+    // 住所から市区町村を抽出
+    let areaName = 'エリア情報未設定';
+    if (address && address !== '---' && address !== '') {
+        const match = address.match(/(.*?([市区町村]))/);
+        areaName = match ? match[1] : address.substring(0, 10);
+    }
+
+    // 画面に反映
+    const buildEl = document.getElementById('preview-highlight-build');
+    const layoutEl = document.getElementById('preview-highlight-layout');
+    const areaEl = document.getElementById('preview-highlight-area');
+    
+    if(buildEl) buildEl.innerText = buildText;
+    if(layoutEl) layoutEl.innerText = `${layout || '間取り'} / ${area}${floorText}`;
+    if(areaEl) areaEl.innerText = areaName;
 };

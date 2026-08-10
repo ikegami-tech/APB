@@ -89,24 +89,35 @@
                     <button class="btn-cancel" onclick="goBackToStep2()">◀ デザイン選択に戻る</button>
                 </div>
                 
-                <div class="zumen-d1" id="zumen-layout-1">
-                    <div class="zumen-d1-header" style="background: linear-gradient(to right, #AAC8E6 0%, #AAC8E6 28%, #FAFCFF 40%, #FAFCFF 100%); border-bottom: none; box-shadow: 0 3px 15px rgba(0,0,0,0.06); position: relative; z-index: 10;">
-                        <!-- 🌟 左上固定エリア：見切れを防ぐため左揃え（flex-start）にし、左に余白を設けます -->
-                        <div style="width: 25%; flex-shrink: 0; height: 100%; background-color: transparent; display: flex; align-items: center; justify-content: flex-start; gap: 8px; border: none; box-sizing: border-box; padding-left: 20px;">
+                <!-- 🌟 全体の高さを720pxに完全固定！これで枠が下に伸びることは物理的に不可能です -->
+                <div class="zumen-d1" id="zumen-layout-1" style="width: 100%; height: 720px; display: flex; flex-direction: column; overflow: hidden; background-color: #FFF; box-sizing: border-box; border: 1px solid #CFD8DC; margin: 0 auto;">
+                    <div class="zumen-d1-header" style="display: flex; height: 110px; flex-shrink: 0; background: linear-gradient(to right, #AAC8E6 0%, #AAC8E6 28%, #FAFCFF 40%, #FAFCFF 100%); border-bottom: none; box-shadow: 0 3px 15px rgba(0,0,0,0.06); position: relative; z-index: 10;">
+                        <!-- 🌟 左上：ロゴと自動抽出されるアピールポイントのプレビュー -->
+                        <!-- 💡 下の画像枠に被らないように、padding-top を 10px に減らして全体を上に持ち上げる！ -->
+                        <div style="width: 30%; flex-shrink: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-start; padding-top: 10px; padding-left: 20px; box-sizing: border-box; gap: 4px;">
                             
-                            <!-- 🌟 アイコンを約1/2のサイズに（heightを25pxへ） -->
-                            <img src="/static/mark.png" style="height: 25px; width: auto; filter: brightness(0) invert(18%) sepia(34%) saturate(2035%) hue-rotate(193deg) brightness(96%) contrast(98%);" alt="アイコン">
-                            
-                            <!-- 🌟 テキストを約1/2のサイズに（font-sizeを14pxへ） -->
-                            <div id="tenpo-text" style="color: #10335D; font-size: 14px; font-weight: bold; font-family: '游ゴシック', 'Yu Gothic', sans-serif; white-space: nowrap; letter-spacing: 0.05em; margin-top: 2px;">
-                                「住まい」のもっと先へ。
+                            <!-- 🌟 ロゴとテキスト -->
+                            <div style="display: flex; align-items: center; justify-content: flex-start; gap: 6px; margin-bottom: 2px;">
+                                <img src="/static/mark.png" style="height: 16px; width: auto; filter: brightness(0) invert(18%) sepia(34%) saturate(2035%) hue-rotate(193deg) brightness(96%) contrast(98%);" alt="アイコン">
+                                <div style="color: #10335D; font-size: 11px; font-weight: bold; font-family: '游ゴシック', 'Yu Gothic', sans-serif; white-space: nowrap; letter-spacing: 0.05em; margin-top: 2px;">
+                                    「住まい」のもっと先へ。
+                                </div>
+                            </div>
+
+                            <!-- 🌟 ハイライト情報（文字サイズを枠に収まるよう最適化） -->
+                            <!-- 💡 余分な margin-top を 2px に詰めてさらに隙間を確保！ -->
+                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; width: 100%; margin-top: 2px;">
+                                <!-- 🌟 文字色をグレー(#666)から濃い青(#10335D)に変更して統一！ -->
+                                <div id="preview-highlight-build" style="font-size: 12px; color: #10335D; font-weight: bold; font-family: '游明朝', 'Yu Mincho', serif; letter-spacing: 1px; text-align: center;">建築年月未設定</div>
+                                <div id="preview-highlight-layout" style="font-size: 16px; color: #10335D; font-weight: bold; font-family: '游明朝', 'Yu Mincho', serif; line-height: 1.2; text-align: center;">間取り / 面積</div>
+                                <!-- 🌟 オレンジ(#DDAA77)から、画像ラベル等と同じブルーグレー(#809AB9)に変更して統一感を出す！ -->
+                                <div id="preview-highlight-area" style="display: inline-block; background-color: #809AB9; color: #FFF; font-size: 11px; font-weight: bold; padding: 3px 12px; border-radius: 4px; text-align: center; margin-top: 2px;">エリア情報未設定</div>
                             </div>
                         </div>
                         
-                        <!-- 🌟 修正：height: 100%; を追加し、隣の店舗写真の高さに対して「ど真ん中」に揃える！ -->
-                        <!-- 🌟 タイトル枠の幅を40%にして全体のバランスを100%（35% + 40% + 25%）に整えます -->
-<div style="width: 50%; flex-shrink: 1; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="openModal('titleModal')">
-                            <div style="width: 85%; text-align: center; font-size: 32px; font-weight: bold; word-break: break-all; line-height: 1.2; padding: 12px 0; color: #10335D; font-family: '游明朝', 'Yu Mincho', serif; border-top: 2px solid #AAC8E6; border-bottom: 2px solid #AAC8E6;">
+                        <!-- 🌟 中央：キャッチコピー（左側の幅を広げた分、干渉しないように幅を調整） -->
+                        <div style="width: 45%; flex-shrink: 1; height: 100%; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="openModal('titleModal')">
+                            <div style="width: 85%; text-align: center; font-size: 28px; font-weight: bold; word-break: break-all; line-height: 1.2; padding: 12px 0; color: #10335D; font-family: '游明朝', 'Yu Mincho', serif; border-top: 2px solid #AAC8E6; border-bottom: 2px solid #AAC8E6;">
                                 <span id="display-title">キャッチコピーを入力</span>
                             </div>
                         </div>
@@ -121,7 +132,8 @@
                         </div>
                     </div>
                     
-                    <div class="zumen-d1-body" style="min-height: 0; background: linear-gradient(to right, #AAC8E6 0%, #AAC8E6 28%, #FAFCFF 40%, #FAFCFF 100%);">
+                    <!-- 🌟 flex-grow: 1; と display: flex; を追加して、残りの空間にピッタリ収める -->
+                    <div class="zumen-d1-body" style="flex-grow: 1; display: flex; min-height: 0; background: linear-gradient(to right, #AAC8E6 0%, #AAC8E6 28%, #FAFCFF 40%, #FAFCFF 100%);">
                         <div class="zumen-d1-left" style="width: 72%; padding: 12px; box-sizing: border-box;">
                             <div style="display: flex; gap: 15px; height: 55%; margin-bottom: 12px;">
                                 <!-- 🌟 修正：画像空枠の文字フォントを「游明朝」にし、パワポに合わせて文字を大きく -->
@@ -145,9 +157,10 @@
                             <!-- 🌟 修正：上のpaddingを0にし、少しだけマージンをあけて上に寄せる -->
                             <div class="z-box zumen-summary-box" style="flex-grow: 1; padding: 0 8px 8px 8px; margin-top: 5px; cursor: pointer; display: flex; flex-direction: column; gap: 5px; background-color: transparent; min-height: 0;" onclick="openModal('summaryModal')">
                                     <div style="font-size: 11px; font-weight: bold; border-bottom: 1px solid #777; padding-bottom: 2px; margin-bottom: 3px; flex-shrink: 0; color: #333;">■ 物件詳細情報</div>
-                                    <div style="flex-grow: 1; width: 100%; min-height: 0;">
-                                        <!-- 🌟 修正：物件詳細の中身のフォントを「游明朝」へ -->
-                                        <div id="summary-container-d1" style="width: 100%; display: flex; flex-direction: column; line-height: 1.3; font-family: '游明朝', 'Yu Mincho', serif; color: #505050;">
+                                    <!-- 🌟 修正：overflow: hidden を追加して、中身が増えても絶対に枠を突き破って下へ伸びないようにする！ -->
+                                    <div style="flex-grow: 1; width: 100%; min-height: 0; overflow: hidden;">
+                                        <!-- 🌟 修正：はみ出しを防止し、1列でスッキリ見せる -->
+                                        <div id="summary-container-d1" style="width: 100%; display: block; line-height: 1.3; font-family: '游明朝', 'Yu Mincho', serif; color: #505050; height: 100%;">
                                         <div class="summary-item-d1">■ 物件住所 / <span id="display-address"></span></div>
                                         <div class="summary-item-d1">■ 土地権利 / <span id="display-land-right"></span></div>
                                         <div class="summary-item-d1 only-kodate">■ 土地面積 / <span id="display-land-area"></span></div>

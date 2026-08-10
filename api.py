@@ -1926,19 +1926,44 @@ def generate_zumen(
             except:
                 pass 
 
-            # 🌟 左上の領域（下の画像1・画像2の左端ラインとピッタリ揃える魔法！）
-            box_left = Inches(0.2)
-            box_top = Inches(0.2)
-            box_w = Inches(2.3) # タイトルが Inches(2.6) から始まるので、干渉しないように幅を最適化
-            box_h = Inches(1.1)
+# 🌟 左上の領域（物件詳細から自動抽出した情報とロゴを美しく配置！）
+            ext_build = "建築年月未設定"
+            ext_layout = "---"
+            ext_area = "---"
+            ext_floor = "" # 🌟 追加：階数
+            ext_addr = "エリア情報未設定"
             
-            # 🌟 アイコン（3本矢印）の配置と色変換
+            import re
+            for item in full_summary.split("|||"):
+                if "物件住所" in item:
+                    val = item.split("/")[-1].strip()
+                    m = re.match(r'(.*?([市区町村]))', val)
+                    ext_addr = m.group(1) if m else val[:10]
+                elif "間取り" in item:
+                    ext_layout = item.split("/")[-1].strip()
+                elif "専有面積" in item:
+                    ext_area = item.split("/")[-1].strip()
+                elif "建物面積" in item and ext_area == "---":
+                    ext_area = item.split("/")[-1].strip()
+                elif "建築年月" in item:
+                    ext_build = item.split("/")[-1].strip()
+                elif "所在階" in item:
+                    raw_floor = item.split("/")[-1].strip()
+                    # 🌟 「◯階建◯階部分」から「◯階」だけを抽出する！
+                    import re
+                    m_part = re.search(r'(\d+)階部分', raw_floor)
+                    if m_part:
+                        ext_floor = m_part.group(1) + "階"
+                    else:
+                        m_floor = re.search(r'(\d+)階', raw_floor)
+                        ext_floor = m_floor.group(0) if m_floor else raw_floor
+            
+            box_left = Inches(0.2)
+            box_top = Inches(0.3) # 🌟 0.18 から 0.3 に変更し、全体を少し下げて上下中央に配置！
+
+            # 🌟 左上：まずはロゴとテキストを配置
             base_dir = os.path.dirname(__file__)
             mark_img_path = os.path.join(base_dir, "static", "mark.png")
-            
-            text_left = box_left
-            text_width = box_w
-            
             if os.path.exists(mark_img_path):
                 import tempfile
                 from PIL import Image
@@ -1948,45 +1973,91 @@ def generate_zumen(
                         r, g, b, a = img.split()
                         solid_color = Image.new("RGBA", img.size, (16, 51, 93, 255))
                         navy_img = Image.composite(solid_color, Image.new("RGBA", img.size, (0,0,0,0)), a)
-                        
                         with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
                             navy_img.save(tmp.name, "PNG")
                             tmp_path = tmp.name
                             
-                    # 🌟 アイコンをさらに縮小（heightを0.25インチへ）し、中央に揃えるようにY座標も調整します
-                    slide.shapes.add_picture(tmp_path, box_left, box_top + Inches(0.4), height=Inches(0.25))
+                    slide.shapes.add_picture(tmp_path, box_left, box_top + Inches(0.02), height=Inches(0.18))
                     os.remove(tmp_path)
                     
-                    # アイコンがさらに小さくなった分、テキストの開始位置も少し左に寄せて間隔を整えます
-                    text_left = box_left + Inches(0.3)
-                    text_width = box_w - Inches(0.3)
+                    tb_sup = slide.shapes.add_textbox(box_left + Inches(0.25), box_top, Inches(1.8), Inches(0.2))
+                    tb_sup.text_frame.margin_left = 0
+                    p_sup = tb_sup.text_frame.paragraphs[0]
+                    p_sup.text = "「住まい」のもっと先へ。"
+                    p_sup.font.size = Pt(10)
+                    p_sup.font.bold = True
+                    p_sup.font.color.rgb = RGBColor(16, 51, 93)
+                    p_sup.font.name = "游ゴシック"
                 except Exception as e:
                     print(f"アイコン配置エラー: {e}")
 
-            # 🌟 テキストの配置
-            tb_tenpo = slide.shapes.add_textbox(text_left, box_top, text_width, box_h)
-            tf_tenpo = tb_tenpo.text_frame
-            tf_tenpo.vertical_anchor = MSO_ANCHOR.MIDDLE
-            tf_tenpo.word_wrap = False # 🌟 改行させない
+# 🌟 その下にハイライト情報を配置
+            hl_top = box_top + Inches(0.35) 
+            hl_left = box_left
+            hl_width = Inches(2.3) # 🌟 タイトル枠に絶対被らない安全な幅を設定
             
-            # 🌟 パワポ特有の「見えない余白」をゼロにして、ズレを完全に無くす魔法
-            tf_tenpo.margin_top = 0
-            tf_tenpo.margin_bottom = 0
-            tf_tenpo.margin_left = 0
-            tf_tenpo.margin_right = 0
-
-            p_tenpo = tf_tenpo.paragraphs[0]
-            p_tenpo.text = "「住まい」のもっと先へ。"
-            p_tenpo.font.size = Pt(10)  # 🌟 フォントサイズを小さく上品に（Pt10へ）
-            p_tenpo.font.bold = True
-            p_tenpo.font.color.rgb = RGBColor(16, 51, 93)
-            p_tenpo.font.name = "游ゴシック"
-            p_tenpo.alignment = PP_ALIGN.LEFT
-
-# 🌟 追加：タイトルの上下に高級感のある飾り線を復活させる魔法
-            line_color = RGBColor(170, 200, 230) # 上品な薄いブルーグレー
+            # 1行目: 建築年月（中央揃え）
+            tb_tl1 = slide.shapes.add_textbox(hl_left, hl_top, hl_width, Inches(0.3))
+            tb_tl1.text_frame.margin_left = 0
+            p_tl1 = tb_tl1.text_frame.paragraphs[0]
+            p_tl1.text = ext_build
+            p_tl1.font.size = Pt(12)
+            p_tl1.font.color.rgb = RGBColor(16, 51, 93) # 🌟 灰色(100, 100, 100)から濃い青色に変更して統一！
+            p_tl1.font.name = "游明朝"
+            p_tl1.font.bold = True
+            p_tl1.alignment = PP_ALIGN.CENTER # 🌟 中央揃え
             
-            # 🌟 開始位置を思い切って左（2.6）に寄せ、幅を（4.1）に大幅拡大します！
+            # 2行目: 間取り / 面積 / 階数（中央揃え）
+            tb_tl2 = slide.shapes.add_textbox(hl_left, hl_top + Inches(0.20), hl_width, Inches(0.6))
+            tb_tl2.text_frame.margin_left = 0
+            tb_tl2.text_frame.word_wrap = True
+            p_tl2 = tb_tl2.text_frame.paragraphs[0]
+            floor_text = f" / {ext_floor}" if ext_floor and ext_floor != "---" else ""
+            p_tl2.text = f"{ext_layout} / {ext_area}{floor_text}"
+            
+            # はみ出さないように文字サイズを調整
+            if len(p_tl2.text) > 22:
+                p_tl2.font.size = Pt(13)
+            elif len(p_tl2.text) > 15:
+                p_tl2.font.size = Pt(15)
+            else:
+                p_tl2.font.size = Pt(17)
+            
+            p_tl2.font.color.rgb = RGBColor(16, 51, 93)
+            p_tl2.font.name = "游明朝"
+            p_tl2.font.bold = True
+            p_tl2.alignment = PP_ALIGN.CENTER # 🌟 中央揃え
+            
+            # 3行目: エリア (幅から逆算してど真ん中に配置)
+            addr_w = Inches(1.4) if len(ext_addr) <= 4 else Inches(2.0)
+            addr_left = hl_left + (hl_width - addr_w) / 2 
+            
+            # 🌟 Y座標を上に大きく引き上げて、上の「間取り/面積」のすぐ下に寄せる！
+            addr_y = hl_top + Inches(0.48) 
+            
+            bg_addr = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, addr_left, addr_y, addr_w, Inches(0.24))
+            bg_addr.fill.solid()
+            # 🌟 オレンジ色から、画像ラベルなどに使われている「上品なブルーグレー」に変更して統一！
+            bg_addr.fill.fore_color.rgb = RGBColor(128, 154, 185) 
+            bg_addr.line.fill.background()
+            bg_addr.adjustments[0] = 0.2
+            
+            # 🌟 テキストボックスのY座標を背景図形と完全に一致させ、さらに文字の上余白を微調整してド真ん中に！
+            tb_tl3 = slide.shapes.add_textbox(addr_left, addr_y, addr_w, Inches(0.24))
+            tf_tl3 = tb_tl3.text_frame
+            tf_tl3.margin_top = Pt(3) # 🌟 上に寄りやすいフォントの特性を打ち消すため、上部に少し余白(3pt)を入れる
+            tf_tl3.margin_bottom = tf_tl3.margin_left = tf_tl3.margin_right = 0
+            tf_tl3.vertical_anchor = MSO_ANCHOR.MIDDLE
+            p_tl3 = tf_tl3.paragraphs[0]
+            p_tl3.text = ext_addr
+            p_tl3.font.size = Pt(11)
+            p_tl3.font.color.rgb = RGBColor(255, 255, 255)
+            p_tl3.font.name = "游ゴシック"
+            p_tl3.font.bold = True
+            p_tl3.alignment = PP_ALIGN.CENTER
+            
+            # 🌟 タイトルの上下に高級感のある飾り線（元の位置に戻す）
+            line_color = RGBColor(170, 200, 230)
             line_top = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(2.6), Inches(0.25), Inches(4.1), Pt(1.5))
             line_top.fill.solid()
             line_top.fill.fore_color.rgb = line_color
@@ -1997,22 +2068,30 @@ def generate_zumen(
             line_bottom.fill.fore_color.rgb = line_color
             line_bottom.line.fill.background()
 
-            # 🌟 タイトルのテキストボックスも同様に広げます
-            tb_title = slide.shapes.add_textbox(Inches(2.6), Inches(0.25), Inches(4.1), Inches(1.0))
+            # 🌟 タイトル（キャッチコピー）
+            # テキストボックスだと文字に合わせて枠が広がってしまうため、絶対に大きさが変わらない固定枠を作る！
+            tb_title = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(2.6), Inches(0.28), Inches(4.1), Inches(0.94))
+            tb_title.fill.background() # 背景を透明に
+            tb_title.line.fill.background() # 枠線を透明に
+            
             tf_title = tb_title.text_frame
-            
-            # 🌟 追加：パワポ特有の「見えない余白」をゼロにして、ズレを完全に無くす魔法
-            tf_title.margin_top = 0
-            tf_title.margin_bottom = 0
-            tf_title.margin_left = 0
-            tf_title.margin_right = 0
-            
+            tf_title.margin_top = tf_title.margin_bottom = tf_title.margin_left = tf_title.margin_right = 0
             tf_title.vertical_anchor = MSO_ANCHOR.MIDDLE
             tf_title.word_wrap = True
             tf_title.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
+            
             p_title = tf_title.paragraphs[0]
-            p_title.text = title if title else "タイトルを入力"
-            p_title.font.size = Pt(26)
+            title_text = title if title else "キャッチコピーを入力"
+            p_title.text = title_text
+            
+            # 🌟 文字数に応じてベースのフォントサイズを自動調整し、線からはみ出すのを確実に防ぐ！
+            if len(title_text) > 30:
+                p_title.font.size = Pt(16)
+            elif len(title_text) > 20:
+                p_title.font.size = Pt(20)
+            else:
+                p_title.font.size = Pt(26)
+                
             p_title.font.bold = True
             p_title.font.color.rgb = RGBColor(16, 51, 93) 
             p_title.alignment = PP_ALIGN.CENTER
@@ -2138,66 +2217,44 @@ def generate_zumen(
             tb_summ_t = slide.shapes.add_textbox(Inches(7.3), Inches(2.2), Inches(2.5), Inches(0.4))
             p_summ_t = tb_summ_t.text_frame.paragraphs[0]
             p_summ_t.text = "■ 物件詳細情報"
-            p_summ_t.font.size = Pt(10)
+            p_summ_t.font.size = Pt(11) # 🌟 少し大きくしてメリハリを出す
             p_summ_t.font.bold = True
+            p_summ_t.font.name = "游ゴシック" # 🌟 見出しもモダンなゴシック体に統一！
 
             items = [item.strip() for item in full_summary.split('|||') if item.strip()]
             
-            tb_info = slide.shapes.add_textbox(Inches(7.3), Inches(2.5), Inches(2.5), Inches(3.45))
+            # 🌟 2列分割を廃止し、元の美しい1列表示に戻して枠内にすべて収める！
+            tb_info = slide.shapes.add_textbox(Inches(7.3), Inches(2.45), Inches(2.5), Inches(3.45))
             tf_info = tb_info.text_frame
             tf_info.word_wrap = True 
-            # 🚨 パワポの勝手な縮小機能をオフにして、こちらの計算を絶対優先させます
+            tf_info.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE # 🌟 パワポの自動縮小機能もオンにしておく
             tf_info.margin_top = tf_info.margin_bottom = tf_info.margin_left = tf_info.margin_right = 0
             
-            # 🌟 【等間隔＆ジャストフィットの究極魔法】
-            available_height_pt = 240.0 # 枠の高さ(3.45インチ)の実質利用可能ポイント
+            # 利用可能な高さ (少し安全マージンを取って 240pt とする)
+            available_height_pt = 240.0
             
-            # まず、折り返しを考慮した「実質的な行数」を見積もる
-            num_lines = 0
-            for item_text in items:
-                # 🌟 修正：ユーザーが入力した改行（\n）も1行として正確にカウントする
-                for line in item_text.split('\n'):
-                    if len(line) > 19: # 20文字以上は2行に折り返されると判定
-                        num_lines += 2
-                    else:
-                        num_lines += 1
-
+            # 予想行数（基本1項目1行とするが、18文字超えは2行とカウントして余裕を持たせる）
+            num_lines = sum([2 if len(item_text) > 18 else 1 for item_text in items])
             if num_lines == 0: num_lines = 1
             
-            # ギリギリまで文字を大きく（最大9.5Pt、最小5.0Pt）
-            calc_font_size = (available_height_pt / num_lines) * 0.8
-            ppt_font_size = max(5.0, min(9.5, calc_font_size))
-            
-            # 折り返した行同士の隙間は少し詰める
-            inner_line_spacing = ppt_font_size * 1.15
-            
-            # テキスト自体の総高さ
-            total_text_height = num_lines * inner_line_spacing
-            
-            # 余った隙間を割り出して、各項目の「間」に均等に振り分ける
-            remaining_height = available_height_pt - total_text_height
-            # 🌟 修正：項目が0件の時にゼロ割りエラー（ZeroDivisionError）になるのを防ぐ安全ガードを追加！
-            space_between = remaining_height / len(items) if remaining_height > 0 and len(items) > 0 else 0
+            # 🌟 限界まで文字を大きくするが、計算を厳しめ（係数0.75）にして絶対にはみ出さないようにする
+            ppt_font_size = max(5.0, min(9.5, (available_height_pt / num_lines) * 0.75))
             
             for idx, item_text in enumerate(items):
                 p = tf_info.paragraphs[0] if idx == 0 else tf_info.add_paragraph()
                 p.text = item_text
-                
                 p.font.size = Pt(ppt_font_size) 
-                p.font.name = "游明朝"
+                p.font.name = "游ゴシック" # 🌟 游明朝から、スッキリとしてスタイリッシュな游ゴシックに変更！
                 p.font.color.rgb = RGBColor(80, 80, 80)
-                p.line_spacing = Pt(inner_line_spacing)
                 
-                # 🌟【究極の整列魔法】パワポの裏側（XML）を直接操作してインデントを設定！
-                # ※ 8.5の部分は文字幅です。もし「:」と文字の隙間が広すぎたり狭すぎる場合は、この数字を微調整してください
-                indent_emu = int(Pt(ppt_font_size * 8.5)) 
-                pPr = p._p.get_or_add_pPr()
-                pPr.set('marL', str(indent_emu))      # 2行目以降の開始位置(左余白)を設定
-                pPr.set('indent', str(-indent_emu))   # 1行目(項目名)だけ左に引き戻す
+                # 🌟 重なりの原因だった「固定サイズ(Pt)」をやめ、「倍率(1.1)」で指定して絶対に重ならないようにする！
+                p.line_spacing = 1.1 
                 
-                # 🌟 等間隔に散らすために、項目と項目の間に計算した余白を挿入！
-                if idx > 0:
-                    p.space_before = Pt(space_between)
+                # 🌟 【究極の整列魔法】2行に折り返された時、値の開始位置にピシッと揃える
+                # ゴシック体は明朝体より少し横幅をとるため、インデントの係数を 8.5 から 9.0 に微調整
+                indent_emu = int(Pt(ppt_font_size * 9.0)) 
+                p._p.get_or_add_pPr().set('marL', str(indent_emu))
+                p._p.get_or_add_pPr().set('indent', str(-indent_emu))
 
             line_eq1 = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, Inches(5.9), Inches(10), Pt(1))
             line_eq1.fill.solid()
@@ -2345,11 +2402,11 @@ def generate_zumen(
                 vl1.fill.fore_color.rgb = line_color
                 vl1.line.fill.background()
 
-            # 🌟 絶対に綺麗に出るフォント定義
-            FONT_ENG = "Arial"
-            FONT_JPN = "游明朝"
+# 🌟 スタイリッシュでモダンなフォント定義に変更
+            FONT_ENG = "Century Gothic" # 高級感とスマートさがある英字フォント
+            FONT_JPN = "游ゴシック"     # スッキリしてかっこいい日本語フォント
 
-# 🌟 会社情報（文字サイズを9.5に落とし、行間を詰めて細い帯にジャストフィットさせる！）
+# 🌟 会社情報
             tb_comp = slide.shapes.add_textbox(Inches(2.45), footer_y + Inches(0.02), Inches(3.7), Inches(0.75))
             tf_comp = tb_comp.text_frame
             tf_comp.clear()
@@ -2360,34 +2417,42 @@ def generate_zumen(
             p1 = tf_comp.paragraphs[0]
             r1 = p1.add_run()
             r1.text = f"TEL. {branch.get('tel', '')}"
-            r1.font.size = Pt(9.5)
+            r1.font.size = Pt(14) # 🌟 電話番号をガッツリ大きくして強調！（10.5 -> 14）
             r1.font.bold = True
             r1.font.color.rgb = text_color_main
             r1.font.name = FONT_ENG
+            try: r1.font.shadow = True 
+            except: pass
             
             p2 = tf_comp.add_paragraph()
-            p2.space_before = Pt(1.5)  # 行間を3pt -> 1.5ptに詰める
+            p2.space_before = Pt(1.0) # 🌟 枠にはみ出ないように行間を少し詰める（1.5 -> 1.0）
             p2.text = branch.get("license", "免許番号")
-            p2.font.size = Pt(9.5)
+            p2.font.size = Pt(8) # 🌟 メリハリをつけるため微縮小（8.5 -> 8）
             p2.font.bold = True
             p2.font.color.rgb = text_color_main
             p2.font.name = FONT_JPN
+            try: p2.font.shadow = True
+            except: pass
             
             p3 = tf_comp.add_paragraph()
-            p3.space_before = Pt(1.5)  # 行間を詰める
+            p3.space_before = Pt(1.0)
             p3.text = branch.get('full_name', '')
-            p3.font.size = Pt(9.5)
+            p3.font.size = Pt(9.5) # 🌟 会社名も微縮小してバランスを取る（10 -> 9.5）
             p3.font.bold = True 
             p3.font.color.rgb = text_color_main
             p3.font.name = FONT_JPN
+            try: p3.font.shadow = True
+            except: pass
             
             p4 = tf_comp.add_paragraph()
-            p4.space_before = Pt(1.5)  # 行間を詰める
+            p4.space_before = Pt(1.0)
             p4.text = branch.get('address', '')
-            p4.font.size = Pt(9.5)
+            p4.font.size = Pt(8) # 🌟 住所も微縮小（8.5 -> 8）
             p4.font.bold = True
             p4.font.color.rgb = text_color_main
             p4.font.name = FONT_JPN
+            try: p4.font.shadow = True
+            except: pass
 
             # 🌟 縦線2 (会社情報と担当者の間)
             if line_color:
@@ -2396,7 +2461,7 @@ def generate_zumen(
                 vl2.fill.fore_color.rgb = line_color
                 vl2.line.fill.background()
 
-            # 🌟 担当者情報（こちらも同様に文字サイズと行間を最適化！）
+            # 🌟 担当者情報
             tb_person = slide.shapes.add_textbox(Inches(6.35), footer_y + Inches(0.08), Inches(2.4), Inches(0.65))
             tf_person = tb_person.text_frame
             tf_person.clear()
@@ -2405,30 +2470,36 @@ def generate_zumen(
             tf_person.auto_size = MSO_AUTO_SIZE.TEXT_TO_FIT_SHAPE
             
             p_p1 = tf_person.paragraphs[0] 
-            r1 = p_p1.add_run()
-            r1.text = f"担当 {user_name}"
-            r1.font.size = Pt(9.5)
-            r1.font.bold = True
-            r1.font.color.rgb = text_color_main
-            r1.font.name = FONT_JPN
+            r1_p = p_p1.add_run()
+            r1_p.text = f"担当 {user_name}"
+            r1_p.font.size = Pt(10) # 🌟 担当者名を少し大きく
+            r1_p.font.bold = True
+            r1_p.font.color.rgb = text_color_main
+            r1_p.font.name = FONT_JPN
+            try: r1_p.font.shadow = True
+            except: pass
             
             p_p2 = tf_person.add_paragraph()
-            p_p2.space_before = Pt(1.5)  # 行間を詰める
+            p_p2.space_before = Pt(2.0)
             r_mob = p_p2.add_run()
             r_mob.text = f"Mobile. {user_mobile}"
             r_mob.font.size = Pt(9.5)
             r_mob.font.bold = True
             r_mob.font.color.rgb = text_color_main
             r_mob.font.name = FONT_ENG
+            try: r_mob.font.shadow = True
+            except: pass
             
             p_p3 = tf_person.add_paragraph()
-            p_p3.space_before = Pt(1.5)  # 行間を詰める
+            p_p3.space_before = Pt(2.0)
             r_mail = p_p3.add_run()
             r_mail.text = f"Mail. {user_email_disp}"
             r_mail.font.size = Pt(9.5)
             r_mail.font.bold = True
             r_mail.font.color.rgb = text_color_main
             r_mail.font.name = FONT_ENG
+            try: r_mail.font.shadow = True
+            except: pass
 
             # 🌟 縦線3 (取引態様と被らない安全な位置に戻す！)
             if line_color:
